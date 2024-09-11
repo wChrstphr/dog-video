@@ -1,5 +1,8 @@
 # DogVideo
 Repositorio criado para documentação, acompanhamento e versionamento de código para o projeto Dogvideo (2024)
+
+## Tecnologias utilizadas
+[![My Skills](https://skillicons.dev/icons?i=html,css,js,nodejs,react,mysql,php,git&perline=8)](https://skillicons.dev)
 ## Informações Importantes 
 - [Requisitos Funcionais e Não-Funcionais do Projeto](https://www.overleaf.com/project/66d21797940a8fdbadbf5317)
 
@@ -38,5 +41,5 @@ Conterá:
 
 |Gerente|Assessor(a) Front-End|Assessor Back-End|
 |:----:|:-----:|:-----:|
-|[Christopher](github.com/wChrstphr)|[Gabriel]()|[Tulio]()|
-||[Laura]()|[Lucas]()|
+|[Christopher](https://github.com/wChrstphr/)|[Gabriel](https://github.com/GabrielSMonteiro)|[Tulio](https://github.com/Tullianno)|
+||[Laura](https://github.com/LauraYamamotoUNB)|[Lucas](https://github.com/lucasdepaulaleal)|
