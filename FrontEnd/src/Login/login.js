@@ -15,20 +15,26 @@ function Login({ onLogin }) {
 
   return (
     <div className="Login">
-      <h2>Login</h2>
+      <img src="/dog.png" alt="Logo" className="logo" />
+      <label 
+        htmlFor="username">Usuário    
+      </label>
       <input
         type="text"
-        placeholder="Usuário"
+        placeholder="Insira o usuário"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
       />
+      <label
+        htmlFor="username">Senha
+      </label>
       <input
         type="password"
-        placeholder="Senha"
+        placeholder="Insira a senha"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
-      <button onClick={handleLogin}>Entrar</button>
+      <button onClick={handleLogin}>LOGAR</button>
     </div>
   );
 }
