@@ -20,7 +20,7 @@ Repositorio criado para documentação, acompanhamento e versionamento de códig
 |Area "Dados do Cliente" | Cliente | Administrador |
 |----|----|----|
 | Conterá | 1. Nome do cliente <br/>2. Nome dos cães<br/>3. Pacote comprado<br/>4. Horário dos passeios | 1. Backups dos clientes<br/>2. Clientes cadastrados<br/>3. Passeadores cadastrados<br/>4. CRUD de Clientes e informações do cachorro |
-| Permissões| 1. Visualizar dados cadastrados <br/> 2. Alterar senha | 1. [Cadastrar clientes](https://github.com/wChrstphr/dog-video/edit/main/README.md#cadastro-de-clientes) <br/>2. Cadastrar passeadores<br/>3. Visualizar e editar dados dos clientes e passeadores<br/>4. Controle sobre os backups para realizar downloads |
+| Permissões| 1. Visualizar dados cadastrados <br/> 2. Alterar senha | 1. [Cadastrar clientes](#cadastro-de-clientes) <br/>2. Cadastrar passeadores<br/>3. Visualizar e editar dados dos clientes e passeadores<br/>4. Controle sobre os backups para realizar downloads |
 | Acesso |  Via página principal de login | Via página externa em modo administrador ou via página<br/>principal utilizando [RBAC (Role-Based Access Control)](https://dac.digital/how-to-use-reactjs-for-secure-role-based-access-control/)|
 
 #### Cadastro de Clientes 
