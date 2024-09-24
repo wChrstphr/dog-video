@@ -16,12 +16,22 @@ function App() {
     setIsLoggedIn(true);
   };
 
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+  };
+
   return (
     <React.StrictMode>
       <Router>
         <Routes>
-          <Route path="/" element={isLoggedIn ? <Web /> : <Login onLogin={handleLogin} />} />
-          <Route path="/dados-cliente" element={<DadosCliente />} />
+          <Route 
+            path="/" 
+            element={isLoggedIn ? <Web onLogout={handleLogout} /> : <Login onLogin={handleLogin} />} 
+          />
+          <Route 
+            path="/dados-cliente" 
+            element={<DadosCliente onLogout={handleLogout} />} 
+          />
         </Routes>
       </Router>
     </React.StrictMode>

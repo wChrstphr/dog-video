@@ -8,6 +8,7 @@ body {
   background-color: #2E55FF;
   min-height: 100vh;
   justify-content: space-between;
+  min-height: 100vh;
 }
 
 
@@ -72,7 +73,7 @@ body {
   font-family: 'Manrope', sans-serif;
   padding: 10px 20px;
   border-radius: 8px;
-  margin: 60px auto;
+  margin: 30px auto;
   width: fit-content;
   border: 2px solid #D69958;
 }
@@ -92,7 +93,7 @@ body {
   display: flex;
   justify-content: center;
   gap: 50px;
-  margin-top: 4px;
+  margin-top: 20px;
 }
 
 .passeador {

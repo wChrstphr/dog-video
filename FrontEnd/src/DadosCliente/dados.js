@@ -1,7 +1,7 @@
 import "./dados.css";
 import { useNavigate } from "react-router-dom";
 
-function Dados() {
+function Dados({ onLogout }) {
   const navigate = useNavigate();
 
   return (
@@ -25,12 +25,12 @@ function Dados() {
           alt="Ícone de logout"
           className="user-icon"
           onClick={() => {
-            navigate('/');
+            onLogout(); // Chama a função de logout
+            navigate('/'); // Redireciona para a página de login
           }}
         />
-     <div className="footer-bar"></div> {/* Barrinha inferior */}
+        <div className="footer-bar"></div> {/* Barrinha inferior */}
       </header>
- 
 
       <main className="Main-content">
         <h1>Nome Completo</h1>
