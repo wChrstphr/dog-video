@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Web from './TelaInicial/Web';
 import Login from './Login/login';
+import DadosCliente from './DadosCliente/dados';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -14,9 +16,24 @@ function App() {
     setIsLoggedIn(true);
   };
 
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+  };
+
   return (
     <React.StrictMode>
-      {isLoggedIn ? <Web /> : <Login onLogin={handleLogin} />}
+      <Router>
+        <Routes>
+          <Route 
+            path="/" 
+            element={isLoggedIn ? <Web onLogout={handleLogout} /> : <Login onLogin={handleLogin} />} 
+          />
+          <Route 
+            path="/dados-cliente" 
+            element={<DadosCliente onLogout={handleLogout} />} 
+          />
+        </Routes>
+      </Router>
     </React.StrictMode>
   );
 }

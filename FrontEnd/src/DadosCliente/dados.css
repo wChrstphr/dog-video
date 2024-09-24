@@ -1,0 +1,102 @@
+body {
+    background-color: #2e55ff;
+    padding: 0;
+    margin: 0;
+}
+
+.Web {
+    text-align: center;
+    background-color: #2e55ff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.Web-logo {
+    height: 40vmin;
+    pointer-events: none;
+}
+
+.Web-header {
+    background-color: #0024bd;
+    height: 90px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+}
+
+.footer-bar {
+    background-color: #D69958;
+    height: 5px;
+    position: fixed;
+    margin-top: 90px;
+    left: 0; /* Começa na extremidade esquerda */
+    right: 0; /* Termina na extremidade direita */
+    width: 100%; /* Garante que ocupe 100% da largura */
+  }
+
+.back-icon {
+    height: 30px;
+    cursor: pointer;
+}
+
+.Main-content {
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+.Dados-grid {
+    display: flex;
+    justify-content: space-evenly;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
+.Card {
+    background-color: #d08b56;
+    border-radius: 10px;
+    padding: 20px;
+    width: 200px;
+    text-align: center;
+    word-wrap: break-word;
+    box-sizing: border-box;
+}
+
+.Card-header-bg {
+    background-color: #e9be91;
+    padding: 5px;
+    border-radius: 10px;
+}
+
+.Card-header {
+    font-size: 18px;
+    font-weight: bold;
+    color: black;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.Card-content {
+    font-size: 16px;
+    margin-top: 20px;
+    font-weight: bold;
+    overflow-wrap: break-word;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+li {
+    margin-bottom: 5px;
+}
+
+.user-icon {
+    height: 40px;
+    cursor: pointer;
+}
