@@ -6,8 +6,12 @@ import Web from './TelaInicial/Web';
 import Login from './Login/login';
 import DadosCliente from './DadosCliente/dados';
 import reportWebVitals from './reportWebVitals';
+import Modal from 'react-modal';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+
+Modal.setAppElement('#root'); // Substitua '#root' pelo ID do seu elemento raiz, se necessário
+
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);

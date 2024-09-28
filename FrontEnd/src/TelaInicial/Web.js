@@ -1,8 +1,9 @@
 import './Web.css';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Modal from "react-modal";
 
-function Web() {
+function Web({onLogout}) {
   const navigate = useNavigate(); // Hook do React Router para navegar
   const [passeadores, setPasseadores] = useState([
     { id: 1, nome: 'Passeador 1', imagem: '/passeador1.jpeg', existe: false },
@@ -11,6 +12,16 @@ function Web() {
     { id: 4, nome: 'Passeador 4', imagem: '/passeador4.jpeg', existe: false },
   ]);
 
+  const [isModalVisible, setIsModalVisible] = useState(false);
+
+  const showModal = () => setIsModalVisible(true);
+  const hideModal = () => setIsModalVisible(false);
+  const handleLogout = () => {
+    onLogout(); // Chama a função de logout
+    hideModal(); // Esconde o modal
+    navigate("/"); // Redireciona para a página de login
+  };
+  
   useEffect(() => {
     // Verifica se as imagens dos passeadores existem
     passeadores.forEach((passeador, index) => {
@@ -47,7 +58,34 @@ function Web() {
           <img src="/user.svg" alt="Ícone do Usuário" className="user-icon" />
           Dados do Cliente
         </div>
+        <Modal
+          isOpen={isModalVisible}
+          onRequestClose={hideModal}
+          className="modal-container"
+          overlayClassName="modal-overlay"
+          ariaHideApp={false}
+        >
+          <div className="modal-content">
+            <h2 className="modal-title">Deseja mesmo sair do site?</h2>
+            <div className="modal-buttons">
+              <button className="modal-button no-button" onClick={hideModal}>
+                Não
+              </button>
+              <button className="modal-button yes-button" onClick={handleLogout}>
+                Sim
+              </button>
+            </div>
+          </div>
+        </Modal>
+
+        <img
+          src="/logout.svg"
+          alt="Ícone de logout"
+          className="user-icon"
+          onClick={showModal} // Exibe o modal ao clicar
+        />
       </header>
+
       <div className="footer-bar"></div> {/* Barrinha inferior */}
 
       <div className="rectangle">PASSEADORES</div>

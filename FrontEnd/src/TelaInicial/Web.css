@@ -66,17 +66,18 @@ body {
 }
 
 .rectangle {
-  background-color: #0024BD;
-  color: white;
-  font-size: 35px;
-  font-weight: bold;
-  font-family: 'Manrope', sans-serif;
-  padding: 10px 20px;
-  border-radius: 8px;
-  margin: 30px auto;
-  width: fit-content;
-  border: 2px solid #D69958;
+  background-color: #0024BD; /* Cor de fundo azul para todo o botão */
+  color: white; /* Cor do texto */
+  font-size: 35px; /* Tamanho da fonte */
+  font-weight: bold; /* Peso da fonte */
+  font-family: 'Manrope', sans-serif; /* Fonte */
+  padding: 10px 40px; /* Espaçamento interno maior para compensar bordas */
+  border-radius: 20px; /* Borda arredondada */
+  margin: 30px auto; /* Centraliza o elemento */
+  width: fit-content; /* Ajuste do tamanho */
+  box-shadow: 0 0 0 8px #D69958; /* Criação da borda externa com box-shadow */
 }
+
 
 .Web-logotipo {
   height: 200px;
