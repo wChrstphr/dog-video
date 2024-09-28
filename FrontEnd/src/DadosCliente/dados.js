@@ -54,7 +54,7 @@ function Dados({ onLogout }) {
           src="/logout.svg"
           alt="Ícone de logout"
           className="user-icon"
-          onClick={showModal} // Exibe o modal ao clicar
+          onClick={showModal}
         />
         <div className="footer-bar"></div>
       </header>
@@ -72,6 +72,7 @@ function Dados({ onLogout }) {
               <ul>
                 <li>Cachorro1</li>
                 <li>Cachorro2</li>
+                <li>Cachorro3</li>
               </ul>
             </div>
           </div>
@@ -106,15 +107,16 @@ function Dados({ onLogout }) {
               <ul>
                 <li>cliente@gmail.com</li>
                 <li>CPF: 000.000.000-00</li>
+                <li>(61) 9999-99999</li>
               </ul>
             </div>
           </div>
 
           <div className="Card">
             <div className="Card-header-bg">
-              <div className="Card-header">Contato</div>
+              <div className="Card-header">Passeador</div>
             </div>
-            <div className="Card-content">(61) 9999-99999</div>
+            <div className="Card-content">Passeador 1</div>
           </div>
 
           <div className="Card">
