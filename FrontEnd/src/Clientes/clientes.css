@@ -82,6 +82,7 @@ body {
     font-size: 25px;
     width: 80%;
     margin: 0 auto;
+    cursor: pointer;
 }
 
 .client-item span {
@@ -125,3 +126,55 @@ body {
     top: 20%;
     transform: translateY(-50%);
 }
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.75);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .modal-container {
+    background: #0024bd;
+    border-radius: 10px;
+    padding: 20px;
+    width: 300px;
+    max-width: 90%;
+    text-align: center;
+  }
+  
+  .modal-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: white;
+  }
+  
+  .modal-buttons {
+    display: flex;
+    justify-content: space-around;
+  }
+  
+  .modal-button {
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    margin: 0 10px;
+  }
+  
+  .no-button {
+    background-color: #838383;
+    color: white;
+  }
+  
+  .yes-button {
+    background-color: #d08b56;
+    color: white;
+  }
+  

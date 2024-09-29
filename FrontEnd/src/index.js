@@ -11,6 +11,7 @@ import Modal from 'react-modal';
 import Clientes from './Clientes/clientes';
 import Passeadores from './Passeadores/passeadores';
 import CriarCliente from './CriarCliente/criarcliente';
+import VisualizarCliente from './VisualizarCliente/visualizarcliente';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
@@ -53,6 +54,7 @@ function App() {
           <Route path="/clientes" element={<Clientes />} />
           <Route path="/passeadores" element={<Passeadores />} />
           <Route path="/criarcliente" element={<CriarCliente />} />
+          <Route path="/visualizarcliente" element={<VisualizarCliente />} />
         </Routes>
       </Router>
     </React.StrictMode>
