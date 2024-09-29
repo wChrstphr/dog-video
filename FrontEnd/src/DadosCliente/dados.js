@@ -114,7 +114,7 @@ function Dados({ onLogout }) {
 
           <div className="Card">
             <div className="Card-header-bg">
-              <div className="Card-header">Passeador</div>
+              <div className="Card-header">Passeador Responsável</div>
             </div>
             <div className="Card-content">Passeador 1</div>
           </div>
