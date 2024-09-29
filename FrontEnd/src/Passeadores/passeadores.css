@@ -62,7 +62,7 @@ body {
 
 
 
-.client-list {
+.passeador-list {
     margin: 20px auto;
     display: flex;
     flex-direction: column;
@@ -71,7 +71,7 @@ body {
     margin-left: 120px;
 }
 
-.client-item {
+.passeador-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -84,7 +84,7 @@ body {
     margin: 0 auto;
 }
 
-.client-item span {
+.passeador-item span {
     padding-left: 40px;
 }
 

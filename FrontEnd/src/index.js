@@ -9,6 +9,7 @@ import Admin from './TelaInicialAdmin/admin';
 import reportWebVitals from './reportWebVitals';
 import Modal from 'react-modal';
 import Clientes from './Clientes/clientes';
+import Passeadores from './Passeadores/passeadores';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
@@ -49,6 +50,7 @@ function App() {
           <Route path="/dados-cliente" element={<DadosCliente onLogout={handleLogout} />} />
           <Route path="/admin" element={<Admin onLogout={handleLogout} />} />
           <Route path="/clientes" element={<Clientes />} />
+          <Route path="/passeadores" element={<Passeadores />} />
         </Routes>
       </Router>
     </React.StrictMode>

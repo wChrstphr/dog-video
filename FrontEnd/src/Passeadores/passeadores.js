@@ -1,8 +1,8 @@
-import './clientes.css';
+import './passeadores.css';
 import React from 'react';
 import { useNavigate } from "react-router-dom";
 
-function Clientes() {
+function Passeadores() {
 
   const navigate = useNavigate();
   
@@ -33,10 +33,10 @@ function Clientes() {
               onClick={() => navigate("/")}
             />
 
-            <div className="client-list">
-                {['cliente numero 1', 'cliente numero 2', 'cliente numero 3', 'cliente numero 4', 'cliente numero 6', 'cliente numero 7', 'cliente numero 8', 'cliente numero 9', 'cliente numero 10'].map((cliente, index) => (
-                    <div className="client-item" key={index}>
-                        <span>{cliente}</span>
+            <div className="passeador-list">
+                {['passeador numero 1', 'passeador numero 2', 'passeador numero 3', 'passeador numero 4', 'passeador numero 6', 'passeador numero 7', 'passeador numero 8', 'passeador numero 9', 'passeador numero 10'].map((passeador, index) => (
+                    <div className="passeador-item" key={index}>
+                        <span>{passeador}</span>
                         <button className="delete-button">
                             <img src="/trash.svg" alt="Deletar" />
                         </button>
@@ -47,4 +47,4 @@ function Clientes() {
     );
 }
 
-export default Clientes;
+export default Passeadores;
