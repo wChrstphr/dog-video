@@ -30,7 +30,7 @@ function Clientes() {
               src="/Back.svg"
               alt="Ícone de voltar"
               className="back-icon"
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/admin")}
             />
 
             <div className="client-list">

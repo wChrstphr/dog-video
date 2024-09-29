@@ -1,7 +1,7 @@
 import './criarcliente.css';
 import React, { useRef } from 'react';
 import { useNavigate } from "react-router-dom";
-import { FaUser, FaEnvelope, FaAddressCard, FaDog, FaPhone, FaHome, FaCalendarAlt, FaClock } from "react-icons/fa";
+import { FaUser, FaEnvelope, FaAddressCard, FaDog, FaPhone, FaHome, FaCalendarAlt, FaClock, FaBook } from "react-icons/fa";
 
 function CriarCliente() {
 
@@ -16,7 +16,8 @@ function CriarCliente() {
   const enderecoRef = useRef(null);
   const pacoteRef = useRef(null);
   const horarioRef = useRef(null);
-  const createButtonRef = useRef(null); // Referência para o botão "Criar"
+  const createButtonRef = useRef(null);
+  const anotacaoRef = useRef(null);
 
   // Função para gerenciar a troca de foco
   const handleKeyDown = (e, nextRef) => {
@@ -122,9 +123,18 @@ function CriarCliente() {
               type="text"
               placeholder="Horário de passeio"
               className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, 'create-button')}
+              onKeyDown={(e) => handleKeyDown(e, anotacaoRef)}
             />
           </div>
+          <div className="input-container">
+            <FaBook className="input-icon" />
+            <textarea
+                ref={anotacaoRef}
+                placeholder="Anotações"
+                className="form-textarea"
+            />
+          </div>
+
 
           {/* Botões */}
           <div className="button-group">
@@ -136,9 +146,10 @@ function CriarCliente() {
               Cancelar
             </button>
             <button
-              ref={createButtonRef} // Adicionando a referência para o botão "Criar"
+              ref={createButtonRef}
               type="submit"
               className="create-button"
+              onClick={() => navigate("/clientes")}
             >
               Criar
             </button>
