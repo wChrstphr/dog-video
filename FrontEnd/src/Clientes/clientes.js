@@ -17,8 +17,8 @@ function Clientes() {
               <div className="icon-container">
                   <img src="/search.svg" alt="Ícone de busca" className="icon"/>
               </div>
-              <div className="icon-container">
-                  <img src="/add.svg" alt="Ícone de adicionar" className="icon"/>
+              <div className="icon-container" onClick={() => navigate('/criarcliente')}>
+                    <img src="/add.svg" alt="Ícone de adicionar" className="icon"/>
               </div>
               <div className="icon-container">
                   <img src="/filter.svg" alt="Ícone de filtro" className="icon"/>
