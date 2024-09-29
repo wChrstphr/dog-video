@@ -1,0 +1,112 @@
+body {
+    background-color: #2E55FF;
+    margin: 0;
+    padding: 0;
+}
+
+.Web {
+    text-align: center;
+    background-color: #2E55FF;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.Web-header {
+    background-color: #0024BD;
+    height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+}
+
+.Web-logotipo {
+    height: 200px;
+    margin-left: 20px;
+  }
+
+.back-button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.header-icons {
+    display: flex;
+    gap: 45px;
+    margin-top: 25px;
+    justify-content: flex-end;
+    margin-right: 40px;
+}
+
+.icon-container {
+    background-color: #D69958;
+    padding: 10px;
+    border-radius: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+}
+
+.icon {
+    width: 40px;
+    height: 40px;
+}
+
+
+
+.client-list {
+    margin: 20px auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 600px;
+}
+
+.client-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #001B7A;
+    border-radius: 15px;
+    padding: 15px;
+    color: white;
+    font-size: 18px;
+}
+
+.delete-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.delete-button img {
+    width: 24px;
+    height: 24px;
+}
+
+.footer-bar {
+    background-color: #D69958;
+    height: 5px;
+    width: 100%;
+    margin-top: 90px;
+    position: absolute;
+}
+
+.back-icon {
+    background: none;
+    border: none;
+    color: white;
+    height: 50px;
+    cursor: pointer;
+    position: absolute;
+    left: 20px;
+    top: 20%;
+    transform: translateY(-50%);
+}

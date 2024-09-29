@@ -29,7 +29,7 @@ body {
 .footer-bar {
     background-color: #D69958;
     height: 5px;
-    position: fixed;
+    position: absolute;
     margin-top: 90px;
     left: 0; /* Começa na extremidade esquerda */
     right: 0; /* Termina na extremidade direita */

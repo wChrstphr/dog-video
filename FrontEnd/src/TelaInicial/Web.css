@@ -46,7 +46,7 @@ body {
 .footer-bar {
   background-color: #D69958;
   height: 5px;
-  position: fixed;
+  position: absolute;
   margin-top: 90px;
   width: 100%;
 }

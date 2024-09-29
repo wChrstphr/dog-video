@@ -1,4 +1,3 @@
-// src/index.js
 import React, { useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
@@ -9,6 +8,7 @@ import DadosCliente from './DadosCliente/dados';
 import Admin from './TelaInicialAdmin/admin';
 import reportWebVitals from './reportWebVitals';
 import Modal from 'react-modal';
+import Clientes from './Clientes/clientes';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
@@ -16,11 +16,11 @@ Modal.setAppElement(root);
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userRole, setUserRole] = useState(''); // Novo estado para armazenar o tipo de usuário
+  const [userRole, setUserRole] = useState('');
 
   const handleLogin = (role) => {
     setIsLoggedIn(true);
-    setUserRole(role); // Define o tipo de usuário
+    setUserRole(role);
   };
 
   const handleLogout = () => {
@@ -47,7 +47,8 @@ function App() {
             }
           />
           <Route path="/dados-cliente" element={<DadosCliente onLogout={handleLogout} />} />
-          <Route path="/admin" element={<Admin onLogout={handleLogout} />} /> {/* Rota para a tela Admin */}
+          <Route path="/admin" element={<Admin onLogout={handleLogout} />} />
+          <Route path="/clientes" element={<Clientes />} />
         </Routes>
       </Router>
     </React.StrictMode>
