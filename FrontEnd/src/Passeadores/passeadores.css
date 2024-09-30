@@ -82,6 +82,7 @@ body {
     font-size: 25px;
     width: 80%;
     margin: 0 auto;
+    cursor: pointer;
 }
 
 .passeador-item span {

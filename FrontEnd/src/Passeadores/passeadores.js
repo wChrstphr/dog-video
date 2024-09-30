@@ -48,6 +48,11 @@ function Passeadores() {
     setIsFilterMenuVisible(false); // Fechar o menu após selecionar uma opção
   };
 
+  // Função para navegar para a tela de visualização de passeador
+  const handlePasseadorClick = (passeador) => {
+    navigate(`/visualizarpasseador`); // Redireciona para a página de visualização
+  };
+
   // Função de exclusão
   const handleDelete = () => {
     console.log("Passeador excluído:", selectedPasseador);
@@ -139,7 +144,7 @@ function Passeadores() {
       <div className="passeador-list">
         {passeadoresFiltrados.map((passeador, index) => (
           <div className="passeador-item" key={index}>
-            <span>{passeador}</span>
+            <span onClick={() => handlePasseadorClick(passeador)}>{passeador}</span> {/* Adicionado o onClick */}
             <button className="delete-button" onClick={() => showModal(passeador)}>
               <img src="/trash.svg" alt="Deletar" />
             </button>

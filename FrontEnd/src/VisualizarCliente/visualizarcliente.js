@@ -66,7 +66,7 @@ function VisualizarCliente() {
             <button
               type="button"
               className="edit-button"
-              onClick={() => navigate("/editar-cliente")}
+              onClick={() => navigate("/editarcliente")}
             >
               Editar
             </button>
