@@ -13,7 +13,8 @@ import Passeadores from './Passeadores/passeadores';
 import CriarCliente from './CriarCliente/criarcliente';
 import VisualizarCliente from './VisualizarCliente/visualizarcliente';
 import CriarPasseador from './CriarPasseador/criarpasseador';
-import EditarCliente from './EditarCliente/editarcliente'
+import EditarCliente from './EditarCliente/editarcliente';
+import Cameras from './Cameras/cameras';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
@@ -59,6 +60,8 @@ function App() {
           <Route path="/visualizarcliente" element={<VisualizarCliente />} />
           <Route path="/criarpasseador" element={<CriarPasseador />} />
           <Route path="/editarcliente" element={<EditarCliente />} />
+          <Route path="/cameras" element={<Cameras onLogout={handleLogout} />} />
+          <Route path="/Web" element={<Web onLogout={handleLogout} />} />
         </Routes>
       </Router>
     </React.StrictMode>

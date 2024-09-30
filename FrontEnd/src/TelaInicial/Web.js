@@ -40,10 +40,10 @@ function Web({onLogout}) {
     });
   }, [passeadores]);
 
-  const handlePasseadorClick = (id) => {
-    // Redireciona para a página do passeador com base no id
-    window.location.href = `/passeador/${id}`;
-  };
+  // const handlePasseadorClick = (id) => {
+  //   // Redireciona para a página do passeador com base no id
+  //   window.location.href = `/passeador/${id}`;
+  // };
 
   const handleDadosClienteClick = () => {
     // Redireciona para a página de dados do cliente
@@ -98,7 +98,7 @@ function Web({onLogout}) {
       <div className="passeadores">
         {passeadores.map((passeador) =>
           passeador.existe ? (
-            <div className="passeador" key={passeador.id} onClick={() => handlePasseadorClick(passeador.id)}>
+            <div className="passeador" key={passeador.id} onClick={() => navigate('/cameras')}>
               <img src={passeador.imagem} alt={passeador.nome} className="passeador-foto" />
               <p className="passeador-nome">{passeador.nome}</p>
             </div>
