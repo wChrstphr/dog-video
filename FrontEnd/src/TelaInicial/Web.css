@@ -46,7 +46,7 @@ body {
 .footer-bar {
   background-color: #D69958;
   height: 5px;
-  position: fixed;
+  position: absolute;
   margin-top: 90px;
   width: 100%;
 }
@@ -66,17 +66,18 @@ body {
 }
 
 .rectangle {
-  background-color: #0024BD;
-  color: white;
-  font-size: 35px;
-  font-weight: bold;
-  font-family: 'Manrope', sans-serif;
-  padding: 10px 20px;
-  border-radius: 8px;
-  margin: 30px auto;
-  width: fit-content;
-  border: 2px solid #D69958;
+  background-color: #0024BD; /* Cor de fundo azul para todo o botão */
+  color: white; /* Cor do texto */
+  font-size: 35px; /* Tamanho da fonte */
+  font-weight: bold; /* Peso da fonte */
+  font-family: 'Manrope', sans-serif; /* Fonte */
+  padding: 10px 40px; /* Espaçamento interno maior para compensar bordas */
+  border-radius: 20px; /* Borda arredondada */
+  margin: 30px auto; /* Centraliza o elemento */
+  width: fit-content; /* Ajuste do tamanho */
+  box-shadow: 0 0 0 8px #D69958; /* Criação da borda externa com box-shadow */
 }
+
 
 .Web-logotipo {
   height: 200px;
@@ -93,7 +94,7 @@ body {
   display: flex;
   justify-content: center;
   gap: 50px;
-  margin-top: 20px;
+  margin-top: 10px;
 }
 
 .passeador {
@@ -115,3 +116,31 @@ body {
   font-weight: bold;
   color: white;
 }
+
+.passeador-titulo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 10px 0; /* Reduzido de 20px para 10px para aproximar o título da seção de passeadores */
+  position: relative;
+  max-width: 100%; /* Garante que a largura da imagem se ajuste ao tamanho do container */
+}
+
+
+.passeador-titulo img {
+  width: 500px; /* Define um tamanho adequado para o SVG */
+  height: auto; /* Mantém a proporção da imagem */
+}
+
+.passeador-texto {
+  font-family: 'Manrope', sans-serif;
+  font-size: 30px; /* Ajusta o tamanho da fonte */
+  font-weight: bold;
+  color: white;
+  position: absolute; /* Posiciona o texto sobre a imagem */
+  top: 20%; /* Centraliza verticalmente */
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+

@@ -6,7 +6,7 @@
     height: 100vh;
   }
   .logo {
-    max-width: 400px; 
+    max-width: 350px; 
     margin-top: 0px;
   }
 
@@ -40,7 +40,6 @@
     font-size: 25px;
     color: #fff;
     cursor: pointer; 
-    /*transition: background-color 0.2s ease, transform 0.2s ease;*/
   }
   button:active {
     background-color: #fff;
@@ -49,11 +48,20 @@
   }
 
   .Login label {
-    width: 24%;
-    margin-top: 10px;
+    width: 450px;
+    margin-top: 5px;
     text-align: left;
     font-family: 'Manrope', sans-serif;
     font-weight: normal;
     font-size: 25px;
     color: #fff;
   }
+
+  .error {
+    margin-top: 10px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 18px;
+    color: red; /* Define a cor do texto como vermelho */
+  }
+  
+  
