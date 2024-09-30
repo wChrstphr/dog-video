@@ -96,6 +96,9 @@ function Passeadores() {
         <div className="icon-container" onClick={toggleSearch}>
           <img src="/search.svg" alt="Ícone de busca" className="icon" />
         </div>
+        <div className="icon-container" onClick={() => navigate('/criarpasseador')}>
+          <img src="/add.svg" alt="Ícone de adicionar" className="icon" />
+        </div>
         <div className="icon-container" onClick={toggleFilterMenu}>
           <img src="/filter.svg" alt="Ícone de filtro" className="icon" />
         </div>

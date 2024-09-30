@@ -12,6 +12,7 @@ import Clientes from './Clientes/clientes';
 import Passeadores from './Passeadores/passeadores';
 import CriarCliente from './CriarCliente/criarcliente';
 import VisualizarCliente from './VisualizarCliente/visualizarcliente';
+import CriarPasseador from './CriarPasseador/criarpasseador';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
@@ -55,6 +56,7 @@ function App() {
           <Route path="/passeadores" element={<Passeadores />} />
           <Route path="/criarcliente" element={<CriarCliente />} />
           <Route path="/visualizarcliente" element={<VisualizarCliente />} />
+          <Route path="/criarpasseador" element={<CriarPasseador />} />
         </Routes>
       </Router>
     </React.StrictMode>
