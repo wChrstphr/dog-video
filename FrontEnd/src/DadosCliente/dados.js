@@ -101,7 +101,7 @@ function Dados({ onLogout }) {
         <div className="Dados-grid">
           <div className="Card">
             <div className="Card-header-bg">
-              <div className="Card-header">Dados Pessoais</div>
+              <div className="Card-header">PESSOAL</div>
             </div>
             <div className="Card-content">
               <ul>
@@ -114,14 +114,14 @@ function Dados({ onLogout }) {
 
           <div className="Card">
             <div className="Card-header-bg">
-              <div className="Card-header">Passeador Responsável</div>
+              <div className="Card-header">PASSEADOR</div>
             </div>
             <div className="Card-content">Passeador 1</div>
           </div>
 
           <div className="Card">
             <div className="Card-header-bg">
-              <div className="Card-header">Endereço</div>
+              <div className="Card-header">ENDEREÇO</div>
             </div>
             <div className="Card-content">
               Rua das Laranjaeiras apt. 1003 Torre 07 Residencial DogVideo

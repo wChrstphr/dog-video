@@ -88,7 +88,11 @@ function Web({onLogout}) {
 
       <div className="footer-bar"></div> {/* Barrinha inferior */}
 
-      <div className="rectangle">PASSEADORES</div>
+      <div className="passeador-titulo">
+        <img src="/passeadores.svg" alt="Passeadores título" />
+      <p className="passeador-texto">PASSEADORES</p>
+      </div>
+
 
       {/* Seção dos Passeadores */}
       <div className="passeadores">

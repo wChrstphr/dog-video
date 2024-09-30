@@ -94,7 +94,7 @@ body {
   display: flex;
   justify-content: center;
   gap: 50px;
-  margin-top: 20px;
+  margin-top: 10px;
 }
 
 .passeador {
@@ -116,3 +116,31 @@ body {
   font-weight: bold;
   color: white;
 }
+
+.passeador-titulo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 10px 0; /* Reduzido de 20px para 10px para aproximar o título da seção de passeadores */
+  position: relative;
+  max-width: 100%; /* Garante que a largura da imagem se ajuste ao tamanho do container */
+}
+
+
+.passeador-titulo img {
+  width: 500px; /* Define um tamanho adequado para o SVG */
+  height: auto; /* Mantém a proporção da imagem */
+}
+
+.passeador-texto {
+  font-family: 'Manrope', sans-serif;
+  font-size: 30px; /* Ajusta o tamanho da fonte */
+  font-weight: bold;
+  color: white;
+  position: absolute; /* Posiciona o texto sobre a imagem */
+  top: 20%; /* Centraliza verticalmente */
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
