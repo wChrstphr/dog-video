@@ -14,6 +14,12 @@ function Clientes() {
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [busca, setBusca] = useState('');
 
+  // Estado para controlar a direção da ordenação (A-Z ou Z-A)
+  const [sortDirection, setSortDirection] = useState('asc');
+
+  // Estado para controlar a visibilidade do menu de filtro
+  const [isFilterMenuVisible, setIsFilterMenuVisible] = useState(false);
+
   // Função para exibir o modal de confirmação
   const showModal = (cliente) => {
     setSelectedCliente(cliente);
@@ -29,6 +35,17 @@ function Clientes() {
   // Função para alternar a visibilidade do campo de pesquisa
   const toggleSearch = () => {
     setIsSearchVisible(!isSearchVisible);
+  };
+
+  // Função para alternar a visibilidade do menu de filtro
+  const toggleFilterMenu = () => {
+    setIsFilterMenuVisible(!isFilterMenuVisible);
+  };
+
+  // Função para definir a direção da ordenação
+  const handleSort = (direction) => {
+    setSortDirection(direction);
+    setIsFilterMenuVisible(false); // Fechar o menu após selecionar uma opção
   };
 
   // Função para navegar para a tela de visualização de cliente
@@ -53,12 +70,23 @@ function Clientes() {
       'Benicio',
       'Pablo',
     ];
-  
+
     const lowerBusca = busca.toLowerCase();
-    return clientes.filter((cliente) =>
+    
+    // Filtrar clientes com base na busca
+    const filteredClientes = clientes.filter((cliente) =>
       cliente.toLowerCase().includes(lowerBusca)
     );
-  }, [busca]);
+
+    // Ordenar clientes com base na direção da ordenação
+    return filteredClientes.sort((a, b) => {
+      if (sortDirection === 'asc') {
+        return a.localeCompare(b); // Ordem A-Z
+      } else {
+        return b.localeCompare(a); // Ordem Z-A
+      }
+    });
+  }, [busca, sortDirection]);
 
   return (
     <div className="Web">
@@ -74,7 +102,7 @@ function Clientes() {
         <div className="icon-container" onClick={() => navigate('/criarcliente')}>
           <img src="/add.svg" alt="Ícone de adicionar" className="icon" />
         </div>
-        <div className="icon-container">
+        <div className="icon-container" onClick={toggleFilterMenu}>
           <img src="/filter.svg" alt="Ícone de filtro" className="icon" />
         </div>
       </div>
@@ -89,6 +117,18 @@ function Clientes() {
             placeholder="Pesquisar cliente"
             className="search-input"
           />
+        </div>
+      )}
+
+      {/* Menu de filtro que aparece quando o ícone de filtro é clicado */}
+      {isFilterMenuVisible && (
+        <div className="filter-menu">
+          <button onClick={() => handleSort('asc')} className="filter-button">
+            Ordenar A-Z
+          </button>
+          <button onClick={() => handleSort('desc')} className="filter-button">
+            Ordenar Z-A
+          </button>
         </div>
       )}
 
