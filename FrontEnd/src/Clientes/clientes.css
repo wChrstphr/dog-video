@@ -178,3 +178,16 @@ body {
     color: white;
   }
   
+  .search-bar {
+    margin: 20px auto;
+    width: 70%;
+  }
+  
+  .search-input {
+    width: 100%;
+    padding: 10px;
+    font-size: 18px;
+    border-radius: 5px;
+    border: 1px solid #0024bd;
+  }
+  

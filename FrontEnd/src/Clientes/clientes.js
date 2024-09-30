@@ -1,5 +1,5 @@
 import './clientes.css';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import Modal from 'react-modal'; // Certifique-se de que o pacote 'react-modal' esteja instalado.
 
@@ -9,6 +9,10 @@ function Clientes() {
   // Estado para controlar a visibilidade do modal
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedCliente, setSelectedCliente] = useState(null);
+
+  // Estado para controlar a visibilidade do campo de busca
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const [busca, setBusca] = useState('');
 
   // Função para exibir o modal de confirmação
   const showModal = (cliente) => {
@@ -22,16 +26,39 @@ function Clientes() {
     setSelectedCliente(null);
   };
 
+  // Função para alternar a visibilidade do campo de pesquisa
+  const toggleSearch = () => {
+    setIsSearchVisible(!isSearchVisible);
+  };
+
   // Função para navegar para a tela de visualização de cliente
   const handleClientClick = (cliente) => {
     navigate(`/visualizarcliente`);
   };
 
-  // Função de logout (pode ser substituída pela função de exclusão real)
+  // Função de exclusão
   const handleDelete = () => {
     console.log("Cliente excluído:", selectedCliente);
     hideModal();
   };
+
+  const clientesFiltrados = useMemo(() => {
+    const clientes = [
+      'Lucas',
+      'Pedro',
+      'Paulo',
+      'Matheus',
+      'Gabriel',
+      'Marcos',
+      'Benicio',
+      'Pablo',
+    ];
+  
+    const lowerBusca = busca.toLowerCase();
+    return clientes.filter((cliente) =>
+      cliente.toLowerCase().includes(lowerBusca)
+    );
+  }, [busca]);
 
   return (
     <div className="Web">
@@ -41,7 +68,7 @@ function Clientes() {
       </header>
 
       <div className="header-icons">
-        <div className="icon-container">
+        <div className="icon-container" onClick={toggleSearch}>
           <img src="/search.svg" alt="Ícone de busca" className="icon" />
         </div>
         <div className="icon-container" onClick={() => navigate('/criarcliente')}>
@@ -52,6 +79,19 @@ function Clientes() {
         </div>
       </div>
 
+      {/* Campo de busca que aparece quando o ícone de busca é clicado */}
+      {isSearchVisible && (
+        <div className="search-bar">
+          <input
+            type="text"
+            value={busca}
+            onChange={(ev) => setBusca(ev.target.value)}
+            placeholder="Pesquisar cliente"
+            className="search-input"
+          />
+        </div>
+      )}
+
       <img
         src="/Back.svg"
         alt="Ícone de voltar"
@@ -60,7 +100,7 @@ function Clientes() {
       />
 
       <div className="client-list">
-        {['cliente numero 1', 'cliente numero 2', 'cliente numero 3', 'cliente numero 4', 'cliente numero 6', 'cliente numero 7', 'cliente numero 8', 'cliente numero 9', 'cliente numero 10'].map((cliente, index) => (
+        {clientesFiltrados.map((cliente, index) => (
           <div className="client-item" key={index}>
             <span onClick={() => handleClientClick(cliente)}>{cliente}</span>
             <button className="delete-button" onClick={() => showModal(cliente)}>
