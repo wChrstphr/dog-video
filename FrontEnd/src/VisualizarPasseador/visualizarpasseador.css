@@ -1,0 +1,210 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+body {
+    background-color: #2E55FF;
+    margin: 0;
+    padding: 0;
+    font-family: 'Manrope', sans-serif;
+}
+
+.Web {
+    text-align: center;
+    background-color: #2E55FF;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.Web-header {
+    background-color: #0024BD;
+    height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+}
+
+.Web-logotipo {
+    height: 200px;
+    margin-left: 20px;
+}
+
+.footer-bar {
+    background-color: #D69958;
+    height: 5px;
+    width: 100%;
+    margin-top: 90px;
+    position: absolute;
+}
+
+.back-button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.form-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    margin-top: 50px;
+    border-radius: 10px;
+}
+
+.passeador-form {
+    display: flex;
+    flex-direction: column;
+    width: 40%;
+    padding: 0;
+    border: none;
+    box-shadow: none;
+    background-color: transparent;
+}
+
+.input-container {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+    position: relative;
+    width: 100%;
+}
+
+.input-icon {
+    position: absolute;
+    left: 15px;
+    color: #000000;
+    font-size: 20px;
+}
+
+.form-input {
+    margin: 0;
+    padding: 15px 15px 15px 50px;
+    border: 1px solid transparent;
+    border-radius: 20px;
+    font-size: 16px;
+    background-color: white;
+    color: black;
+    font-weight: bold;
+    outline: none;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.15);
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    width: 100%;
+}
+
+.form-textarea {
+    margin: 0;
+    padding: 15px 15px 15px 50px;
+    border: 1px solid transparent;
+    border-radius: 20px;
+    font-size: 16px;
+    background-color: white;
+    color: black;
+    font-weight: bold;
+    outline: none;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.15);
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    width: 100%;
+    height: 100px;
+    resize: vertical;
+    line-height: 1.5;
+}
+
+
+.cancel-button, .create-button {
+    border: none;
+    color: rgb(0, 0, 0);
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    justify-content: space-between;
+    font-weight: 600;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.15);
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    margin-bottom: 20px;
+}
+
+.cancel-button {
+    background-color: #FF0000;
+    margin-right: 25px;
+}
+
+.create-button {
+    background-color: #4CBC2E;
+    margin-left: 25px;
+}
+
+.cancel-button:hover, .create-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.25);
+}
+
+.image-container {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .image-upload-label {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 200px;
+    height: 200px;
+    background-color: #d3d3d3;
+    border-radius: 10px;
+    cursor: pointer;
+    overflow: hidden;
+  }
+  
+  .placeholder-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+  }
+  
+  .camera-icon {
+    font-size: 50px;
+    color: #808080;
+  }
+  
+  .image-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .image-input {
+    display: none;
+  }
+  
+  .button-group {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.edit-button {
+    border: none;
+    color: rgb(0, 0, 0);
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    justify-content: space-between;
+    font-weight: 600;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.15);
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    margin-bottom: 20px;
+    background-color: #D69958;
+}
+
+.edit-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.25);
+}

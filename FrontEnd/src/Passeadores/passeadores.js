@@ -144,7 +144,7 @@ function Passeadores() {
       <div className="passeador-list">
         {passeadoresFiltrados.map((passeador, index) => (
           <div className="passeador-item" key={index}>
-            <span onClick={() => handlePasseadorClick(passeador)}>{passeador}</span> {/* Adicionado o onClick */}
+            <span onClick={() => handlePasseadorClick(passeador)}>{passeador}</span>
             <button className="delete-button" onClick={() => showModal(passeador)}>
               <img src="/trash.svg" alt="Deletar" />
             </button>

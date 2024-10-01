@@ -64,4 +64,16 @@
     color: red; /* Define a cor do texto como vermelho */
   }
   
+  .password-container {
+    display: flex;
+    align-items: center;
+    position: relative; /* Para posicionar o ícone dentro do campo */
+  }
+  
+  .password-toggle-icon {
+    position: absolute;
+    right: 30px; /* Distância do ícone do lado direito do campo */
+    cursor: pointer;
+    color: #fff; /* Cor do ícone */
+  }
   
