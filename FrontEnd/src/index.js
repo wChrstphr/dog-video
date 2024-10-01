@@ -15,6 +15,8 @@ import VisualizarCliente from './VisualizarCliente/visualizarcliente';
 import CriarPasseador from './CriarPasseador/criarpasseador';
 import EditarCliente from './EditarCliente/editarcliente';
 import Cameras from './Cameras/cameras';
+import VisualizarPasseador from './VisualizarPasseador/visualizarpasseador';
+import EditarPasseador from './EditarPasseador/editarpasseador';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
@@ -62,6 +64,8 @@ function App() {
           <Route path="/editarcliente" element={<EditarCliente />} />
           <Route path="/cameras" element={<Cameras onLogout={handleLogout} />} />
           <Route path="/Web" element={<Web onLogout={handleLogout} />} />
+          <Route path="/visualizarpasseador" element={<VisualizarPasseador />} />
+          <Route path="/editarpasseador" element={<EditarPasseador />} />
         </Routes>
       </Router>
     </React.StrictMode>

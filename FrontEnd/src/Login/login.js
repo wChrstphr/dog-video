@@ -1,5 +1,5 @@
-// src/Login/login.js
 import React, { useState, useRef } from 'react';
+import { FaEye, FaEyeSlash } from 'react-icons/fa'; // Importando os ícones
 import './login.css';
 
 function Login({ onLogin }) {
@@ -7,6 +7,7 @@ function Login({ onLogin }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false); // Novo estado para controlar a visualização da senha
 
   // Referência para o campo de senha
   const passwordInputRef = useRef(null);
@@ -48,6 +49,11 @@ function Login({ onLogin }) {
     }
   };
 
+  // Função para alternar a exibição da senha
+  const togglePasswordVisibility = () => {
+    setShowPassword((prevState) => !prevState);
+  };
+
   return (
     <div className="Login">
       <img src="/dog.png" alt="Logo" className="logo" />
@@ -57,17 +63,22 @@ function Login({ onLogin }) {
         placeholder="Insira o usuário"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
-        onKeyDown={(e) => handleKeyDown(e, 'username')} // Adiciona handleKeyDown com campo de 'username'
+        onKeyDown={(e) => handleKeyDown(e, 'username')}
       />
       <label htmlFor="password">Senha</label>
-      <input
-        type="password"
-        placeholder="Insira a senha"
-        value={password}
-        ref={passwordInputRef} // Referência ao campo de senha
-        onChange={(e) => setPassword(e.target.value)}
-        onKeyDown={(e) => handleKeyDown(e, 'password')} // Adiciona handleKeyDown com campo de 'password'
-      />
+      <div className="password-container">
+        <input
+          type={showPassword ? 'text' : 'password'} // Alterna entre 'text' e 'password'
+          placeholder="Insira a senha"
+          value={password}
+          ref={passwordInputRef}
+          onChange={(e) => setPassword(e.target.value)}
+          onKeyDown={(e) => handleKeyDown(e, 'password')}
+        />
+        <span className="password-toggle-icon" onClick={togglePasswordVisibility}>
+          {showPassword ? <FaEyeSlash /> : <FaEye />} {/* Alterna entre o ícone de olho */}
+        </span>
+      </div>
       {error && <p className="error">{error}</p>}
       <button onClick={handleLogin}>LOGAR</button>
     </div>
