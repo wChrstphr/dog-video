@@ -76,7 +76,7 @@ function Login({ onLogin }) {
           onKeyDown={(e) => handleKeyDown(e, 'password')}
         />
         <span className="password-toggle-icon" onClick={togglePasswordVisibility}>
-          {showPassword ? <FaEyeSlash /> : <FaEye />} {/* Alterna entre o ícone de olho */}
+          {showPassword ? <FaEye /> : <FaEyeSlash />}
         </span>
       </div>
       {error && <p className="error">{error}</p>}

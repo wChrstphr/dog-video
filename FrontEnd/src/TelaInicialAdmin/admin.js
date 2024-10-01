@@ -61,7 +61,7 @@ function Admin({ onLogout }) {
             <img src="/icon-passeadores.svg" alt="Passeadores Icone" className="icon" />
             <span>Passeadores</span>
           </button>
-          <button className="admin-option" onClick={() => navigate('/backups')}>
+          <button className="admin-option" onClick={() => navigate('')}>
             <img src="/icon-backups.svg" alt="Backups Icone" className="icon" />
             <span>Backups</span>
           </button>
