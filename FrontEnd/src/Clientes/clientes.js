@@ -1,7 +1,7 @@
 import './clientes.css';
-import React, { useMemo, useState } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { useNavigate } from "react-router-dom";
-import Modal from 'react-modal'; // Certifique-se de que o pacote 'react-modal' esteja instalado.
+import Modal from 'react-modal';
 
 function Clientes() {
   const navigate = useNavigate();
@@ -20,6 +20,9 @@ function Clientes() {
   // Estado para controlar a visibilidade do menu de filtro
   const [isFilterMenuVisible, setIsFilterMenuVisible] = useState(false);
 
+    // Referência para o campo de busca
+    const searchInputRef = useRef(null);
+
   // Função para exibir o modal de confirmação
   const showModal = (cliente) => {
     setSelectedCliente(cliente);
@@ -35,6 +38,11 @@ function Clientes() {
   // Função para alternar a visibilidade do campo de pesquisa
   const toggleSearch = () => {
     setIsSearchVisible(!isSearchVisible);
+    setTimeout(() => {
+      if (searchInputRef.current) {
+        searchInputRef.current.focus(); // Focar no campo de pesquisa
+      }
+    }, 0); // Garantir que a visibilidade seja atualizada antes de focar
   };
 
   // Função para alternar a visibilidade do menu de filtro
@@ -59,6 +67,11 @@ function Clientes() {
     hideModal();
   };
 
+  const normalizeText = (text) => {
+    return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  };
+
+
   const clientesFiltrados = useMemo(() => {
     const clientes = [
       'Lucas',
@@ -68,14 +81,14 @@ function Clientes() {
       'Gabriel',
       'Marcos',
       'Benicio',
-      'Pablo',
+      'Mariã',
     ];
 
-    const lowerBusca = busca.toLowerCase();
-    
-    // Filtrar clientes com base na busca
+    const normalizedBusca = normalizeText(busca);
+
+    // Filtrar passeadores com base na busca, normalizando para remover acentos
     const filteredClientes = clientes.filter((cliente) =>
-      cliente.toLowerCase().includes(lowerBusca)
+      normalizeText(cliente).includes(normalizedBusca)
     );
 
     // Ordenar clientes com base na direção da ordenação
@@ -113,6 +126,7 @@ function Clientes() {
           <input
             type="text"
             value={busca}
+            ref={searchInputRef} // Ref para o campo de pesquisa
             onChange={(ev) => setBusca(ev.target.value)}
             placeholder="Pesquisar cliente"
             className="search-input"
