@@ -56,7 +56,7 @@ function Web({onLogout}) {
         <img src="/logotipo.svg" className="Web-logotipo" alt="Dogvideo Logomarca" />
         <div className="tabbar-title" onClick={handleDadosClienteClick} style={{ cursor: 'pointer' }}>
           <img src="/user.svg" alt="Ícone do Usuário" className="user-icon" />
-          Dados do Cliente
+          <span className="tabbar-title-text">Dados do Cliente</span>
         </div>
         <Modal
           isOpen={isModalVisible}

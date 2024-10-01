@@ -17,6 +17,10 @@ body {
   pointer-events: none
 }
 
+.tabbar-title-text {
+  display: inline;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .Web-logo {
     animation: Web-logo-spin infinite 20s linear;
@@ -41,8 +45,6 @@ body {
   padding-right: 20px;
 }
 
-
-
 .footer-bar {
   background-color: #D69958;
   height: 5px;
@@ -66,16 +68,16 @@ body {
 }
 
 .rectangle {
-  background-color: #0024BD; /* Cor de fundo azul para todo o botão */
-  color: white; /* Cor do texto */
-  font-size: 35px; /* Tamanho da fonte */
-  font-weight: bold; /* Peso da fonte */
-  font-family: 'Manrope', sans-serif; /* Fonte */
-  padding: 10px 40px; /* Espaçamento interno maior para compensar bordas */
-  border-radius: 20px; /* Borda arredondada */
-  margin: 30px auto; /* Centraliza o elemento */
-  width: fit-content; /* Ajuste do tamanho */
-  box-shadow: 0 0 0 8px #D69958; /* Criação da borda externa com box-shadow */
+  background-color: #0024BD;
+  color: white;
+  font-size: 35px;
+  font-weight: bold;
+  font-family: 'Manrope', sans-serif;
+  padding: 10px 40px;
+  border-radius: 20px;
+  margin: 30px auto;
+  width: fit-content;
+  box-shadow: 0 0 0 8px #D69958;
 }
 
 
@@ -121,26 +123,146 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 10px 0; /* Reduzido de 20px para 10px para aproximar o título da seção de passeadores */
+  margin: 10px 0;
   position: relative;
-  max-width: 100%; /* Garante que a largura da imagem se ajuste ao tamanho do container */
+  max-width: 100%;
 }
 
 
 .passeador-titulo img {
-  width: 500px; /* Define um tamanho adequado para o SVG */
-  height: auto; /* Mantém a proporção da imagem */
+  width: 500px;
+  height: auto;
 }
 
 .passeador-texto {
   font-family: 'Manrope', sans-serif;
-  font-size: 30px; /* Ajusta o tamanho da fonte */
+  font-size: 30px;
   font-weight: bold;
   color: white;
-  position: absolute; /* Posiciona o texto sobre a imagem */
-  top: 20%; /* Centraliza verticalmente */
+  position: absolute;
+  top: 20%;
   left: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
+}
+
+/* Estilos para dispositivos móveis */
+@media (max-width: 768px) {
+  .Web-header {
+    height: 70px;
+    padding: 0 10px;
+  }
+
+  .tabbar-title-text {
+    display: none;
+  }
+
+  .footer-bar {
+    height: 3px;
+    width: 100%;
+  }
+
+  .rectangle {
+    font-size: 28px;
+    padding: 8px 20px;
+    box-shadow: 0 0 0 4px #D69958;
+  }
+
+  .Web-logotipo {
+    height: 100px;
+    margin-left: 10px;
+  }
+
+  .user-icon {
+    height: 30px;
+    margin-right: 5px;
+  }
+
+  .tabbar-title {
+    font-size: 18px;
+    padding-right: 10px;
+  }
+
+  .passeadores {
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    margin-top: 20px;
+  }
+
+  .passeador {
+    margin-bottom: 20px;
+  }
+
+  .passeador-foto {
+    width: 120px;
+    height: 120px;
+    border: 3px solid #D69958;
+  }
+
+  .passeador-nome {
+    font-size: 16px;
+  }
+
+  .passeador-titulo img {
+    width: 90%;
+    max-width: 300px;
+  }
+
+  .passeador-texto {
+    font-size: 24px;
+    top: 15%;
+    left: 50%;
+    margin-top: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .Web-header {
+    height: 60px;
+    width: 100vw;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 20px;
+    box-sizing: border-box;
+  }
+
+  .Web-logotipo {
+    height: 80px;
+    margin: 0;
+    position: absolute;
+    left: -40px;
+  }
+
+  .footer-bar {
+    height: 2px;
+    width: 100%;
+  }
+
+  .rectangle {
+    font-size: 24px;
+    padding: 6px 15px;
+    box-shadow: 0 0 0 2px #D69958;
+  }
+
+  .tabbar-title {
+    font-size: 16px;
+    padding-right: 5px;
+  }
+
+  .passeador-foto {
+    width: 100px;
+    height: 100px;
+  }
+
+  .passeador-nome {
+    font-size: 14px;
+  }
+
+  .passeador-texto {
+    font-size: 20px;
+    top: 10%;
+    margin-top: 20px;
+  }
 }
 

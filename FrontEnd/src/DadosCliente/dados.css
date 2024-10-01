@@ -1,154 +1,263 @@
 body {
-    background-color: #2e55ff;
-    padding: 0;
-    margin: 0;
+  background-color: #2e55ff;
+  padding: 0;
+  margin: 0;
 }
 
 .Web {
-    text-align: center;
-    background-color: #2e55ff;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+  text-align: center;
+  background-color: #2e55ff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .Web-logo {
-    height: 40vmin;
-    pointer-events: none;
+  height: 40vmin;
+  pointer-events: none;
 }
 
 .Web-header {
-    background-color: #0024bd;
-    height: 90px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 20px;
+  background-color: #0024bd;
+  height: 90px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 10px;
 }
 
 .footer-bar {
-    background-color: #D69958;
-    height: 5px;
-    position: absolute;
-    margin-top: 90px;
-    left: 0; /* Começa na extremidade esquerda */
-    right: 0; /* Termina na extremidade direita */
-    width: 100%; /* Garante que ocupe 100% da largura */
-  }
+  background-color: #D69958;
+  height: 5px;
+  position: absolute;
+  margin-top: 90px;
+  left: 0;
+  right: 0;
+  width: 100%;
+}
 
 .back-icon {
-    height: 30px;
-    cursor: pointer;
+  height: 30px;
+  cursor: pointer;
 }
 
 .Main-content {
-    color: white;
-    padding: 20px;
-    text-align: center;
+  color: white;
+  padding: 20px;
+  text-align: center;
+  margin-top: 40px;
 }
 
+
 .Dados-grid {
-    display: flex;
-    justify-content: space-evenly;
-    flex-wrap: wrap;
-    margin-top: 20px;
+  display: flex;
+  justify-content: space-evenly;
+  flex-wrap: wrap;
+  margin-top: 20px;
 }
 
 .Card {
-    background-color: #d08b56;
-    border-radius: 10px;
-    padding: 20px;
-    width: 200px;
-    text-align: center;
-    word-wrap: break-word;
-    box-sizing: border-box;
+  background-color: #d08b56;
+  border-radius: 10px;
+  padding: 20px;
+  width: 200px;
+  text-align: center;
+  word-wrap: break-word;
+  box-sizing: border-box;
+  margin: 10px;
 }
 
 .Card-header-bg {
-    background-color: #e9be91;
-    padding: 5px;
-    border-radius: 10px;
+  background-color: #e9be91;
+  padding: 5px;
+  border-radius: 10px;
 }
 
 .Card-header {
-    font-size: 18px;
-    font-weight: bold;
-    color: black;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  font-size: 18px;
+  font-weight: bold;
+  color: black;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .Card-content {
-    font-size: 16px;
-    margin-top: 20px;
-    font-weight: bold;
-    overflow-wrap: break-word;
+  font-size: 16px;
+  margin-top: 20px;
+  font-weight: bold;
+  overflow-wrap: break-word;
 }
 
 ul {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
 }
 
 li {
-    margin-bottom: 5px;
+  margin-bottom: 5px;
 }
 
-.user-icon {
-    height: 40px;
-    cursor: pointer;
+.logout {
+  height: 40px;
+  cursor: pointer;
 }
 
 .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.75);
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-container {
+  background: #0024bd;
+  border-radius: 10px;
+  padding: 20px;
+  width: 300px;
+  max-width: 90%;
+  text-align: center;
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: white;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-around;
+}
+
+.modal-button {
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  margin: 0 10px;
+}
+
+.no-button {
+  background-color: #838383;
+  color: white;
+}
+
+.yes-button {
+  background-color: #d08b56;
+  color: white;
+}
+
+/* Responsividade para telas menores */
+@media (max-width: 768px) {
+  .Web-header {
+    height: 80px;
+    padding: 0 10px;
   }
-  
+
+  .footer-bar {
+    height: 3px;
+  }
+
+  .Main-content {
+    margin-top: 80px;
+  }
+
+  .back-icon {
+    height: 25px;
+  }
+
+  .Main-content {
+    padding: 10px;
+  }
+
+  .Card {
+    width: 100%;
+    margin: 10px 0;
+  }
+
+  .Card-header {
+    font-size: 16px;
+  }
+
+  .Card-content {
+    font-size: 14px;
+  }
+
+  .Dados-grid {
+    flex-direction: column;
+    width: 70%;
+    margin: 0 auto;
+  }
+
   .modal-container {
-    background: #0024bd;
-    border-radius: 10px;
-    padding: 20px;
-    width: 300px;
-    max-width: 90%;
-    text-align: center;
+    width: 90%;
   }
-  
+
   .modal-title {
-    font-size: 18px;
-    font-weight: bold;
-    margin-bottom: 20px;
-    color: white;
+    font-size: 16px;
   }
-  
-  .modal-buttons {
+}
+
+/* Responsividade para telas de smartphones */
+@media (max-width: 480px) {
+  .Web-header {
+    height: 60px;
+    width: 100vw;
     display: flex;
-    justify-content: space-around;
+    justify-content: space-between;
+    padding: 0 20px;
+    box-sizing: border-box;
   }
-  
-  .modal-button {
-    padding: 10px 20px;
-    border: none;
+
+  .Web-logotipo {
+    height: 80px;
+    margin: 0;
+    position: absolute;
+  }
+
+  .logout {
+    height: 40px;
     cursor: pointer;
-    border-radius: 5px;
-    margin: 0 10px;
+    margin-left: 340px;
   }
-  
-  .no-button {
-    background-color: #838383;
-    color: white;
+
+  .footer-bar {
+    height: 2px;
+    width: 100%;
   }
-  
-  .yes-button {
-    background-color: #d08b56;
-    color: white;
+
+  .Main-content {
+    margin-top: 80px;
   }
-  
+
+  .back-icon {
+    height: 20px;
+  }
+
+  .Card-header {
+    font-size: 14px;
+  }
+
+  .Card-content {
+    font-size: 12px;
+  }
+
+  .Dados-grid {
+    flex-direction: column;
+    align-items: center;
+    width: 80%;
+    margin: 0 auto;
+  }
+
+  .modal-container {
+    width: 100%;
+  }
+}
