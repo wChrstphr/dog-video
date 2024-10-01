@@ -3,8 +3,8 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 85vh; /* Ajuste para 90% da altura da tela */
-    padding: 0 20px; /* Adiciona um pouco de padding lateral */
+    height: 85vh;
+    padding: 0 20px;
   }
   .logo {
     max-width: 350px; 
@@ -62,40 +62,40 @@
     margin-top: 10px;
     font-family: 'Manrope', sans-serif;
     font-size: 18px;
-    color: red; /* Define a cor do texto como vermelho */
+    color: red;
     font-weight: bold;
   }
   
   .password-container {
     display: flex;
     align-items: center;
-    position: relative; /* Para posicionar o ícone dentro do campo */
+    position: relative;
   }
   
   .password-toggle-icon {
     position: absolute;
-    right: 30px; /* Distância do ícone do lado direito do campo */
+    right: 30px;
     cursor: pointer;
-    color: #fff; /* Cor do ícone */
+    color: #fff;
   }
   
   /* Estilos para telas menores que 768px (tablets e smartphones) */
   @media (max-width: 768px) {
     input {
-        width: 100%; /* Ocupa a largura total disponível */
-        max-width: 350px; /* Diminui o tamanho máximo */
-        font-size: 18px; /* Ajusta o tamanho da fonte */
+        width: 100%;
+        max-width: 350px;
+        font-size: 18px;
     }
   
     button {
-        width: 100%; /* Ocupa a largura total disponível */
-        max-width: 150px; /* Diminui o tamanho máximo */
-        font-size: 22px; /* Ajusta o tamanho da fonte */
+        width: 100%;
+        max-width: 150px;
+        font-size: 22px;
     }
   
     .Login label {
-        max-width: 350px; /* Diminui o tamanho máximo */
-        font-size: 22px; /* Ajusta o tamanho da fonte */
+        max-width: 350px;
+        font-size: 22px;
     }
   
     .password-container {
@@ -104,7 +104,7 @@
   }
 
     .password-toggle-icon {
-      right: 25px; /* Ajusta a posição do ícone */
+      right: 25px;
       top: 35%;
 }
   }
@@ -112,24 +112,24 @@
   /* Estilos para telas menores que 480px (smartphones pequenos) */
   @media (max-width: 480px) {
     .logo {
-        max-width: 350px; /* Reduz o tamanho do logo */
+        max-width: 350px;
     }
   
     input {
-        width: 100%; /* Ocupa a largura total disponível */
-        max-width: 300px; /* Diminui ainda mais o tamanho máximo */
-        font-size: 16px; /* Ajusta o tamanho da fonte */
+        width: 100%;
+        max-width: 300px;
+        font-size: 16px;
     }
   
     button {
-        width: 100%; /* Ocupa a largura total disponível */
-        max-width: 140px; /* Diminui o tamanho máximo */
-        font-size: 20px; /* Ajusta o tamanho da fonte */
+        width: 100%;
+        max-width: 140px;
+        font-size: 20px;
     }
   
     .Login label {
-        max-width: 300px; /* Diminui ainda mais o tamanho máximo */
-        font-size: 20px; /* Ajusta o tamanho da fonte */
+        max-width: 300px;
+        font-size: 20px;
     }
   
     .password-container {
@@ -138,7 +138,7 @@
     }
   
     .password-toggle-icon {
-        right: 25px; /* Ajusta a posição do ícone */
+        right: 25px;
         top: 35%;
     }
   }
