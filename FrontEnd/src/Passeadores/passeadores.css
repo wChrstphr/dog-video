@@ -181,13 +181,15 @@ body {
   .search-bar {
     margin: 20px auto;
     width: 70%;
+    margin-left: 180px;
+    margin-top: 5px;
   }
   
   .search-input {
     width: 100%;
     padding: 10px;
     font-size: 18px;
-    border-radius: 5px;
+    border-radius: 25px;
     border: 1px solid #0024bd;
   }
   

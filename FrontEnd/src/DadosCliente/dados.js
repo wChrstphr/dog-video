@@ -53,14 +53,14 @@ function Dados({ onLogout }) {
         <img
           src="/logout.svg"
           alt="Ícone de logout"
-          className="user-icon"
+          className="logout"
           onClick={showModal}
         />
         <div className="footer-bar"></div>
       </header>
 
       <main className="Main-content">
-        <h1>Nome Completo</h1>
+        <h1>Pedro de Alcântara João Carlos Leopoldo</h1>
 
         {/* Primeira linha de cards */}
         <div className="Dados-grid">
