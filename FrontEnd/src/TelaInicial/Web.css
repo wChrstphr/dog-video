@@ -90,6 +90,7 @@ body {
   height: 40px;
   margin-right: 8px;
   vertical-align: middle;
+  cursor: pointer;
 }
 
 .passeadores {

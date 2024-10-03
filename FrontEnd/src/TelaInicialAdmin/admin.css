@@ -23,6 +23,11 @@ body {
     height: 200px;
     margin-left: 20px;
   }
+
+  .logout {
+    height: 40px;
+    cursor: pointer;
+  }
   
   .admin-container {
     margin: 100px auto;
@@ -81,3 +86,59 @@ body {
     position: absolute;
   }
   
+  /* Responsividade para tablets */
+@media (max-width: 768px) {
+  .admin-container {
+    width: 350px;
+  }
+
+  .admin-title {
+    font-size: 32px;
+  }
+
+  .admin-option {
+    padding: 10px 40px;
+  }
+
+  .Web-logotipo {
+    height: 150px;
+  }
+}
+
+/* Responsividade para smartphones */
+@media (max-width: 480px) {
+  .Web-header {
+    height: 70px;
+  }
+
+  .logout {
+    height: 40px;
+    cursor: pointer;
+    margin-left: 340px;
+  }
+
+  .Web-logotipo {
+    height: 120px;
+    margin-left: 10px;
+  }
+
+  .admin-container {
+    width: 85%;
+    margin: 50px auto;
+    padding: 15px;
+    margin: auto;
+    margin-top: 40%;
+  }
+
+  .admin-title {
+    font-size: 28px;
+  }
+
+  .admin-option {
+    padding: 10px 30px;
+  }
+
+  .footer-bar {
+    margin-top: 70px;
+  }
+}
