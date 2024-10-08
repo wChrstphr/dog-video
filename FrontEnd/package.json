@@ -6,6 +6,7 @@
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "emoji-picker-react": "^4.12.0",
     "babel-preset-react-app": "^10.0.1",
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
@@ -24,7 +25,10 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "client": "cd src/Chat/client && npm run dev",
+    "server": "cd src/Chat/server && npm run dev",
+    "chat": "concurrently \"npm run client\" \"npm run server\" \"npm start\""
   },
   "eslintConfig": {
     "extends": [
@@ -45,6 +49,7 @@
     ]
   },
   "devDependencies": {
+    "concurrently": "^9.0.1",
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@types/cors": "^2.8.17",
     "webpack": "^5.95.0",
