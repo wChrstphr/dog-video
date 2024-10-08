@@ -13,29 +13,39 @@ function Login({ onLogin }) {
   const passwordInputRef = useRef(null);
 
   // Função para lidar com o login
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!username || !password) {
       setError('Todos os campos são obrigatórios.');
       return;
     }
-
+  
     if (password.length < 6) {
       setError('Sua senha deve ter pelo menos 6 caracteres.');
       return;
     }
-
-    // Verificação de credenciais
-    if (username === 'admin' && password === '123456') {
-      setError('');
-      onLogin('admin'); // Passa 'admin' como tipo de usuário
-    } else if (username === 'teste' && password === '123456') {
-      setError('');
-      onLogin('user'); // Passa 'user' como tipo de usuário
-    } else {
-      setError('Usuário não encontrado!');
+  
+    try {
+      const response = await fetch('http://localhost:3001/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: username, senha: password }),
+      });
+  
+      const data = await response.json();
+  
+      if (data.success) {
+        setError('');
+        onLogin(data.userType); // 'admin' ou 'user'
+      } else {
+        setError(data.message);
+      }
+    } catch (error) {
+      setError('Erro ao conectar ao servidor. Tente novamente mais tarde.');
     }
-  };
-
+  };  
+  
   // Função para lidar com a tecla "Enter" em cada campo
   const handleKeyDown = (event, field) => {
     if (event.key === 'Enter') {
@@ -57,10 +67,10 @@ function Login({ onLogin }) {
   return (
     <div className="Login">
       <img src="/dog.png" alt="Logo" className="logo" />
-      <label htmlFor="username">Usuário</label>
+      <label htmlFor="username">Email</label>
       <input
         type="text"
-        placeholder="Insira o usuário"
+        placeholder="Insira seu email"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
         onKeyDown={(e) => handleKeyDown(e, 'username')}
@@ -84,5 +94,4 @@ function Login({ onLogin }) {
     </div>
   );
 }
-
 export default Login;
