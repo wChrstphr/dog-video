@@ -1,10 +1,12 @@
 import './clientes.css';
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from "react-router-dom";
 import Modal from 'react-modal';
+import axios from 'axios';
 
 function Clientes() {
   const navigate = useNavigate();
+  const [clientes, setClientes] = useState([]);
 
   // Estado para controlar a visibilidade do modal
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -20,8 +22,19 @@ function Clientes() {
   // Estado para controlar a visibilidade do menu de filtro
   const [isFilterMenuVisible, setIsFilterMenuVisible] = useState(false);
 
-    // Referência para o campo de busca
-    const searchInputRef = useRef(null);
+  // Referência para o campo de busca
+  const searchInputRef = useRef(null);
+
+  // Função para buscar os clientes do banco de dados
+  useEffect(() => {
+    axios.get('http://localhost:3001/clientes')
+      .then(response => {
+        setClientes(response.data);
+      })
+      .catch(error => {
+        console.error('Erro ao buscar clientes:', error);
+      });
+  }, []);
 
   // Função para exibir o modal de confirmação
   const showModal = (cliente) => {
@@ -71,35 +84,23 @@ function Clientes() {
     return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   };
 
-
   const clientesFiltrados = useMemo(() => {
-    const clientes = [
-      'Lucas',
-      'Pedro',
-      'Paulo',
-      'Matheus',
-      'Gabriel',
-      'Marcos',
-      'Benicio',
-      'Mariã',
-    ];
-
     const normalizedBusca = normalizeText(busca);
 
-    // Filtrar passeadores com base na busca, normalizando para remover acentos
+    // Filtrar clientes com base na busca
     const filteredClientes = clientes.filter((cliente) =>
-      normalizeText(cliente).includes(normalizedBusca)
+      normalizeText(cliente.nome).includes(normalizedBusca)
     );
 
     // Ordenar clientes com base na direção da ordenação
     return filteredClientes.sort((a, b) => {
       if (sortDirection === 'asc') {
-        return a.localeCompare(b); // Ordem A-Z
+        return a.nome.localeCompare(b.nome);
       } else {
-        return b.localeCompare(a); // Ordem Z-A
+        return b.nome.localeCompare(a.nome);
       }
     });
-  }, [busca, sortDirection]);
+  }, [clientes, busca, sortDirection]);
 
   return (
     <div className="Web">
@@ -126,7 +127,7 @@ function Clientes() {
           <input
             type="text"
             value={busca}
-            ref={searchInputRef} // Ref para o campo de pesquisa
+            ref={searchInputRef}
             onChange={(ev) => setBusca(ev.target.value)}
             placeholder="Pesquisar cliente"
             className="search-input"
@@ -154,9 +155,9 @@ function Clientes() {
       />
 
       <div className="client-list">
-        {clientesFiltrados.map((cliente, index) => (
-          <div className="client-item" key={index}>
-            <span onClick={() => handleClientClick(cliente)}>{cliente}</span>
+        {clientesFiltrados.map((cliente) => (
+          <div className="client-item" key={cliente.id}>
+            <span onClick={() => handleClientClick(cliente)}>{cliente.nome}</span>
             <button className="delete-button" onClick={() => showModal(cliente)}>
               <img src="/trash.svg" alt="Deletar" />
             </button>
@@ -164,7 +165,6 @@ function Clientes() {
         ))}
       </div>
 
-      {/* Modal de confirmação de exclusão */}
       <Modal
         isOpen={isModalVisible}
         onRequestClose={hideModal}
