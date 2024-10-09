@@ -43,7 +43,7 @@ function Admin({ onLogout }) {
         <img
           src="/logout.svg"
           alt="Ícone de logout"
-          className="user-icon"
+          className="logout"
           onClick={showModal}
         />
 

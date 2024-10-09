@@ -180,7 +180,7 @@ body {
   
   .search-bar {
     margin: 20px auto;
-    width: 70%;
+    width: 60%;
     margin-left: 180px;
     margin-top: 5px;
   }
@@ -218,4 +218,104 @@ body {
 
 .filter-button:hover {
     background-color: #D69958;
+}
+
+/* Responsividade para tablets */
+@media (max-width: 768px) {
+  .passeador-list {
+      width: 90%;
+      margin-left: 0;
+  }
+
+  .passeador-item {
+      font-size: 20px;
+      padding: 10px;
+  }
+
+  .Web-logotipo {
+      height: 150px;
+  }
+
+  .icon {
+      width: 30px;
+      height: 30px;
+  }
+
+  .header-icons {
+      gap: 30px;
+  }
+
+  .delete-button {
+      width: 50px;
+      height: 50px;
+  }
+
+  .footer-bar {
+      margin-top: 50px;
+  }
+}
+
+/* Responsividade para smartphones */
+@media (max-width: 480px) {
+  .Web-header {
+      height: 70px;
+  }
+
+  .Web-logotipo {
+      height: 120px;
+  }
+
+  .header-icons {
+      gap: 15px;
+      margin-bottom: 40px;
+  }
+
+  .icon {
+      width: 25px;
+      height: 25px;
+  }
+
+  .passeador-list {
+      width: 100%;
+      margin: 0 auto;
+  }
+
+  .search-bar {
+    margin: 20px;
+    width: 90%;
+    margin-left: 30px;
+    margin-top: 5px;
+  }
+  .passeador-item {
+      font-size: 18px;
+      padding: 5px;
+  }
+
+  .delete-button {
+      width: 40px;
+      height: 40px;
+  }
+
+  .footer-bar {
+      margin-top: 30px;
+  }
+
+  .back-icon {
+      height: 40px;
+      top: 15%;
+      margin-top: -15px;
+  }
+
+  .modal-container {
+      width: 90%;
+      padding: 10px;
+  }
+
+  .modal-title {
+      font-size: 16px;
+  }
+
+  .modal-button {
+      padding: 8px 15px;
+  }
 }
