@@ -59,6 +59,46 @@ app.get('/clientes', (req, res) => {
   });
 });
 
+// Endpoint para criar um cliente
+app.post('/criarcliente', (req, res) => {
+  const { nome, email, cpf, telefone, endereco, pacote, horario, anotacao, caes } = req.body;
+
+  // Query para inserir um novo cliente
+  const insertClientQuery = 'INSERT INTO clientes (nome, email, cpf, telefone, endereco, pacote, horario_passeio, anotacoes, tipo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)';
+
+  // Executa a inserção do cliente
+  connection.query(
+    insertClientQuery,
+    [nome, email, cpf, telefone, endereco, pacote, horario, anotacao],
+    (err, result) => {
+      if (err) {
+        console.error('Erro ao inserir cliente:', err);
+        return res.status(500).send('Erro ao inserir cliente');
+      }
+
+      const clienteId = result.insertId; // Obtém o ID do cliente inserido
+
+      // Verifica se há cães para adicionar
+      if (caes && caes.length > 0) {
+        const insertDogQuery = 'INSERT INTO cachorros (nome, id_cliente) VALUES ?';
+
+        // Formata os valores dos cães para a inserção em massa
+        const dogValues = caes.map((cao) => [cao, clienteId]);
+
+        connection.query(insertDogQuery, [dogValues], (err) => {
+          if (err) {
+            console.error('Erro ao inserir cães:', err);
+            return res.status(500).send('Erro ao inserir cães');
+          }
+
+          res.json({ success: true, message: 'Cliente e cães adicionados com sucesso!' });
+        });
+      } else {
+        res.json({ success: true, message: 'Cliente adicionado com sucesso!' });
+      }
+    }
+  );
+});
 
 // Iniciar o servidor
 app.listen(port, () => {
