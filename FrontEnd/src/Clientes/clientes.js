@@ -66,18 +66,29 @@ function Clientes() {
   // Função para definir a direção da ordenação
   const handleSort = (direction) => {
     setSortDirection(direction);
-    setIsFilterMenuVisible(false); // Fechar o menu após selecionar uma opção
+    setIsFilterMenuVisible(false);
   };
 
   // Função para navegar para a tela de visualização de cliente
   const handleClientClick = (cliente) => {
-    navigate(`/visualizarcliente`);
+    navigate(`/visualizarcliente/${cliente.id_cliente}`);
   };
 
   // Função de exclusão
-  const handleDelete = () => {
-    console.log("Cliente excluído:", selectedCliente);
-    hideModal();
+  const handleDelete = async () => {
+    try {
+      const response = await axios.delete(`http://localhost:3001/clientes/${selectedCliente.id_cliente}`);
+      if (response.data.success) {
+        // Atualiza a lista de clientes após a exclusão
+        setClientes(clientes.filter(cliente => cliente.id_cliente !== selectedCliente.id_cliente));
+        hideModal();
+      } else {
+        alert('Erro ao excluir cliente.');
+      }
+    } catch (error) {
+      console.error('Erro ao excluir cliente:', error);
+      alert('Erro ao excluir cliente.');
+    }
   };
 
   const normalizeText = (text) => {
@@ -86,13 +97,9 @@ function Clientes() {
 
   const clientesFiltrados = useMemo(() => {
     const normalizedBusca = normalizeText(busca);
-
-    // Filtrar clientes com base na busca
     const filteredClientes = clientes.filter((cliente) =>
       normalizeText(cliente.nome).includes(normalizedBusca)
     );
-
-    // Ordenar clientes com base na direção da ordenação
     return filteredClientes.sort((a, b) => {
       if (sortDirection === 'asc') {
         return a.nome.localeCompare(b.nome);
@@ -121,7 +128,6 @@ function Clientes() {
         </div>
       </div>
 
-      {/* Campo de busca que aparece quando o ícone de busca é clicado */}
       {isSearchVisible && (
         <div className="search-bar">
           <input
@@ -135,7 +141,6 @@ function Clientes() {
         </div>
       )}
 
-      {/* Menu de filtro que aparece quando o ícone de filtro é clicado */}
       {isFilterMenuVisible && (
         <div className="filter-menu">
           <button onClick={() => handleSort('asc')} className="filter-button">
@@ -156,7 +161,7 @@ function Clientes() {
 
       <div className="client-list">
         {clientesFiltrados.map((cliente) => (
-          <div className="client-item" key={cliente.id}>
+          <div className="client-item" key={cliente.id_cliente}>
             <span onClick={() => handleClientClick(cliente)}>{cliente.nome}</span>
             <button className="delete-button" onClick={() => showModal(cliente)}>
               <img src="/trash.svg" alt="Deletar" />

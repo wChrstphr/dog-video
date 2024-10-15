@@ -28,22 +28,21 @@ connection.connect((err) => {
 
 // Endpoint para login
 app.post('/login', (req, res) => {
-    const { email, senha } = req.body;
-    const query = 'SELECT * FROM clientes WHERE email = ? AND senha = ?';
+  const { email, senha } = req.body;
+  const query = 'SELECT * FROM clientes WHERE email = ? AND senha = ?';
 
-    connection.query(query, [email, senha], (err, results) => {
-      if (err) {
-        console.error('Erro ao consultar o banco de dados:', err);
-        return res.status(500).send('Erro ao consultar o banco de dados');
-      } else if (results.length > 0) {
-        const user = results[0];
-        console.log('Usuário autenticado:', user);
-        const userType = user.tipo === 1 ? 'admin' : 'user';
-        res.json({ success: true, userType: userType });
-      } else {
-        res.json({ success: false, message: 'Email ou senha incorretos' });
-      }
-    });
+  connection.query(query, [email, senha], (err, results) => {
+    if (err) {
+      console.error('Erro ao consultar o banco de dados:', err);
+      return res.status(500).send('Erro ao consultar o banco de dados');
+    } else if (results.length > 0) {
+      const user = results[0];
+      const userType = user.tipo === 1 ? 'admin' : 'user';
+      res.json({ success: true, userType: userType });
+    } else {
+      res.json({ success: false, message: 'Email ou senha incorretos' });
+    }
+  });
 });
 
 // Endpoint para aparecer os clientes
@@ -91,13 +90,44 @@ app.post('/criarcliente', (req, res) => {
             return res.status(500).send('Erro ao inserir cães');
           }
 
-          res.json({ success: true, message: 'Cliente e cães adicionados com sucesso!' });
+          // Envia uma resposta de sucesso sem mensagem
+          res.sendStatus(200);
         });
       } else {
-        res.json({ success: true, message: 'Cliente adicionado com sucesso!' });
+        // Envia uma resposta de sucesso sem mensagem
+        res.sendStatus(200);
       }
     }
   );
+});
+
+// Endpoint para excluir um cliente
+app.delete('/clientes/:id', (req, res) => {
+  const clienteId = req.params.id;
+
+  // Query para deletar os cachorros associados ao cliente
+  const deleteCachorrosQuery = 'DELETE FROM cachorros WHERE id_cliente = ?';
+  // Query para deletar o cliente
+  const deleteClienteQuery = 'DELETE FROM clientes WHERE id_cliente = ?';
+
+  // Deletar os cachorros associados ao cliente
+  connection.query(deleteCachorrosQuery, [clienteId], (err) => {
+    if (err) {
+      console.error('Erro ao deletar cachorros:', err);
+      return res.status(500).send('Erro ao deletar cachorros');
+    }
+
+    // Deletar o cliente após deletar os cachorros
+    connection.query(deleteClienteQuery, [clienteId], (err) => {
+      if (err) {
+        console.error('Erro ao deletar cliente:', err);
+        return res.status(500).send('Erro ao deletar cliente');
+      }
+
+      // Envia uma resposta de sucesso sem mensagem
+      res.sendStatus(200);
+    });
+  });
 });
 
 // Iniciar o servidor
