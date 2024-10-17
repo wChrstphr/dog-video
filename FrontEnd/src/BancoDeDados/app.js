@@ -28,21 +28,22 @@ connection.connect((err) => {
 
 // Endpoint para login
 app.post('/login', (req, res) => {
-  const { email, senha } = req.body;
-  const query = 'SELECT * FROM clientes WHERE email = ? AND senha = ?';
+    const { email, senha } = req.body;
+    const query = 'SELECT * FROM clientes WHERE email = ? AND senha = ?';
 
-  connection.query(query, [email, senha], (err, results) => {
-    if (err) {
-      console.error('Erro ao consultar o banco de dados:', err);
-      return res.status(500).send('Erro ao consultar o banco de dados');
-    } else if (results.length > 0) {
-      const user = results[0];
-      const userType = user.tipo === 1 ? 'admin' : 'user';
-      res.json({ success: true, userType: userType });
-    } else {
-      res.json({ success: false, message: 'Email ou senha incorretos' });
-    }
-  });
+    connection.query(query, [email, senha], (err, results) => {
+      if (err) {
+        console.error('Erro ao consultar o banco de dados:', err);
+        return res.status(500).send('Erro ao consultar o banco de dados');
+      } else if (results.length > 0) {
+        const user = results[0];
+        console.log('Usuário autenticado:', user);
+        const userType = user.tipo === 1 ? 'admin' : 'user';
+        res.json({ success: true, userType: userType });
+      } else {
+        res.json({ success: false, message: 'Email ou senha incorretos' });
+      }
+    });
 });
 
 // Endpoint para aparecer os clientes
@@ -90,18 +91,16 @@ app.post('/criarcliente', (req, res) => {
             return res.status(500).send('Erro ao inserir cães');
           }
 
-          // Envia uma resposta de sucesso sem mensagem
-          res.sendStatus(200);
+          res.json({ success: true, message: 'Cliente e cães adicionados com sucesso!' });
         });
       } else {
-        // Envia uma resposta de sucesso sem mensagem
-        res.sendStatus(200);
+        res.json({ success: true, message: 'Cliente adicionado com sucesso!' });
       }
     }
   );
 });
 
-// Endpoint para excluir um cliente
+// Endpoint para excluir um cliente e seus cachorros
 app.delete('/clientes/:id', (req, res) => {
   const clienteId = req.params.id;
 
@@ -124,8 +123,7 @@ app.delete('/clientes/:id', (req, res) => {
         return res.status(500).send('Erro ao deletar cliente');
       }
 
-      // Envia uma resposta de sucesso sem mensagem
-      res.sendStatus(200);
+      res.json({ success: true, message: 'Cliente e seus cachorros deletados com sucesso!' });
     });
   });
 });

@@ -7,25 +7,14 @@ import axios from 'axios';
 function Clientes() {
   const navigate = useNavigate();
   const [clientes, setClientes] = useState([]);
-
-  // Estado para controlar a visibilidade do modal
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedCliente, setSelectedCliente] = useState(null);
-
-  // Estado para controlar a visibilidade do campo de busca
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [busca, setBusca] = useState('');
-
-  // Estado para controlar a direção da ordenação (A-Z ou Z-A)
   const [sortDirection, setSortDirection] = useState('asc');
-
-  // Estado para controlar a visibilidade do menu de filtro
   const [isFilterMenuVisible, setIsFilterMenuVisible] = useState(false);
-
-  // Referência para o campo de busca
   const searchInputRef = useRef(null);
 
-  // Função para buscar os clientes do banco de dados
   useEffect(() => {
     axios.get('http://localhost:3001/clientes')
       .then(response => {
@@ -36,45 +25,38 @@ function Clientes() {
       });
   }, []);
 
-  // Função para exibir o modal de confirmação
   const showModal = (cliente) => {
     setSelectedCliente(cliente);
     setIsModalVisible(true);
   };
 
-  // Função para ocultar o modal
   const hideModal = () => {
     setIsModalVisible(false);
     setSelectedCliente(null);
   };
 
-  // Função para alternar a visibilidade do campo de pesquisa
   const toggleSearch = () => {
     setIsSearchVisible(!isSearchVisible);
     setTimeout(() => {
       if (searchInputRef.current) {
-        searchInputRef.current.focus(); // Focar no campo de pesquisa
+        searchInputRef.current.focus();
       }
-    }, 0); // Garantir que a visibilidade seja atualizada antes de focar
+    }, 0);
   };
 
-  // Função para alternar a visibilidade do menu de filtro
   const toggleFilterMenu = () => {
     setIsFilterMenuVisible(!isFilterMenuVisible);
   };
 
-  // Função para definir a direção da ordenação
   const handleSort = (direction) => {
     setSortDirection(direction);
     setIsFilterMenuVisible(false);
   };
 
-  // Função para navegar para a tela de visualização de cliente
   const handleClientClick = (cliente) => {
     navigate(`/visualizarcliente/${cliente.id_cliente}`);
   };
 
-  // Função de exclusão
   const handleDelete = async () => {
     try {
       const response = await axios.delete(`http://localhost:3001/clientes/${selectedCliente.id_cliente}`);
