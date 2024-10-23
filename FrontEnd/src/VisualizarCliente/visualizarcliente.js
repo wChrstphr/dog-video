@@ -1,11 +1,36 @@
 import './visualizarcliente.css';
-import React from 'react';
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from "react-router-dom";
 import { FaUser, FaEnvelope, FaAddressCard, FaDog, FaPhone, FaHome, FaCalendarAlt, FaClock, FaBook } from "react-icons/fa";
 
 function VisualizarCliente() {
-
   const navigate = useNavigate();
+  const { id } = useParams(); // Obter o ID do cliente da URL
+  const [cliente, setCliente] = useState(null); // Estado para armazenar os dados do cliente
+  const [loading, setLoading] = useState(true); // Estado de carregamento
+
+  useEffect(() => {
+    const fetchCliente = async () => {
+      try {
+        const response = await fetch(`http://localhost:3001/cliente/${id}`); // Faz a requisição para o backend
+        const data = await response.json();
+        setCliente(data); // Armazena os dados do cliente
+      } catch (error) {
+        console.error('Erro ao buscar cliente:', error);
+      } finally {
+        setLoading(false); // Remove o estado de carregamento
+      }
+    };
+    fetchCliente();
+  }, [id]);
+
+  if (loading) {
+    return <div>Carregando...</div>; // Mensagem enquanto carrega
+  }
+
+  if (!cliente) {
+    return <div>Cliente não encontrado</div>; // Caso o cliente não seja encontrado
+  }
 
   return (
     <div className="Web">
@@ -21,52 +46,50 @@ function VisualizarCliente() {
         onClick={() => navigate("/clientes")}
       />
 
-      {/* Formulário de Visualização de Cliente */}
       <div className="form-container">
         <div className="client-form">
           <div className="input-container">
             <FaUser className="input-icon" />
-            <span className="form-input">Nome do cliente</span>
+            <span className="form-input">{cliente.nome}</span> {/* Nome do cliente */}
           </div>
           <div className="input-container">
             <FaEnvelope className="input-icon" />
-            <span className="form-input">email@cliente.com</span>
+            <span className="form-input">{cliente.email}</span> {/* Email do cliente */}
           </div>
           <div className="input-container">
             <FaAddressCard className="input-icon" />
-            <span className="form-input">000.000.000-00</span>
+            <span className="form-input">{cliente.cpf}</span> {/* CPF do cliente */}
           </div>
           <div className="input-container">
             <FaDog className="input-icon" />
-            <span className="form-input">Cachorro 1, Cachorro 2</span>
+            <span className="form-input">{cliente.caes.join(', ')}</span> {/* Lista de cães */}
           </div>
           <div className="input-container">
             <FaPhone className="input-icon" />
-            <span className="form-input">(11) 90000-0000</span>
+            <span className="form-input">{cliente.telefone}</span> {/* Telefone do cliente */}
           </div>
           <div className="input-container">
             <FaHome className="input-icon" />
-            <span className="form-input">Rua Exemplo, 123</span>
+            <span className="form-input">{cliente.endereco}</span> {/* Endereço do cliente */}
           </div>
           <div className="input-container">
             <FaCalendarAlt className="input-icon" />
-            <span className="form-input">Pacote Especial</span>
+            <span className="form-input">{cliente.pacote}</span> {/* Pacote do cliente */}
           </div>
           <div className="input-container">
             <FaClock className="input-icon" />
-            <span className="form-input">08:00 - 09:00</span>
+            <span className="form-input">{cliente.horario_passeio}</span> {/* Horário de passeio */}
           </div>
           <div className="input-container">
             <FaBook className="input-icon" />
-            <span className="form-textarea">Anotações sobre o cliente...</span>
+            <span className="form-textarea">{cliente.anotacoes}</span> {/* Anotações */}
           </div>
 
-          {/* Botão Editar */}
           <div className="button-group">
             <button
               type="button"
               className="edit-button"
-              onClick={() => navigate("/editarcliente")}
+              onClick={() => navigate(`/editarcliente/${id}`)} // Navegar para a tela de edição
             >
               Editar
             </button>

@@ -59,7 +59,7 @@ function App() {
           <Route path="/clientes" element={<Clientes />} />
           <Route path="/passeadores" element={<Passeadores />} />
           <Route path="/criarcliente" element={<CriarCliente />} />
-          <Route path="/visualizarcliente" element={<VisualizarCliente />} />
+          <Route path="/visualizarcliente/:id" element={<VisualizarCliente />} /> {/* Alteração importante aqui */}
           <Route path="/criarpasseador" element={<CriarPasseador />} />
           <Route path="/editarcliente" element={<EditarCliente />} />
           <Route path="/cameras" element={<Cameras onLogout={handleLogout} />} />

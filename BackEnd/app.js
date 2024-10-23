@@ -128,6 +128,48 @@ app.delete('/clientes/:id', (req, res) => {
   });
 });
 
+// Endpoint para buscar informações de um cliente específico e seus cachorros
+app.get('/cliente/:id', (req, res) => {
+  const clienteId = req.params.id;
+
+  // Query para buscar as informações do cliente
+  const queryCliente = 'SELECT * FROM clientes WHERE id_cliente = ?';
+  const queryCachorros = 'SELECT nome FROM cachorros WHERE id_cliente = ?';
+
+  // Consultar os dados do cliente
+  connection.query(queryCliente, [clienteId], (err, clienteResults) => {
+    if (err) {
+      console.error('Erro ao consultar cliente:', err);
+      return res.status(500).send('Erro ao consultar cliente');
+    }
+
+    if (clienteResults.length === 0) {
+      return res.status(404).send('Cliente não encontrado');
+    }
+
+    const cliente = clienteResults[0];
+
+    // Formatar horário para mostrar apenas HH:MM
+    if (cliente.horario_passeio) {
+      cliente.horario_passeio = cliente.horario_passeio.slice(0, 5);
+    }
+
+    // Consultar os cachorros associados ao cliente
+    connection.query(queryCachorros, [clienteId], (err, cachorroResults) => {
+      if (err) {
+        console.error('Erro ao consultar cachorros:', err);
+        return res.status(500).send('Erro ao consultar cachorros');
+      }
+
+      const caes = cachorroResults.map(cachorro => cachorro.nome);
+      cliente.caes = caes; // Adiciona os cães ao objeto cliente
+
+      // Retorna os dados do cliente e dos cachorros
+      res.json(cliente);
+    });
+  });
+});
+
 // Iniciar o servidor
 app.listen(port, () => {
   console.log(`Servidor rodando em http://localhost:${port}`);
