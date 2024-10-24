@@ -170,6 +170,55 @@ app.get('/cliente/:id', (req, res) => {
   });
 });
 
+// Endpoint para atualizar um cliente
+app.put('/cliente/:id', (req, res) => {
+  const clienteId = req.params.id;
+  const { nome, email, cpf, telefone, endereco, pacote, horario_passeio, anotacoes, caes } = req.body;
+
+  // Query para atualizar os dados do cliente
+  const updateClienteQuery = `
+    UPDATE clientes
+    SET nome = ?, email = ?, cpf = ?, telefone = ?, endereco = ?, pacote = ?, horario_passeio = ?, anotacoes = ?
+    WHERE id_cliente = ?`;
+
+  // Executa a atualização do cliente
+  connection.query(
+    updateClienteQuery,
+    [nome, email, cpf, telefone, endereco, pacote, horario_passeio, anotacoes, clienteId],
+    (err) => {
+      if (err) {
+        console.error('Erro ao atualizar cliente:', err);
+        return res.status(500).send('Erro ao atualizar cliente');
+      }
+
+      // Atualiza os cães associados ao cliente
+      const deleteCachorrosQuery = 'DELETE FROM cachorros WHERE id_cliente = ?';
+      connection.query(deleteCachorrosQuery, [clienteId], (err) => {
+        if (err) {
+          console.error('Erro ao deletar cachorros:', err);
+          return res.status(500).send('Erro ao deletar cachorros');
+        }
+
+        if (caes && caes.length > 0) {
+          const insertDogQuery = 'INSERT INTO cachorros (nome, id_cliente) VALUES ?';
+          const dogValues = caes.map((cao) => [cao, clienteId]);
+
+          connection.query(insertDogQuery, [dogValues], (err) => {
+            if (err) {
+              console.error('Erro ao inserir cães:', err);
+              return res.status(500).send('Erro ao inserir cães');
+            }
+
+            res.json({ success: true, message: 'Cliente atualizado com sucesso!' });
+          });
+        } else {
+          res.json({ success: true, message: 'Cliente atualizado com sucesso!' });
+        }
+      });
+    }
+  );
+});
+
 // Iniciar o servidor
 app.listen(port, () => {
   console.log(`Servidor rodando em http://localhost:${port}`);
