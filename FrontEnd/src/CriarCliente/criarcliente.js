@@ -1,6 +1,7 @@
 import './criarcliente.css';
 import React, { useRef } from 'react';
 import { useNavigate } from "react-router-dom";
+import axios from 'axios';
 import { FaUser, FaEnvelope, FaAddressCard, FaDog, FaPhone, FaHome, FaCalendarAlt, FaClock, FaBook } from "react-icons/fa";
 
 function CriarCliente() {
@@ -33,6 +34,47 @@ function CriarCliente() {
           nextRef.current.focus(); // Foca no próximo input se a referência existir
         }
       }
+    }
+  };
+
+  // Função para lidar com a criação do cliente
+  const handleCreate = async (e) => {
+    e.preventDefault(); // Previne o comportamento padrão do formulário
+
+    // Captura os valores dos inputs
+    const nome = nomeRef.current.value;
+    const email = emailRef.current.value;
+    const cpf = cpfRef.current.value;
+    const telefone = telefoneRef.current.value;
+    const endereco = enderecoRef.current.value;
+    const pacote = pacoteRef.current.value;
+    const horario = horarioRef.current.value;
+    const anotacao = anotacaoRef.current.value;
+    const caes = caesRef.current.value.split(',').map(cao => cao.trim()); // Divide os nomes dos cães por vírgula
+
+    try {
+      // Envia os dados para o backend
+      const response = await axios.post('http://localhost:3001/criarcliente', {
+        nome,
+        email,
+        cpf,
+        telefone,
+        endereco,
+        pacote,
+        horario,
+        anotacao,
+        caes
+      });
+
+      if (response.data.success) {
+        alert(response.data.message);
+        navigate("/clientes");
+      } else {
+        alert('Erro ao criar cliente.');
+      }
+    } catch (error) {
+      console.error('Erro ao criar cliente:', error);
+      alert('Erro ao criar cliente.');
     }
   };
 
@@ -81,7 +123,7 @@ function CriarCliente() {
             <input
               ref={caesRef}
               type="text"
-              placeholder="Cães"
+              placeholder="Cães (separados por vírgula)"
               className="form-input"
               onKeyDown={(e) => handleKeyDown(e, telefoneRef)}
             />
@@ -121,7 +163,7 @@ function CriarCliente() {
             <input
               ref={horarioRef}
               type="text"
-              placeholder="Horário de passeio"
+              placeholder="Horário de passeio (HH:MM)"
               className="form-input"
               onKeyDown={(e) => handleKeyDown(e, anotacaoRef)}
             />
@@ -129,12 +171,11 @@ function CriarCliente() {
           <div className="input-container">
             <FaBook className="input-icon" />
             <textarea
-                ref={anotacaoRef}
-                placeholder="Anotações"
-                className="form-textarea"
+              ref={anotacaoRef}
+              placeholder="Anotações"
+              className="form-textarea"
             />
           </div>
-
 
           {/* Botões */}
           <div className="button-group">
@@ -149,7 +190,7 @@ function CriarCliente() {
               ref={createButtonRef}
               type="submit"
               className="create-button"
-              onClick={() => navigate("/clientes")}
+              onClick={handleCreate}
             >
               Criar
             </button>

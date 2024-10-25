@@ -1,105 +1,95 @@
 import './clientes.css';
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from "react-router-dom";
 import Modal from 'react-modal';
+import axios from 'axios';
 
 function Clientes() {
   const navigate = useNavigate();
-
-  // Estado para controlar a visibilidade do modal
+  const [clientes, setClientes] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedCliente, setSelectedCliente] = useState(null);
-
-  // Estado para controlar a visibilidade do campo de busca
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [busca, setBusca] = useState('');
-
-  // Estado para controlar a direção da ordenação (A-Z ou Z-A)
   const [sortDirection, setSortDirection] = useState('asc');
-
-  // Estado para controlar a visibilidade do menu de filtro
   const [isFilterMenuVisible, setIsFilterMenuVisible] = useState(false);
+  const searchInputRef = useRef(null);
 
-    // Referência para o campo de busca
-    const searchInputRef = useRef(null);
+  useEffect(() => {
+    axios.get('http://localhost:3001/clientes')
+      .then(response => {
+        setClientes(response.data);
+      })
+      .catch(error => {
+        console.error('Erro ao buscar clientes:', error);
+      });
+  }, []);
 
-  // Função para exibir o modal de confirmação
   const showModal = (cliente) => {
     setSelectedCliente(cliente);
     setIsModalVisible(true);
   };
 
-  // Função para ocultar o modal
   const hideModal = () => {
     setIsModalVisible(false);
     setSelectedCliente(null);
   };
 
-  // Função para alternar a visibilidade do campo de pesquisa
   const toggleSearch = () => {
     setIsSearchVisible(!isSearchVisible);
     setTimeout(() => {
       if (searchInputRef.current) {
-        searchInputRef.current.focus(); // Focar no campo de pesquisa
+        searchInputRef.current.focus();
       }
-    }, 0); // Garantir que a visibilidade seja atualizada antes de focar
+    }, 0);
   };
 
-  // Função para alternar a visibilidade do menu de filtro
   const toggleFilterMenu = () => {
     setIsFilterMenuVisible(!isFilterMenuVisible);
   };
 
-  // Função para definir a direção da ordenação
   const handleSort = (direction) => {
     setSortDirection(direction);
-    setIsFilterMenuVisible(false); // Fechar o menu após selecionar uma opção
+    setIsFilterMenuVisible(false);
   };
 
-  // Função para navegar para a tela de visualização de cliente
   const handleClientClick = (cliente) => {
-    navigate(`/visualizarcliente`);
+    navigate(`/visualizarcliente/${cliente.id_cliente}`);
   };
 
-  // Função de exclusão
-  const handleDelete = () => {
-    console.log("Cliente excluído:", selectedCliente);
-    hideModal();
+  const handleDelete = async () => {
+    try {
+      const response = await axios.delete(`http://localhost:3001/clientes/${selectedCliente.id_cliente}`);
+      if (response.data.success) {
+        // Atualiza a lista de clientes após a exclusão
+        setClientes(clientes.filter(cliente => cliente.id_cliente !== selectedCliente.id_cliente));
+        hideModal();
+      } else {
+        alert('Erro ao excluir cliente.');
+      }
+    } catch (error) {
+      console.error('Erro ao excluir cliente:', error);
+      alert('Erro ao excluir cliente.');
+    }
   };
 
   const normalizeText = (text) => {
     return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   };
 
-
   const clientesFiltrados = useMemo(() => {
-    const clientes = [
-      'Lucas',
-      'Pedro',
-      'Paulo',
-      'Matheus',
-      'Gabriel',
-      'Marcos',
-      'Benicio',
-      'Mariã',
-    ];
-
     const normalizedBusca = normalizeText(busca);
-
-    // Filtrar passeadores com base na busca, normalizando para remover acentos
     const filteredClientes = clientes.filter((cliente) =>
-      normalizeText(cliente).includes(normalizedBusca)
+      normalizeText(cliente.nome).includes(normalizedBusca)
     );
-
-    // Ordenar clientes com base na direção da ordenação
     return filteredClientes.sort((a, b) => {
       if (sortDirection === 'asc') {
-        return a.localeCompare(b); // Ordem A-Z
+        return a.nome.localeCompare(b.nome);
       } else {
-        return b.localeCompare(a); // Ordem Z-A
+        return b.nome.localeCompare(a.nome);
       }
     });
-  }, [busca, sortDirection]);
+  }, [clientes, busca, sortDirection]);
 
   return (
     <div className="Web">
@@ -120,13 +110,12 @@ function Clientes() {
         </div>
       </div>
 
-      {/* Campo de busca que aparece quando o ícone de busca é clicado */}
       {isSearchVisible && (
         <div className="search-bar">
           <input
             type="text"
             value={busca}
-            ref={searchInputRef} // Ref para o campo de pesquisa
+            ref={searchInputRef}
             onChange={(ev) => setBusca(ev.target.value)}
             placeholder="Pesquisar cliente"
             className="search-input"
@@ -134,7 +123,6 @@ function Clientes() {
         </div>
       )}
 
-      {/* Menu de filtro que aparece quando o ícone de filtro é clicado */}
       {isFilterMenuVisible && (
         <div className="filter-menu">
           <button onClick={() => handleSort('asc')} className="filter-button">
@@ -154,9 +142,9 @@ function Clientes() {
       />
 
       <div className="client-list">
-        {clientesFiltrados.map((cliente, index) => (
-          <div className="client-item" key={index}>
-            <span onClick={() => handleClientClick(cliente)}>{cliente}</span>
+        {clientesFiltrados.map((cliente) => (
+          <div className="client-item" key={cliente.id_cliente}>
+            <span onClick={() => handleClientClick(cliente)}>{cliente.nome}</span>
             <button className="delete-button" onClick={() => showModal(cliente)}>
               <img src="/trash.svg" alt="Deletar" />
             </button>
@@ -164,7 +152,6 @@ function Clientes() {
         ))}
       </div>
 
-      {/* Modal de confirmação de exclusão */}
       <Modal
         isOpen={isModalVisible}
         onRequestClose={hideModal}
