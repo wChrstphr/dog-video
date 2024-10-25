@@ -87,6 +87,13 @@ body {
     width: 100%;
 }
 
+.form-input::placeholder,
+.form-textarea::placeholder {
+    color: black;
+    opacity: 0.5;
+}
+
+
 .form-textarea {
     margin: 0;
     padding: 15px 15px 15px 50px;

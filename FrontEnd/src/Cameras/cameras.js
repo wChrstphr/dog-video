@@ -1,15 +1,22 @@
 import './cameras.css';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Modal from 'react-modal';
 import { FaLocationArrow, FaRegCommentAlt } from 'react-icons/fa';
 
 function Cameras({ onLogout }) {
   const navigate = useNavigate();
-
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isMapVisible, setIsMapVisible] = useState(false);
   const [isChatVisible, setIsChatVisible] = useState(false);
+  const [isCameraVisible, setIsCameraVisible] = useState(false);
+
+  // Defina os horários desejados para abrir e fechar as câmeras (24h)
+  // TÚLIO FAÇA COM QUE PUXE DO BANCO DE DADOS ESSES HORÁRIOS E IMPLEMENTE AQUI
+  const openHour = 20;
+  const openMinute = 6;
+  const closeHour = 20;
+  const closeMinute = 7;
 
   const showModal = () => setIsModalVisible(true);
   const hideModal = () => setIsModalVisible(false);
@@ -29,6 +36,23 @@ function Cameras({ onLogout }) {
   const handleDadosClienteClick = () => {
     navigate('/dados-cliente');
   };
+
+  useEffect(() => {
+    const checkCameraVisibility = () => {
+      const now = new Date();
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+
+      const isWithinTimeRange =
+        (currentHour > openHour || (currentHour === openHour && currentMinute >= openMinute)) &&
+        (currentHour < closeHour || (currentHour === closeHour && currentMinute < closeMinute));
+
+      setIsCameraVisible(isWithinTimeRange);
+    };
+
+    const intervalId = setInterval(checkCameraVisibility, 1000);
+    return () => clearInterval(intervalId);
+  }, []);
 
   return (
     <div className="Web">
@@ -60,33 +84,38 @@ function Cameras({ onLogout }) {
           </div>
         </Modal>
 
-        {/* Botão de logout */}
         <img
           src="/logout.svg"
           alt="Ícone de logout"
           className="user-icon"
-          onClick={showModal} // Exibe o modal ao clicar
+          onClick={showModal}
         />
       </header>
 
-      {/* Área das câmeras */}
       <div className="cameras-container">
-        <div className="camera-box">
-          <video id="camera1" autoPlay playsInline></video>
-          <p style={{ fontWeight: 'bold', color: 'white' }}>CAMERA 01</p>
-        </div>
-        <div className="camera-box">
-          <video id="camera2" autoPlay playsInline></video>
-          <p style={{ fontWeight: 'bold', color: 'white' }}>CAMERA 02</p>
+        {isCameraVisible ? (
+          <>
+            <div className="camera-box">
+              <video id="camera1" autoPlay playsInline></video>
+              <p style={{ fontWeight: 'bold', color: 'white' }}>CAMERA 01</p>
+            </div>
+            <div className="camera-box">
+              <video id="camera2" autoPlay playsInline></video>
+              <p style={{ fontWeight: 'bold', color: 'white' }}>CAMERA 02</p>
+            </div>
 
-        </div>
+            <button className="location-button" onClick={showMap}>
+              <FaLocationArrow size={20} />
+            </button>
+
+            <button className="chat-button" onClick={showChat}>
+              <FaRegCommentAlt size={20} />
+            </button>
+          </>
+        ) : (
+          <p style={{ color: 'white' }}>As câmeras estarão disponíveis no horário programado.</p>
+        )}
       </div>
-
-      {/* Pop-up de Mapa */}
-      <button className="location-button" onClick={showMap}>
-        <FaLocationArrow size={20} />
-      </button>
-
 
       <Modal
         isOpen={isMapVisible}
@@ -103,11 +132,6 @@ function Cameras({ onLogout }) {
           </button>
         </div>
       </Modal>
-
-      {/* Pop-up de Chat */}
-      <button className="chat-button" onClick={showChat}>
-        <FaRegCommentAlt size={20} />
-      </button>
 
       <Modal
         isOpen={isChatVisible}
