@@ -1,7 +1,7 @@
 import './visualizarpasseador.css';
 import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom";
-import { FaUser, FaEnvelope, FaAddressCard, FaPhone, FaHome, FaCamera } from "react-icons/fa";
+import { FaUser, FaEnvelope, FaAddressCard, FaPhone, FaHome, FaCamera, FaUserAlt } from "react-icons/fa";
 
 function VisualizarPasseador() {
 
@@ -74,6 +74,10 @@ function VisualizarPasseador() {
           <div className="input-container">
             <FaHome className="input-icon" />
             <span className="form-input">Rua Exemplo, 123</span>
+          </div>
+          <div className="input-container">
+            <FaUserAlt className="input-icon" />
+            <span className="form-input">Gabriel</span>
           </div>
 
           {/* Botão Editar */}

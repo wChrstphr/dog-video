@@ -1,7 +1,7 @@
 import './visualizarcliente.css';
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from "react-router-dom";
-import { FaUser, FaEnvelope, FaAddressCard, FaDog, FaPhone, FaHome, FaCalendarAlt, FaClock, FaBook } from "react-icons/fa";
+import { FaUser, FaEnvelope, FaAddressCard, FaDog, FaPhone, FaHome, FaCalendarAlt, FaClock, FaBook, FaUserAlt } from "react-icons/fa";
 
 function VisualizarCliente() {
   const navigate = useNavigate();
@@ -71,6 +71,10 @@ function VisualizarCliente() {
           <div className="input-container">
             <FaHome className="input-icon" />
             <span className="form-input">{cliente.endereco}</span> {/* Endereço do cliente */}
+          </div>
+          <div className="input-container">
+            <FaUserAlt className="input-icon" />
+            <span className="form-input">{cliente.passeador}</span> {/* Passeador do cliente */}
           </div>
           <div className="input-container">
             <FaCalendarAlt className="input-icon" />
