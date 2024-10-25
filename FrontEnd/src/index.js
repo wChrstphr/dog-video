@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
@@ -21,11 +21,12 @@ import RedefinirSenha from './RedefinirSenha/redefinir';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
-Modal.setAppElement(root);
+Modal.setAppElement('#root');  // Defina o elemento para os modais
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState('');
+  const [isMapVisible, setIsMapVisible] = useState(false);
 
   const handleLogin = (role) => {
     setIsLoggedIn(true);
@@ -36,6 +37,29 @@ function App() {
     setIsLoggedIn(false);
     setUserRole('');
   };
+
+  useEffect(() => {
+    const constraints = {
+      video: true,
+      audio: false,
+    };
+
+    navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
+      const video1 = document.getElementById('camera1');
+      const video2 = document.getElementById('camera2');
+      if (video1) video1.srcObject = stream;
+      if (video2) video2.srcObject = stream;
+    });
+  }, []);
+
+  // useEffect(() => {
+  //   if (isMapVisible) {
+  //     const map = new google.maps.Map(document.getElementById('map'), {
+  //       center: { lat: -34.397, lng: 150.644 },
+  //       zoom: 8,
+  //     });
+  //   }
+  // }, [isMapVisible]);
 
   return (
     <React.StrictMode>
@@ -60,7 +84,7 @@ function App() {
           <Route path="/clientes" element={<Clientes />} />
           <Route path="/passeadores" element={<Passeadores />} />
           <Route path="/criarcliente" element={<CriarCliente />} />
-          <Route path="/visualizarcliente/:id" element={<VisualizarCliente />} /> {/* Alteração importante aqui */}
+          <Route path="/visualizarcliente/:id" element={<VisualizarCliente />} /> {/* Rota dinâmica */}
           <Route path="/criarpasseador" element={<CriarPasseador />} />
           <Route path="/editarcliente" element={<EditarCliente />} />
           <Route path="/cameras" element={<Cameras onLogout={handleLogout} />} />

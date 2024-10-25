@@ -1,28 +1,31 @@
 import './cameras.css';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Modal from "react-modal";
+import Modal from 'react-modal';
+import { FaLocationArrow, FaRegCommentAlt } from 'react-icons/fa';
 
 function Cameras({ onLogout }) {
-  const navigate = useNavigate(); // Hook do React Router para navegação
+  const navigate = useNavigate();
 
-  // Controle de estado do modal
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isMapVisible, setIsMapVisible] = useState(false);
+  const [isChatVisible, setIsChatVisible] = useState(false);
 
-  // Função para mostrar o modal
   const showModal = () => setIsModalVisible(true);
-
-  // Função para esconder o modal
   const hideModal = () => setIsModalVisible(false);
 
-  // Função para efetuar o logout
+  const showMap = () => setIsMapVisible(true);
+  const hideMap = () => setIsMapVisible(false);
+
+  const showChat = () => setIsChatVisible(true);
+  const hideChat = () => setIsChatVisible(false);
+
   const handleLogout = () => {
-    onLogout(); // Chama a função de logout recebida via props
-    hideModal(); // Esconde o modal
-    navigate("/"); // Redireciona para a página de login
+    onLogout();
+    hideModal();
+    navigate('/');
   };
 
-  // Função para navegar para a página de dados do cliente
   const handleDadosClienteClick = () => {
     navigate('/dados-cliente');
   };
@@ -32,13 +35,11 @@ function Cameras({ onLogout }) {
       <header className="Web-header">
         <img src="/logotipo.svg" className="Web-logotipo" alt="Dogvideo Logomarca" />
 
-        {/* Botão para acessar dados do cliente */}
         <div className="tabbar-title" onClick={handleDadosClienteClick} style={{ cursor: 'pointer' }}>
           <img src="/user.svg" alt="Ícone do Usuário" className="user-icon" />
           Dados do Cliente
         </div>
 
-        {/* Modal de confirmação de logout */}
         <Modal
           isOpen={isModalVisible}
           onRequestClose={hideModal}
@@ -68,15 +69,63 @@ function Cameras({ onLogout }) {
         />
       </header>
 
-      <div className="footer-bar"></div> {/* Barrinha inferior */}
+      {/* Área das câmeras */}
+      <div className="cameras-container">
+        <div className="camera-box">
+          <video id="camera1" autoPlay playsInline></video>
+          <p style={{ fontWeight: 'bold', color: 'white' }}>CAMERA 01</p>
+        </div>
+        <div className="camera-box">
+          <video id="camera2" autoPlay playsInline></video>
+          <p style={{ fontWeight: 'bold', color: 'white' }}>CAMERA 02</p>
 
-      <img
-        src="/Back.svg"
-        alt="Ícone de voltar"
-        className="back-icon"
-        onClick={() => navigate("/Web")}
-      />
+        </div>
+      </div>
 
+      {/* Pop-up de Mapa */}
+      <button className="location-button" onClick={showMap}>
+        <FaLocationArrow size={20} />
+      </button>
+
+
+      <Modal
+        isOpen={isMapVisible}
+        onRequestClose={hideMap}
+        className="modal-container"
+        overlayClassName="modal-overlay"
+        ariaHideApp={false}
+      >
+        <div className="modal-content">
+          <h2>Localização do Passeador</h2>
+          <div id="map"></div>
+          <button className="modal-button" onClick={hideMap}>
+            Fechar
+          </button>
+        </div>
+      </Modal>
+
+      {/* Pop-up de Chat */}
+      <button className="chat-button" onClick={showChat}>
+        <FaRegCommentAlt size={20} />
+      </button>
+
+      <Modal
+        isOpen={isChatVisible}
+        onRequestClose={hideChat}
+        className="modal-container"
+        overlayClassName="modal-overlay"
+        ariaHideApp={false}
+      >
+        <div className="modal-content">
+          <h2>Chat com o Passeador</h2>
+          <div id="chat-box">Aqui será o chat...</div>
+          <button className="modal-button" onClick={hideChat}>
+            Fechar
+          </button>
+        </div>
+      </Modal>
+
+      <div className="footer-bar"></div>
     </div>
   );
 }
