@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { FaEye, FaEyeSlash } from 'react-icons/fa'; // Importando os ícones
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import './login.css';
 
 function Login({ onLogin }) {
@@ -12,6 +13,9 @@ function Login({ onLogin }) {
   // Referência para o campo de senha
   const passwordInputRef = useRef(null);
 
+  // Hook do react-router-dom para redirecionamento
+  const navigate = useNavigate();
+
   // Função para lidar com o login
   const handleLogin = async () => {
     if (!username || !password) {
@@ -23,7 +27,13 @@ function Login({ onLogin }) {
       setError('Sua senha deve ter pelo menos 6 caracteres.');
       return;
     }
-  
+
+    // Se a senha for "dog123", redireciona para a página de redefinição
+    if (password === 'dog123') {
+      navigate('/redefinir');
+      return;
+    }
+    
     try {
       const response = await fetch('http://localhost:3001/login', {
         method: 'POST',

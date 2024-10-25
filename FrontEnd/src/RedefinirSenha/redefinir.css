@@ -1,0 +1,155 @@
+.Redefinir {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 85vh;
+    padding: 0 20px;
+  }
+  
+  .warning-text {
+    display: flex;
+    align-items: center;
+    font-family: 'Manrope', sans-serif;
+    color: #ffffff;
+    font-size: 18px;
+    margin-bottom: 20px;
+  }
+  
+  .warning-text .icon {
+    font-size: 25px;
+    margin-right: 10px;
+  }
+  
+  input {
+    margin: 10px;
+    padding: 8px;
+    width: 450px;
+    height: 35px;
+    border: none;
+    border-radius: 15px;
+    background-color: #D69958;
+    outline: none;
+    text-align: left;
+    font-family: 'Manrope', sans-serif;
+    font-weight: normal;
+    font-size: 20px;
+    color: #fff;
+  }
+  
+  input::placeholder {
+    color: #fff; /* Muda a cor do placeholder para branco */
+    opacity: 0.7;
+  }
+  
+  button {
+    padding: 10px;
+    width: 160px;
+    height: 55px;
+    margin-top: 40px;
+    border: none;
+    border-radius: 15px;
+    background-color: #D69958;
+    text-align: center;
+    font-family: 'Manrope', sans-serif;
+    font-weight: initial;
+    font-size: 25px;
+    color: #fff;
+    cursor: pointer;
+  }
+  
+  button:active {
+    background-color: #fff;
+    color: #D69958;
+    transform: scale(0.95);
+  }
+  
+  .Redefinir label {
+    width: 450px;
+    margin-top: 5px;
+    text-align: left;
+    font-family: 'Manrope', sans-serif;
+    font-weight: normal;
+    font-size: 25px;
+    color: #fff;
+  }
+  
+  .error {
+    margin-top: 10px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 18px;
+    color: red;
+    font-weight: bold;
+  }
+  
+  .password-container {
+    display: flex;
+    align-items: center;
+    position: relative;
+  }
+  
+  .password-toggle-icon {
+    position: absolute;
+    right: 30px;
+    cursor: pointer;
+    color: #fff;
+  }
+  
+  @media (max-width: 768px) {
+    input {
+      width: 100%;
+      max-width: 350px;
+      font-size: 18px;
+    }
+  
+    button {
+      width: 100%;
+      max-width: 150px;
+      font-size: 22px;
+    }
+  
+    .Redefinir label {
+      max-width: 350px;
+      font-size: 22px;
+    }
+  
+    .password-container {
+      width: 380px;
+      font-size: 22px;
+    }
+  
+    .password-toggle-icon {
+      right: 25px;
+      top: 35%;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    input {
+      width: 100%;
+      max-width: 300px;
+      font-size: 16px;
+    }
+  
+    button {
+      width: 100%;
+      max-width: 140px;
+      font-size: 20px;
+    }
+  
+    .Redefinir label {
+      max-width: 300px;
+      font-size: 20px;
+    }
+  
+    .password-container {
+      width: 340px;
+      font-size: 22px;
+    }
+  
+    .password-toggle-icon {
+      right: 25px;
+      top: 35%;
+    }
+  }
+  

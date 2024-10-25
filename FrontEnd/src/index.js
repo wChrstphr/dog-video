@@ -17,6 +17,7 @@ import EditarCliente from './EditarCliente/editarcliente';
 import Cameras from './Cameras/cameras';
 import VisualizarPasseador from './VisualizarPasseador/visualizarpasseador';
 import EditarPasseador from './EditarPasseador/editarpasseador';
+import RedefinirSenha from './RedefinirSenha/redefinir';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
@@ -67,6 +68,7 @@ function App() {
           <Route path="/Web" element={<Web onLogout={handleLogout} />} />
           <Route path="/visualizarpasseador" element={<VisualizarPasseador />} />
           <Route path="/editarpasseador" element={<EditarPasseador />} />
+          <Route path="/redefinir" element={<RedefinirSenha />} />
         </Routes>
       </Router>
     </React.StrictMode>
