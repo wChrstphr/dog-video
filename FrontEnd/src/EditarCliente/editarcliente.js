@@ -1,11 +1,14 @@
 import './editarcliente.css';
-import React, { useRef } from 'react';
-import { useNavigate } from "react-router-dom";
+
+import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate, useParams } from "react-router-dom";
 import { FaUser, FaEnvelope, FaAddressCard, FaDog, FaPhone, FaHome, FaCalendarAlt, FaClock, FaBook, FaUserAlt } from "react-icons/fa";
 
 function EditarCliente() {
-
   const navigate = useNavigate();
+  const { id } = useParams(); // Captura o ID da URL
+  const [cliente, setCliente] = useState(null); // Armazena os dados do cliente
+  const [loading, setLoading] = useState(true); // Controla o estado de carregamento
 
   // Referências para os inputs
   const nomeRef = useRef(null);
@@ -17,22 +20,90 @@ function EditarCliente() {
   const passeadorRef = useRef(null);
   const pacoteRef = useRef(null);
   const horarioRef = useRef(null);
-  const createButtonRef = useRef(null);
   const anotacaoRef = useRef(null);
 
+  // Função para buscar os dados do cliente
+  useEffect(() => {
+    const fetchCliente = async () => {
+      try {
+        const response = await fetch(`http://localhost:3001/cliente/${id}`);
+        const data = await response.json();
+        setCliente(data); // Armazena os dados do cliente
+      } catch (error) {
+        console.error('Erro ao buscar cliente:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCliente();
+  }, [id]);
+
+  // Preencher os campos com os dados do cliente carregado
+  useEffect(() => {
+    if (cliente) {
+      nomeRef.current.value = cliente.nome;
+      emailRef.current.value = cliente.email;
+      cpfRef.current.value = cliente.cpf;
+      caesRef.current.value = cliente.caes.join(', ');
+      telefoneRef.current.value = cliente.telefone;
+      enderecoRef.current.value = cliente.endereco;
+      pacoteRef.current.value = cliente.pacote;
+      horarioRef.current.value = cliente.horario_passeio;
+      anotacaoRef.current.value = cliente.anotacoes;
+    }
+  }, [cliente]);
+
+  if (loading) {
+    return <div>Carregando...</div>;
+  }
+
+  if (!cliente) {
+    return <div>Cliente não encontrado</div>;
+  }
+
+  // Função para salvar as alterações
+  const handleSave = async (e) => {
+    e.preventDefault(); // Previne o comportamento padrão do formulário
+  
+    const updatedCliente = {
+      nome: nomeRef.current.value,
+      email: emailRef.current.value,
+      cpf: cpfRef.current.value,
+      caes: caesRef.current.value.split(',').map(cao => cao.trim()), // Divide a string de cães em uma lista
+      telefone: telefoneRef.current.value,
+      endereco: enderecoRef.current.value,
+      pacote: pacoteRef.current.value,
+      horario_passeio: horarioRef.current.value,
+      anotacoes: anotacaoRef.current.value,
+    };
+  
+    try {
+      // Enviar os dados atualizados para o backend
+      const response = await fetch(`http://localhost:3001/cliente/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedCliente), // Converte os dados para JSON
+      });
+  
+      if (response.ok) {
+        // Redirecionar para a página de visualização do cliente após salvar
+        navigate(`/visualizarcliente/${id}`);
+      } else {
+        console.error('Erro ao atualizar cliente');
+      }
+    } catch (error) {
+      console.error('Erro ao enviar os dados do cliente:', error);
+    }
+  };
+  
   // Função para gerenciar a troca de foco
   const handleKeyDown = (e, nextRef) => {
     if (e.key === "Enter") {
-      e.preventDefault(); // Previne a submissão do formulário ao pressionar Enter
-      if (nextRef) {
-        // Certifique-se de que o elemento existe antes de tentar focar
-        if (typeof nextRef === 'string' && nextRef === 'create-button') {
-          if (createButtonRef.current) {
-            createButtonRef.current.focus(); // Foca no botão "Criar" se a referência existir
-          }
-        } else if (nextRef.current) {
-          nextRef.current.focus(); // Foca no próximo input se a referência existir
-        }
+      e.preventDefault();
+      if (nextRef && nextRef.current) {
+        nextRef.current.focus();
       }
     }
   };
@@ -44,9 +115,9 @@ function EditarCliente() {
         <div className="footer-bar"></div>
       </header>
 
-      {/* Formulário de Criação de Cliente */}
+      {/* Formulário de Edição de Cliente */}
       <div className="form-container">
-        <form className="client-form">
+        <form className="client-form" onSubmit={handleSave}> {/* Chama handleSave ao submeter */}
           <div className="input-container">
             <FaUser className="input-icon" />
             <input
@@ -54,7 +125,7 @@ function EditarCliente() {
               type="text"
               placeholder="Nome do cliente"
               className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, emailRef)} // Mover o foco para o próximo campo (email)
+              onKeyDown={(e) => handleKeyDown(e, emailRef)}
             />
           </div>
           <div className="input-container">
@@ -140,27 +211,24 @@ function EditarCliente() {
           <div className="input-container">
             <FaBook className="input-icon" />
             <textarea
-                ref={anotacaoRef}
-                placeholder="Anotações"
-                className="form-textarea"
+              ref={anotacaoRef}
+              placeholder="Anotações"
+              className="form-textarea"
             />
           </div>
-
 
           {/* Botões */}
           <div className="button-group">
             <button
               type="button"
               className="cancel-button"
-              onClick={() => navigate("/visualizarcliente")}
+              onClick={() => navigate(`/visualizarcliente/${id}`)} // Redireciona ao cancelar
             >
               Cancelar
             </button>
             <button
-              ref={createButtonRef}
               type="submit"
               className="create-button"
-              onClick={() => navigate("/clientes")}
             >
               Salvar
             </button>

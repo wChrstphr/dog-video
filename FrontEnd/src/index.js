@@ -85,8 +85,8 @@ function App() {
           <Route path="/passeadores" element={<Passeadores />} />
           <Route path="/criarcliente" element={<CriarCliente />} />
           <Route path="/visualizarcliente/:id" element={<VisualizarCliente />} /> {/* Rota dinâmica */}
+          <Route path="/editarcliente/:id" element={<EditarCliente />} />
           <Route path="/criarpasseador" element={<CriarPasseador />} />
-          <Route path="/editarcliente" element={<EditarCliente />} />
           <Route path="/cameras" element={<Cameras onLogout={handleLogout} />} />
           <Route path="/Web" element={<Web onLogout={handleLogout} />} />
           <Route path="/visualizarpasseador" element={<VisualizarPasseador />} />
