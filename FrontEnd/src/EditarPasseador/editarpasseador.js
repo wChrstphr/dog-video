@@ -1,7 +1,7 @@
 import './editarpasseador.css';
 import React, { useRef, useState } from 'react';
 import { useNavigate } from "react-router-dom";
-import { FaUser, FaEnvelope, FaAddressCard, FaPhone, FaHome, FaCamera } from "react-icons/fa";
+import { FaUser, FaEnvelope, FaAddressCard, FaPhone, FaHome, FaCamera, FaUserAlt } from "react-icons/fa";
 
 function EditarPasseador() {
 
@@ -13,6 +13,7 @@ function EditarPasseador() {
   const cpfRef = useRef(null);
   const telefoneRef = useRef(null);
   const enderecoRef = useRef(null);
+  const clientesRef = useRef(null);
   const createButtonRef = useRef(null);
 
   // Estado para armazenar a imagem selecionada
@@ -119,6 +120,16 @@ function EditarPasseador() {
               ref={enderecoRef}
               type="text"
               placeholder="Endereço"
+              className="form-input"
+              onKeyDown={(e) => handleKeyDown(e, clientesRef)}
+            />
+          </div>
+          <div className="input-container">
+            <FaUserAlt className="input-icon" />
+            <input
+              ref={clientesRef}
+              type="text"
+              placeholder="Clientes"
               className="form-input"
               onKeyDown={(e) => handleKeyDown(e, null)}
             />

@@ -1,7 +1,8 @@
 import './editarcliente.css';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from "react-router-dom";
-import { FaUser, FaEnvelope, FaAddressCard, FaDog, FaPhone, FaHome, FaCalendarAlt, FaClock, FaBook } from "react-icons/fa";
+import { FaUser, FaEnvelope, FaAddressCard, FaDog, FaPhone, FaHome, FaCalendarAlt, FaClock, FaBook, FaUserAlt } from "react-icons/fa";
 
 function EditarCliente() {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ function EditarCliente() {
   const caesRef = useRef(null);
   const telefoneRef = useRef(null);
   const enderecoRef = useRef(null);
+  const passeadorRef = useRef(null);
   const pacoteRef = useRef(null);
   const horarioRef = useRef(null);
   const anotacaoRef = useRef(null);
@@ -172,6 +174,16 @@ function EditarCliente() {
               ref={enderecoRef}
               type="text"
               placeholder="Endereço"
+              className="form-input"
+              onKeyDown={(e) => handleKeyDown(e, passeadorRef)}
+            />
+          </div>
+          <div className="input-container">
+            <FaUserAlt className="input-icon" />
+            <input
+              ref={passeadorRef}
+              type="text"
+              placeholder="Passeador"
               className="form-input"
               onKeyDown={(e) => handleKeyDown(e, pacoteRef)}
             />
