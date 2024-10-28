@@ -52,15 +52,6 @@ function App() {
     });
   }, []);
 
-  // useEffect(() => {
-  //   if (isMapVisible) {
-  //     const map = new google.maps.Map(document.getElementById('map'), {
-  //       center: { lat: -34.397, lng: 150.644 },
-  //       zoom: 8,
-  //     });
-  //   }
-  // }, [isMapVisible]);
-
   return (
     <React.StrictMode>
       <Router>
@@ -91,7 +82,7 @@ function App() {
           <Route path="/Web" element={<Web onLogout={handleLogout} />} />
           <Route path="/visualizarpasseador" element={<VisualizarPasseador />} />
           <Route path="/editarpasseador" element={<EditarPasseador />} />
-          <Route path="/redefinir" element={<RedefinirSenha />} />
+          <Route path="/redefinir/:id" element={<RedefinirSenha />} /> {/* Rota dinâmica para redefinir senha */}
         </Routes>
       </Router>
     </React.StrictMode>

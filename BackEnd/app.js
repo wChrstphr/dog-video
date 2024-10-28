@@ -28,22 +28,50 @@ connection.connect((err) => {
 
 // Endpoint para login
 app.post('/login', (req, res) => {
-    const { email, senha } = req.body;
-    const query = 'SELECT * FROM clientes WHERE email = ? AND senha = ?';
+  const { email, senha } = req.body;
+  const query = 'SELECT * FROM clientes WHERE email = ? AND senha = ?';
 
-    connection.query(query, [email, senha], (err, results) => {
-      if (err) {
-        console.error('Erro ao consultar o banco de dados:', err);
-        return res.status(500).send('Erro ao consultar o banco de dados');
-      } else if (results.length > 0) {
-        const user = results[0];
-        console.log('Usuário autenticado:', user);
-        const userType = user.tipo === 1 ? 'admin' : 'user';
-        res.json({ success: true, userType: userType });
-      } else {
-        res.json({ success: false, message: 'Email ou senha incorretos' });
-      }
-    });
+  connection.query(query, [email, senha], (err, results) => {
+    if (err) {
+      console.error('Erro ao consultar o banco de dados:', err);
+      return res.status(500).send('Erro ao consultar o banco de dados');
+    } else if (results.length > 0) {
+      const user = results[0];
+      console.log('Usuário autenticado:', user);
+      const userType = user.tipo === 1 ? 'admin' : 'user';
+
+      // Inclui o 'id_cliente' na resposta, junto com 'alterar_senha'
+      res.json({
+        success: true,
+        userType: userType,
+        alterar_senha: user.alterar_senha,
+        id_cliente: user.id_cliente
+      });
+    } else {
+      res.json({ success: false, message: 'Email ou senha incorretos' });
+    }
+  });
+});
+
+// Endpoint para alterar a senha
+app.post('/alterar-senha', (req, res) => {
+  const { novaSenha, id_cliente } = req.body;
+
+  if (!id_cliente) {
+    return res.status(400).json({ success: false, message: 'ID do cliente não fornecido' });
+  }
+
+  const query = 'UPDATE clientes SET senha = ?, alterar_senha = 0 WHERE id_cliente = ?';
+
+  connection.query(query, [novaSenha, id_cliente], (err) => {
+    if (err) {
+      console.error('Erro ao atualizar a senha:', err);
+      return res.status(500).json({ success: false, message: 'Erro ao atualizar a senha' });
+    }
+
+    // Retorna JSON para confirmação de sucesso
+    res.json({ success: true, message: 'Senha alterada com sucesso!' });
+  });
 });
 
 // Endpoint para aparecer os clientes
