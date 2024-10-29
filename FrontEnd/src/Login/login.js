@@ -17,12 +17,12 @@ function Login({ onLogin }) {
       setError('Todos os campos são obrigatórios.');
       return;
     }
-
+  
     if (password.length < 6) {
       setError('Sua senha deve ter pelo menos 6 caracteres.');
       return;
     }
-
+  
     try {
       const response = await fetch('http://localhost:3001/login', {
         method: 'POST',
@@ -31,16 +31,16 @@ function Login({ onLogin }) {
         },
         body: JSON.stringify({ email: username, senha: password }),
       });
-
+  
       const data = await response.json();
-
+  
       if (data.success) {
         setError('');
-        onLogin(data.userType); // 'admin' ou 'user'
-
-        // Redireciona para a tela de redefinição se a senha for "dog123"
-        if (password === 'dog123') {
-          navigate('/redefinir');
+        onLogin(data.userType);
+  
+        // Redireciona para a tela de redefinição com o id do cliente, se alterar_senha for 1
+        if (data.alterar_senha === 1) {
+          navigate(`/redefinir/${data.id_cliente}`);
         }
       } else {
         setError(data.message);
@@ -48,7 +48,7 @@ function Login({ onLogin }) {
     } catch (error) {
       setError('Erro ao conectar ao servidor. Tente novamente mais tarde.');
     }
-  };
+  };  
 
   const handleKeyDown = (event, field) => {
     if (event.key === 'Enter') {
