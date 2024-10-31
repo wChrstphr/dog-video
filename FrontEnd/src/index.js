@@ -81,7 +81,7 @@ function App() {
           <Route path="/cameras" element={<Cameras onLogout={handleLogout} />} />
           <Route path="/Web" element={<Web onLogout={handleLogout} />} />
           <Route path="/visualizarpasseador/:id" element={<VisualizarPasseador />} />
-          <Route path="/editarpasseador" element={<EditarPasseador />} />
+          <Route path="/editarpasseador/:id" element={<EditarPasseador />} />
           <Route path="/redefinir/:id" element={<RedefinirSenha />} /> {/* Rota dinâmica para redefinir senha */}
         </Routes>
       </Router>
