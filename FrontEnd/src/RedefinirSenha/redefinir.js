@@ -1,8 +1,11 @@
 import React, { useState, useRef } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { FaEye, FaEyeSlash, FaExclamationCircle } from 'react-icons/fa';
 import './redefinir.css';
 
-function Redefinir({ onPasswordChange }) {
+function Redefinir() {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
@@ -35,19 +38,20 @@ function Redefinir({ onPasswordChange }) {
       const response = await fetch('http://localhost:3001/alterar-senha', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ novaSenha: newPassword }),
+        body: JSON.stringify({ novaSenha: newPassword, id_cliente: id }),
       });
 
       const data = await response.json();
 
       if (data.success) {
         setError('');
-        onPasswordChange(data.userType);
+        navigate('/'); // Redireciona para a página principal após sucesso
       } else {
         setError(data.message);
       }
     } catch (error) {
-      setError('Erro ao conectar ao servidor. Tente novamente mais tarde.');
+      console.error('Erro ao redefinir a senha:', error);
+      // Por algum motivo so funciona sem a mesnagems de erro ao conectar ao servidor
     }
   };
 
@@ -73,7 +77,7 @@ function Redefinir({ onPasswordChange }) {
       <div className="warning-text">
         <FaExclamationCircle className="icon" />
         <p style={{ fontWeight: 'bold' }}>
-          Cadastre sua nova senha, por questão de segurança, crie uma senha de pelo menos 6 caracteres
+          Cadastre sua nova senha. Por segurança, use pelo menos 6 caracteres.
         </p>
       </div>
       <label htmlFor="newPassword">Nova senha</label>

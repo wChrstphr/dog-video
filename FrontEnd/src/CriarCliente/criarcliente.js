@@ -1,11 +1,10 @@
 import './criarcliente.css';
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 import { FaUser, FaEnvelope, FaAddressCard, FaDog, FaPhone, FaHome, FaCalendarAlt, FaClock, FaBook, FaUserAlt } from "react-icons/fa";
 
 function CriarCliente() {
-
   const navigate = useNavigate();
 
   // Referências para os inputs
@@ -15,32 +14,42 @@ function CriarCliente() {
   const caesRef = useRef(null);
   const telefoneRef = useRef(null);
   const enderecoRef = useRef(null);
-  const passeadorRef = useRef(null);
   const pacoteRef = useRef(null);
   const horarioRef = useRef(null);
   const createButtonRef = useRef(null);
   const anotacaoRef = useRef(null);
 
+  // Estado para armazenar passeadores e o passeador selecionado
+  const [passeadores, setPasseadores] = useState([]);
+  const [selectedPasseadorId, setSelectedPasseadorId] = useState("");
+
+  // Função para buscar passeadores do backend
+  useEffect(() => {
+    const fetchPasseadores = async () => {
+      try {
+        const response = await axios.get('http://localhost:3001/passeadores');
+        setPasseadores(response.data);
+      } catch (error) {
+        console.error('Erro ao buscar passeadores:', error);
+      }
+    };
+
+    fetchPasseadores();
+  }, []);
+
   // Função para gerenciar a troca de foco
   const handleKeyDown = (e, nextRef) => {
     if (e.key === "Enter") {
-      e.preventDefault(); // Previne a submissão do formulário ao pressionar Enter
-      if (nextRef) {
-        // Certifique-se de que o elemento existe antes de tentar focar
-        if (typeof nextRef === 'string' && nextRef === 'create-button') {
-          if (createButtonRef.current) {
-            createButtonRef.current.focus(); // Foca no botão "Criar" se a referência existir
-          }
-        } else if (nextRef.current) {
-          nextRef.current.focus(); // Foca no próximo input se a referência existir
-        }
+      e.preventDefault();
+      if (nextRef && nextRef.current) {
+        nextRef.current.focus();
       }
     }
   };
 
   // Função para lidar com a criação do cliente
   const handleCreate = async (e) => {
-    e.preventDefault(); // Previne o comportamento padrão do formulário
+    e.preventDefault();
 
     // Captura os valores dos inputs
     const nome = nomeRef.current.value;
@@ -51,7 +60,7 @@ function CriarCliente() {
     const pacote = pacoteRef.current.value;
     const horario = horarioRef.current.value;
     const anotacao = anotacaoRef.current.value;
-    const caes = caesRef.current.value.split(',').map(cao => cao.trim()); // Divide os nomes dos cães por vírgula
+    const caes = caesRef.current.value.split(',').map(cao => cao.trim());
 
     try {
       // Envia os dados para o backend
@@ -64,7 +73,8 @@ function CriarCliente() {
         pacote,
         horario,
         anotacao,
-        caes
+        caes,
+        id_passeador: selectedPasseadorId // Enviar o ID do passeador selecionado
       });
 
       if (response.data.success) {
@@ -96,7 +106,7 @@ function CriarCliente() {
               type="text"
               placeholder="Nome do cliente"
               className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, emailRef)} // Mover o foco para o próximo campo (email)
+              onKeyDown={(e) => handleKeyDown(e, emailRef)}
             />
           </div>
           <div className="input-container">
@@ -146,18 +156,24 @@ function CriarCliente() {
               type="text"
               placeholder="Endereço"
               className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, passeadorRef)}
+              onKeyDown={(e) => handleKeyDown(e, pacoteRef)}
             />
           </div>
           <div className="input-container">
             <FaUserAlt className="input-icon" />
-            <input
-              ref={passeadorRef}
-              type="text"
-              placeholder="Passeador"
+            <select
               className="form-input"
+              value={selectedPasseadorId}
+              onChange={(e) => setSelectedPasseadorId(e.target.value)}
               onKeyDown={(e) => handleKeyDown(e, pacoteRef)}
-            />
+            >
+              <option value="">Selecione o Passeador</option>
+              {passeadores.map((passeador) => (
+                <option key={passeador.id_passeador} value={passeador.id_passeador}>
+                  {passeador.nome}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="input-container">
             <FaCalendarAlt className="input-icon" />
