@@ -1,21 +1,41 @@
 import './visualizarpasseador.css';
-import React, { useState } from 'react';
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from "react-router-dom";
 import { FaUser, FaEnvelope, FaAddressCard, FaPhone, FaHome, FaCamera, FaUserAlt } from "react-icons/fa";
 
 function VisualizarPasseador() {
-
+  const { id } = useParams();
   const navigate = useNavigate();
 
-  // Estado para armazenar a imagem selecionada
-  const [selectedImage, setSelectedImage] = useState(null);
+  const [passeador, setPasseador] = useState(null);
+  const [clientes, setClientes] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Função para lidar com a seleção de imagem
-  const handleImageChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedImage(URL.createObjectURL(e.target.files[0]));
-    }
-  };
+  useEffect(() => {
+    const fetchPasseador = async () => {
+      try {
+        const response = await fetch(`http://localhost:3001/passeador/${id}`);
+        const data = await response.json();
+
+        setPasseador(data.passeador);
+        setClientes(data.clientes); // Armazena a lista de clientes
+      } catch (error) {
+        console.error('Erro ao buscar passeador:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPasseador();
+  }, [id]);
+
+  if (loading) {
+    return <div>Carregando...</div>;
+  }
+
+  if (!passeador) {
+    return <div>Passeador não encontrado</div>;
+  }
 
   return (
     <div className="Web">
@@ -31,37 +51,25 @@ function VisualizarPasseador() {
         onClick={() => navigate("/passeadores")}
       />
 
-      {/* Formulário de Visualização de Passeador */}
       <div className="form-container">
         <form className="passeador-form">
-
-          {/* Campo de seleção de imagem */}
           <div className="image-container">
-            <label htmlFor="image-upload" className="image-upload-label">
-              {selectedImage ? (
-                <img src={selectedImage} alt="Imagem Selecionada" className="image-preview" />
-              ) : (
-                <div className="placeholder-container">
-                  <FaCamera className="camera-icon" />
-                </div>
-              )}
-            </label>
-            <div
-              id="image-upload"
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="image-input"
-            />
+            {passeador.imagem ? (
+              <img src={passeador.imagem} alt="Imagem do Passeador" className="image-preview" />
+            ) : (
+              <div className="placeholder-container">
+                <FaCamera className="camera-icon" />
+              </div>
+            )}
           </div>
 
           <div className="input-container">
             <FaUser className="input-icon" />
-            <span className="form-input">Cléber</span>
+            <span className="form-input">{passeador.nome}</span>
           </div>
           <div className="input-container">
             <FaEnvelope className="input-icon" />
-            <span className="form-input">email@passeador.com</span>
+            <span className="form-input">{passeador.email}</span>
           </div>
           <div className="input-container">
             <FaAddressCard className="input-icon" />
@@ -77,15 +85,14 @@ function VisualizarPasseador() {
           </div>
           <div className="input-container">
             <FaUserAlt className="input-icon" />
-            <span className="form-input">Gabriel</span>
+            <span className="form-input">{clientes || 'Sem clientes associados'}</span> {/* Exibe todos os clientes associados */}
           </div>
 
-          {/* Botão Editar */}
           <div className="button-group">
             <button
               type="button"
               className="edit-button"
-              onClick={() => navigate("/editarpasseador")}
+              onClick={() => navigate(`/editarpasseador/${id}`)}
             >
               Editar
             </button>

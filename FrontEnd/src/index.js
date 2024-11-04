@@ -52,15 +52,6 @@ function App() {
     });
   }, []);
 
-  // useEffect(() => {
-  //   if (isMapVisible) {
-  //     const map = new google.maps.Map(document.getElementById('map'), {
-  //       center: { lat: -34.397, lng: 150.644 },
-  //       zoom: 8,
-  //     });
-  //   }
-  // }, [isMapVisible]);
-
   return (
     <React.StrictMode>
       <Router>
@@ -84,14 +75,14 @@ function App() {
           <Route path="/clientes" element={<Clientes />} />
           <Route path="/passeadores" element={<Passeadores />} />
           <Route path="/criarcliente" element={<CriarCliente />} />
-          <Route path="/visualizarcliente/:id" element={<VisualizarCliente />} /> {/* Rota dinâmica */}
+          <Route path="/visualizarcliente/:id" element={<VisualizarCliente />} />
           <Route path="/editarcliente/:id" element={<EditarCliente />} />
           <Route path="/criarpasseador" element={<CriarPasseador />} />
           <Route path="/cameras" element={<Cameras onLogout={handleLogout} />} />
           <Route path="/Web" element={<Web onLogout={handleLogout} />} />
-          <Route path="/visualizarpasseador" element={<VisualizarPasseador />} />
-          <Route path="/editarpasseador" element={<EditarPasseador />} />
-          <Route path="/redefinir" element={<RedefinirSenha />} />
+          <Route path="/visualizarpasseador/:id" element={<VisualizarPasseador />} />
+          <Route path="/editarpasseador/:id" element={<EditarPasseador />} />
+          <Route path="/redefinir/:id" element={<RedefinirSenha />} /> {/* Rota dinâmica para redefinir senha */}
         </Routes>
       </Router>
     </React.StrictMode>
