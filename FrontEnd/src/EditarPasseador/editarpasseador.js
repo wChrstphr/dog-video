@@ -1,45 +1,72 @@
 import './editarpasseador.css';
-import React, { useRef, useState } from 'react';
-import { useNavigate } from "react-router-dom";
-import { FaUser, FaEnvelope, FaAddressCard, FaPhone, FaHome, FaCamera, FaUserAlt } from "react-icons/fa";
+import React, { useRef, useState, useEffect } from 'react';
+import { useNavigate, useParams } from "react-router-dom";
+import { FaUser, FaEnvelope, FaAddressCard, FaPhone, FaHome, FaCamera } from "react-icons/fa";
 
 function EditarPasseador() {
-
+  const { id } = useParams();
   const navigate = useNavigate();
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [passeador, setPasseador] = useState({});
 
-  // Referências para os inputs
   const nomeRef = useRef(null);
   const emailRef = useRef(null);
   const cpfRef = useRef(null);
   const telefoneRef = useRef(null);
   const enderecoRef = useRef(null);
-  const clientesRef = useRef(null);
-  const createButtonRef = useRef(null);
 
-  // Estado para armazenar a imagem selecionada
-  const [selectedImage, setSelectedImage] = useState(null);
-
-  // Função para gerenciar a troca de foco
-  const handleKeyDown = (e, nextRef) => {
-    if (e.key === "Enter") {
-      e.preventDefault(); // Previne a submissão do formulário ao pressionar Enter
-      if (nextRef) {
-        // Certifique-se de que o elemento existe antes de tentar focar
-        if (typeof nextRef === 'string' && nextRef === 'create-button') {
-          if (createButtonRef.current) {
-            createButtonRef.current.focus(); // Foca no botão "Criar" se a referência existir
-          }
-        } else if (nextRef.current) {
-          nextRef.current.focus(); // Foca no próximo input se a referência existir
-        }
+  useEffect(() => {
+    const fetchPasseador = async () => {
+      try {
+        const response = await fetch(`http://localhost:3001/passeador/${id}`);
+        const data = await response.json();
+        setPasseador(data.passeador);
+        setSelectedImage(data.passeador.imagem);
+      } catch (error) {
+        console.error('Erro ao carregar passeador:', error);
       }
+    };
+    fetchPasseador();
+  }, [id]);
+
+  const handleImageChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSelectedImage(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  // Função para lidar com a seleção de imagem
-  const handleImageChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedImage(URL.createObjectURL(e.target.files[0]));
+  const handleSave = async (e) => {
+    e.preventDefault();
+    const updatedPasseador = {
+      nome: nomeRef.current.value,
+      email: emailRef.current.value,
+      cpf: cpfRef.current.value,
+      telefone: telefoneRef.current.value,
+      endereco: enderecoRef.current.value,
+      imagem: selectedImage,
+    };
+
+    try {
+      const response = await fetch(`http://localhost:3001/passeador/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedPasseador),
+      });
+
+      if (response.ok) {
+        navigate("/passeadores");
+      } else {
+        console.error('Erro ao atualizar passeador');
+      }
+    } catch (error) {
+      console.error('Erro ao salvar passeador:', error);
     }
   };
 
@@ -50,11 +77,8 @@ function EditarPasseador() {
         <div className="footer-bar"></div>
       </header>
 
-      {/* Formulário de Criação de Passeador */}
       <div className="form-container">
-        <form className="passeador-form">
-
-          {/* Campo de seleção de imagem */}
+        <form className="passeador-form" onSubmit={handleSave}>
           <div className="image-container">
             <label htmlFor="image-upload" className="image-upload-label">
               {selectedImage ? (
@@ -76,80 +100,30 @@ function EditarPasseador() {
 
           <div className="input-container">
             <FaUser className="input-icon" />
-            <input
-              ref={nomeRef}
-              type="text"
-              placeholder="Nome do passeador"
-              className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, emailRef)} // Mover o foco para o próximo campo (email)
-            />
+            <input ref={nomeRef} type="text" placeholder="Nome do passeador" defaultValue={passeador.nome} className="form-input" />
           </div>
           <div className="input-container">
             <FaEnvelope className="input-icon" />
-            <input
-              ref={emailRef}
-              type="email"
-              placeholder="Email"
-              className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, cpfRef)}
-            />
+            <input ref={emailRef} type="email" placeholder="Email" defaultValue={passeador.email} className="form-input" />
           </div>
           <div className="input-container">
             <FaAddressCard className="input-icon" />
-            <input
-              ref={cpfRef}
-              type="text"
-              placeholder="CPF"
-              className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, telefoneRef)}
-            />
+            <input ref={cpfRef} type="text" placeholder="CPF" defaultValue={passeador.cpf} className="form-input" />
           </div>
           <div className="input-container">
             <FaPhone className="input-icon" />
-            <input
-              ref={telefoneRef}
-              type="tel"
-              placeholder="Telefone"
-              className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, enderecoRef)}
-            />
+            <input ref={telefoneRef} type="tel" placeholder="Telefone" defaultValue={passeador.telefone} className="form-input" />
           </div>
           <div className="input-container">
             <FaHome className="input-icon" />
-            <input
-              ref={enderecoRef}
-              type="text"
-              placeholder="Endereço"
-              className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, clientesRef)}
-            />
-          </div>
-          <div className="input-container">
-            <FaUserAlt className="input-icon" />
-            <input
-              ref={clientesRef}
-              type="text"
-              placeholder="Clientes"
-              className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, null)}
-            />
+            <input ref={enderecoRef} type="text" placeholder="Endereço" defaultValue={passeador.endereco} className="form-input" />
           </div>
 
-          {/* Botões */}
           <div className="button-group">
-            <button
-              type="button"
-              className="cancel-button"
-              onClick={() => navigate("/visualizarpasseador")}
-            >
+            <button type="button" className="cancel-button" onClick={() => navigate(`/visualizarpasseador/${id}`)}>
               Cancelar
             </button>
-            <button
-              ref={createButtonRef}
-              type="submit"
-              className="create-button"
-              onClick={() => navigate("/passeadores")}
-            >
+            <button type="submit" className="create-button">
               Salvar
             </button>
           </div>

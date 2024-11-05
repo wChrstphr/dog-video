@@ -73,15 +73,15 @@ function VisualizarPasseador() {
           </div>
           <div className="input-container">
             <FaAddressCard className="input-icon" />
-            <span className="form-input">000.000.000-00</span>
+            <span className="form-input">{passeador.cpf}</span> {/* CPF do passeador */}
           </div>
           <div className="input-container">
             <FaPhone className="input-icon" />
-            <span className="form-input">(11) 90000-0000</span>
+            <span className="form-input">{passeador.telefone}</span> {/* Telefone do passeador */}
           </div>
           <div className="input-container">
             <FaHome className="input-icon" />
-            <span className="form-input">Rua Exemplo, 123</span>
+            <span className="form-input">{passeador.endereco}</span> {/* Endereço do passeador */}
           </div>
           <div className="input-container">
             <FaUserAlt className="input-icon" />
