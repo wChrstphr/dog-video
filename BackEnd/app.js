@@ -7,7 +7,8 @@ const port = 3001;
 
 // Configuração do middleware
 app.use(cors());
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '10mb' })); // Limite aumentado para suportar imagens maiores
+app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 
 // Configuração da conexão com o banco de dados
 const connection = mysql.createConnection({
@@ -17,7 +18,6 @@ const connection = mysql.createConnection({
   database: 'dogvideo'
 });
 
-// Verifica se a conexão foi estabelecida com sucesso
 connection.connect((err) => {
   if (err) {
     console.error('Erro ao conectar ao banco de dados:', err);
@@ -274,13 +274,16 @@ app.get('/passeadores', (req, res) => {
 // Endpoint para buscar informações detalhadas de um passeador e os clientes associados
 app.get('/passeador/:id', (req, res) => {
   const passeadorId = req.params.id;
-  const queryPasseador = 'SELECT nome, email, imagem FROM passeadores WHERE id_passeador = ?';
+  const queryPasseador = `
+    SELECT nome, email, imagem, cpf, telefone, endereco 
+    FROM passeadores 
+    WHERE id_passeador = ?`;
+
   const queryClientes = `
     SELECT DISTINCT clientes.nome 
     FROM clientes
     JOIN cachorros ON cachorros.id_cliente = clientes.id_cliente
-    WHERE cachorros.id_passeador = ?
-  `;
+    WHERE cachorros.id_passeador = ?`;
 
   connection.query(queryPasseador, [passeadorId], (err, passeadorResults) => {
     if (err) {
@@ -294,7 +297,6 @@ app.get('/passeador/:id', (req, res) => {
 
     const passeador = passeadorResults[0];
 
-    // Converter a imagem em base64, se existir
     if (passeador.imagem) {
       passeador.imagem = `data:image/jpeg;base64,${passeador.imagem.toString('base64')}`;
     }
@@ -309,9 +311,66 @@ app.get('/passeador/:id', (req, res) => {
       // Combina os nomes dos clientes em uma única string separada por vírgulas
       const clientes = clienteResults.map(cliente => cliente.nome).join(', ');
 
-      // Retorna os dados do passeador e dos clientes
       res.json({ passeador, clientes });
     });
+  });
+});
+
+// Endpoint para atualizar os dados de um passeador
+app.put('/passeador/:id', (req, res) => {
+  const passeadorId = req.params.id;
+  const { nome, email, cpf, telefone, endereco, imagem } = req.body;
+
+  // Conversão de base64 para Blob (Binário)
+  const imagemBlob = imagem ? Buffer.from(imagem.replace(/^data:image\/\w+;base64,/, ""), 'base64') : null;
+
+  const query = `
+    UPDATE passeadores
+    SET nome = ?, email = ?, cpf = ?, telefone = ?, endereco = ?, imagem = ?
+    WHERE id_passeador = ?
+  `;
+  
+  connection.query(query, [nome, email, cpf, telefone, endereco, imagemBlob, passeadorId], (err) => {
+    if (err) {
+      console.error('Erro ao atualizar passeador:', err);
+      return res.status(500).json({ success: false, message: 'Erro ao atualizar passeador' });
+    }
+    res.json({ success: true, message: 'Passeador atualizado com sucesso!' });
+  });
+});
+
+// Endpoint para criar um novo passeador
+app.post('/criarpasseador', (req, res) => {
+  const { nome, email, cpf, telefone, endereco, imagem } = req.body;
+
+  // Converte a imagem base64 em Blob para salvar no banco de dados
+  const imagemBlob = imagem ? Buffer.from(imagem.replace(/^data:image\/\w+;base64,/, ""), 'base64') : null;
+
+  const query = `
+    INSERT INTO passeadores (nome, email, cpf, telefone, endereco, imagem)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `;
+
+  connection.query(query, [nome, email, cpf, telefone, endereco, imagemBlob], (err) => {
+    if (err) {
+      console.error('Erro ao criar passeador:', err);
+      return res.status(500).json({ success: false, message: 'Erro ao criar passeador' });
+    }
+    res.json({ success: true, message: 'Passeador criado com sucesso!' });
+  });
+});
+
+// Endpoint para excluir um passeador pelo ID
+app.delete('/passeadores/:id', (req, res) => {
+  const passeadorId = req.params.id;
+  const deleteQuery = 'DELETE FROM passeadores WHERE id_passeador = ?';
+
+  connection.query(deleteQuery, [passeadorId], (err) => {
+    if (err) {
+      console.error('Erro ao excluir passeador:', err);
+      return res.status(500).json({ success: false, message: 'Erro ao excluir passeador' });
+    }
+    res.json({ success: true, message: 'Passeador excluído com sucesso!' });
   });
 });
 

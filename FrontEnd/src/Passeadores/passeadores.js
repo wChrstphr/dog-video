@@ -38,6 +38,25 @@ function Passeadores() {
     setSelectedPasseador(null);
   };
 
+  const handleDelete = async () => {
+    if (!selectedPasseador) return;
+
+    try {
+      const response = await fetch(`http://localhost:3001/passeadores/${selectedPasseador.id_passeador}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setPasseadores(passeadores.filter(p => p.id_passeador !== selectedPasseador.id_passeador));
+        hideModal();
+      } else {
+        console.error('Erro ao excluir passeador');
+      }
+    } catch (error) {
+      console.error('Erro ao excluir passeador:', error);
+    }
+  };
+
   const toggleSearch = () => {
     setIsSearchVisible(!isSearchVisible);
     setTimeout(() => {
@@ -58,11 +77,6 @@ function Passeadores() {
 
   const handlePasseadorClick = (id) => {
     navigate(`/visualizarpasseador/${id}`);
-  };
-
-  const handleDelete = () => {
-    console.log("Passeador excluído:", selectedPasseador);
-    hideModal();
   };
 
   const normalizeText = (text) => {
