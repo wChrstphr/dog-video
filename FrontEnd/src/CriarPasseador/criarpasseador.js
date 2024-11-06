@@ -1,10 +1,9 @@
 import './criarpasseador.css';
 import React, { useRef, useState } from 'react';
 import { useNavigate } from "react-router-dom";
-import { FaUser, FaEnvelope, FaAddressCard, FaPhone, FaHome, FaCamera, FaUserAlt } from "react-icons/fa";
+import { FaUser, FaEnvelope, FaAddressCard, FaPhone, FaHome, FaCamera } from "react-icons/fa";
 
 function CriarPasseador() {
-
   const navigate = useNavigate();
 
   // Referências para os inputs
@@ -13,33 +12,51 @@ function CriarPasseador() {
   const cpfRef = useRef(null);
   const telefoneRef = useRef(null);
   const enderecoRef = useRef(null);
-  const clientesRef = useRef(null);
-  const createButtonRef = useRef(null);
 
-  // Estado para armazenar a imagem selecionada
+  // Estado para armazenar a imagem em base64
   const [selectedImage, setSelectedImage] = useState(null);
-
-  // Função para gerenciar a troca de foco
-  const handleKeyDown = (e, nextRef) => {
-    if (e.key === "Enter") {
-      e.preventDefault(); // Previne a submissão do formulário ao pressionar Enter
-      if (nextRef) {
-        // Certifique-se de que o elemento existe antes de tentar focar
-        if (typeof nextRef === 'string' && nextRef === 'create-button') {
-          if (createButtonRef.current) {
-            createButtonRef.current.focus(); // Foca no botão "Criar" se a referência existir
-          }
-        } else if (nextRef.current) {
-          nextRef.current.focus(); // Foca no próximo input se a referência existir
-        }
-      }
-    }
-  };
 
   // Função para lidar com a seleção de imagem
   const handleImageChange = (e) => {
     if (e.target.files && e.target.files[0]) {
-      setSelectedImage(URL.createObjectURL(e.target.files[0]));
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSelectedImage(reader.result); // Define a imagem em base64
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Função para enviar os dados para criação do passeador
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const newPasseador = {
+      nome: nomeRef.current.value,
+      email: emailRef.current.value,
+      cpf: cpfRef.current.value,
+      telefone: telefoneRef.current.value,
+      endereco: enderecoRef.current.value,
+      imagem: selectedImage,
+    };
+
+    try {
+      const response = await fetch(`http://localhost:3001/criarpasseador`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newPasseador),
+      });
+
+      if (response.ok) {
+        navigate("/passeadores"); // Redireciona para a lista de passeadores
+      } else {
+        console.error('Erro ao criar passeador');
+      }
+    } catch (error) {
+      console.error('Erro ao enviar dados:', error);
     }
   };
 
@@ -52,7 +69,7 @@ function CriarPasseador() {
 
       {/* Formulário de Criação de Passeador */}
       <div className="form-container">
-        <form className="passeador-form">
+        <form className="passeador-form" onSubmit={handleSubmit}>
 
           {/* Campo de seleção de imagem */}
           <div className="image-container">
@@ -76,63 +93,23 @@ function CriarPasseador() {
 
           <div className="input-container">
             <FaUser className="input-icon" />
-            <input
-              ref={nomeRef}
-              type="text"
-              placeholder="Nome do passeador"
-              className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, emailRef)} // Mover o foco para o próximo campo (email)
-            />
+            <input ref={nomeRef} type="text" placeholder="Nome do passeador" className="form-input" />
           </div>
           <div className="input-container">
             <FaEnvelope className="input-icon" />
-            <input
-              ref={emailRef}
-              type="email"
-              placeholder="Email"
-              className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, cpfRef)}
-            />
+            <input ref={emailRef} type="email" placeholder="Email" className="form-input" />
           </div>
           <div className="input-container">
             <FaAddressCard className="input-icon" />
-            <input
-              ref={cpfRef}
-              type="text"
-              placeholder="CPF"
-              className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, telefoneRef)}
-            />
+            <input ref={cpfRef} type="text" placeholder="CPF" className="form-input" />
           </div>
           <div className="input-container">
             <FaPhone className="input-icon" />
-            <input
-              ref={telefoneRef}
-              type="tel"
-              placeholder="Telefone"
-              className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, enderecoRef)}
-            />
+            <input ref={telefoneRef} type="tel" placeholder="Telefone" className="form-input" />
           </div>
           <div className="input-container">
             <FaHome className="input-icon" />
-            <input
-              ref={enderecoRef}
-              type="text"
-              placeholder="Endereço"
-              className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, clientesRef)}
-            />
-          </div>
-          <div className="input-container">
-            <FaUserAlt className="input-icon" />
-            <input
-              ref={clientesRef}
-              type="text"
-              placeholder="Clientes"
-              className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, null)}
-            />
+            <input ref={enderecoRef} type="text" placeholder="Endereço" className="form-input" />
           </div>
 
           {/* Botões */}
@@ -144,12 +121,7 @@ function CriarPasseador() {
             >
               Cancelar
             </button>
-            <button
-              ref={createButtonRef}
-              type="submit"
-              className="create-button"
-              onClick={() => navigate("/passeadores")}
-            >
+            <button type="submit" className="create-button">
               Criar
             </button>
           </div>

@@ -339,6 +339,41 @@ app.put('/passeador/:id', (req, res) => {
   });
 });
 
+// Endpoint para criar um novo passeador
+app.post('/criarpasseador', (req, res) => {
+  const { nome, email, cpf, telefone, endereco, imagem } = req.body;
+
+  // Converte a imagem base64 em Blob para salvar no banco de dados
+  const imagemBlob = imagem ? Buffer.from(imagem.replace(/^data:image\/\w+;base64,/, ""), 'base64') : null;
+
+  const query = `
+    INSERT INTO passeadores (nome, email, cpf, telefone, endereco, imagem)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `;
+
+  connection.query(query, [nome, email, cpf, telefone, endereco, imagemBlob], (err) => {
+    if (err) {
+      console.error('Erro ao criar passeador:', err);
+      return res.status(500).json({ success: false, message: 'Erro ao criar passeador' });
+    }
+    res.json({ success: true, message: 'Passeador criado com sucesso!' });
+  });
+});
+
+// Endpoint para excluir um passeador pelo ID
+app.delete('/passeadores/:id', (req, res) => {
+  const passeadorId = req.params.id;
+  const deleteQuery = 'DELETE FROM passeadores WHERE id_passeador = ?';
+
+  connection.query(deleteQuery, [passeadorId], (err) => {
+    if (err) {
+      console.error('Erro ao excluir passeador:', err);
+      return res.status(500).json({ success: false, message: 'Erro ao excluir passeador' });
+    }
+    res.json({ success: true, message: 'Passeador excluído com sucesso!' });
+  });
+});
+
 // Iniciar o servidor
 app.listen(port, () => {
   console.log(`Servidor rodando em http://localhost:${port}`);
