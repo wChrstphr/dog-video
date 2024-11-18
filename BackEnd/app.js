@@ -26,21 +26,41 @@ connection.connect((err) => {
   }
 });
 
-// Endpoint para login
+// Variáveis para controle de tentativas de login
+const loginAttempts = {}; // Armazena tentativas de login { "email@example.com": { attempts: 0, lastAttempt: Date.now() } }
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_TIME = 10 * 60 * 1000; // 10 minutos em milissegundos
+
+// Endpoint para login com proteção contra ataques de força bruta
 app.post('/login', (req, res) => {
   const { email, senha } = req.body;
-  const query = 'SELECT * FROM clientes WHERE email = ? AND senha = ?';
 
+  // Verifica se o usuário está temporariamente bloqueado
+  if (loginAttempts[email] && loginAttempts[email].attempts >= MAX_ATTEMPTS) {
+    const timeSinceLastAttempt = Date.now() - loginAttempts[email].lastAttempt;
+    if (timeSinceLastAttempt < LOCKOUT_TIME) {
+      return res.status(429).json({ success: false, message: 'Muitas tentativas de login. Tente novamente mais tarde.' });
+    } else {
+      // Redefine o contador após o período de bloqueio
+      loginAttempts[email] = { attempts: 0, lastAttempt: Date.now() };
+    }
+  }
+
+  // Consulta para autenticação
+  const query = 'SELECT * FROM clientes WHERE email = ? AND senha = ?';
   connection.query(query, [email, senha], (err, results) => {
     if (err) {
       console.error('Erro ao consultar o banco de dados:', err);
       return res.status(500).send('Erro ao consultar o banco de dados');
-    } else if (results.length > 0) {
+    }
+
+    if (results.length > 0) {
+      // Login bem-sucedido: reseta tentativas de login
+      loginAttempts[email] = { attempts: 0, lastAttempt: Date.now() };
       const user = results[0];
-      console.log('Usuário autenticado:', user);
       const userType = user.tipo === 1 ? 'admin' : 'user';
 
-      // Inclui o 'id_cliente' na resposta, junto com 'alterar_senha'
+      // Retorna resposta de sucesso e dados do usuário
       res.json({
         success: true,
         userType: userType,
@@ -48,6 +68,15 @@ app.post('/login', (req, res) => {
         id_cliente: user.id_cliente
       });
     } else {
+      // Incrementa o contador de tentativas de login falhas
+      if (!loginAttempts[email]) {
+        loginAttempts[email] = { attempts: 1, lastAttempt: Date.now() };
+      } else {
+        loginAttempts[email].attempts += 1;
+        loginAttempts[email].lastAttempt = Date.now();
+      }
+
+      // Retorna resposta de erro após tentativa falha
       res.json({ success: false, message: 'Email ou senha incorretos' });
     }
   });
