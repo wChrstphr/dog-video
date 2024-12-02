@@ -4,13 +4,14 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const app = express();
 const port = 3001;
+const webPush = require('web-push');
 
 // Configuração do middleware
 app.use(cors());
-app.use(bodyParser.json({ limit: '10mb' })); // Limite aumentado para suportar imagens maiores
+app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 
-// Configuração da conexão com o banco de dados
+// Configuração do banco de dados
 const connection = mysql.createConnection({
   host: 'localhost',
   user: 'root',
@@ -24,6 +25,106 @@ connection.connect((err) => {
   } else {
     console.log('Conexão com o banco de dados estabelecida!');
   }
+});
+
+// Configuração das chaves VAPID
+webPush.setVapidDetails(
+  'mailto:232006663@aluno.unb.br',
+  'BBH2oyhNjmKPnyR140S375tVHFM1wuSd7GW7ijm90Ja7NB2eX67YQRbDLVyW_QrLqiDpbIy9QecaBDC_K1AWCro', //chave pública gerada
+  'Km-siZ1s_FTdpW594744qMlXuDgan3ve77AAAAWGTcU' //chave privada gerada
+);
+
+// Rota para salvar `subscriptions` no banco de dados
+app.post('/subscribe', (req, res) => {
+  const { subscription, id_cliente, id_passeador } = req.body;
+
+  const query = `
+    INSERT INTO subscriptions (endpoint, expiration_time, p256dh, auth, id_cliente, id_passeador)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `;
+  const values = [
+    subscription.endpoint,
+    subscription.expirationTime || null,
+    subscription.keys.p256dh,
+    subscription.keys.auth,
+    id_cliente || null,
+    id_passeador || null
+  ];
+
+  connection.query(query, values, (err) => {
+    if (err) {
+      console.error('Erro ao salvar subscription:', err);
+      return res.status(500).json({ success: false, message: 'Erro ao salvar subscription' });
+    }
+    res.status(201).json({ success: true, message: 'Inscrição salva com sucesso!' });
+  });
+});
+
+// Rota para criar e armazenar notificações
+app.post('/notificacoes', (req, res) => {
+  const { tipo, mensagem, id_cliente, id_passeador } = req.body;
+
+  const query = `
+    INSERT INTO notificacoes (tipo, mensagem, data_hora, id_cliente, id_passeador)
+    VALUES (?, ?, NOW(), ?, ?)
+  `;
+  const values = [tipo, mensagem, id_cliente || null, id_passeador || null];
+
+  connection.query(query, values, (err, result) => {
+    if (err) {
+      console.error('Erro ao salvar notificação:', err);
+      return res.status(500).json({ success: false, message: 'Erro ao salvar notificação' });
+    }
+
+    res.status(201).json({ success: true, message: 'Notificação criada com sucesso!', id: result.insertId });
+  });
+});
+
+// Rota para enviar notificações push
+app.post('/send-notification', (req, res) => {
+  const { id_notificacao } = req.body;
+
+  // Recupera a notificação pelo ID
+  const queryNotificacao = 'SELECT * FROM notificacoes WHERE id_notificacao = ?';
+  connection.query(queryNotificacao, [id_notificacao], (err, notificacaoResult) => {
+    if (err || notificacaoResult.length === 0) {
+      console.error('Erro ao buscar notificação:', err);
+      return res.status(404).json({ success: false, message: 'Notificação não encontrada' });
+    }
+
+    const notificacao = notificacaoResult[0];
+    const payload = JSON.stringify({ title: notificacao.tipo, body: notificacao.mensagem });
+
+    // Determina os usuários-alvo
+    const querySubscriptions = `
+      SELECT * FROM subscriptions 
+      WHERE (id_cliente = ? OR id_passeador = ?) 
+      OR (id_cliente IS NULL AND id_passeador IS NULL)
+    `;
+    connection.query(querySubscriptions, [notificacao.id_cliente, notificacao.id_passeador], (err, subscriptions) => {
+      if (err) {
+        console.error('Erro ao buscar subscriptions:', err);
+        return res.status(500).json({ success: false, message: 'Erro ao buscar subscriptions' });
+      }
+
+      // Envia notificações para cada assinatura
+      subscriptions.forEach((sub) => {
+        const pushSubscription = {
+          endpoint: sub.endpoint,
+          keys: {
+            p256dh: sub.p256dh,
+            auth: sub.auth
+          }
+        };
+
+        webPush.sendNotification(pushSubscription, payload).catch((error) => {
+          console.error('Erro ao enviar notificação push:', error);
+        });
+      });
+
+      res.status(200).json({ success: true, message: 'Notificações enviadas com sucesso!' });
+    });
+  });
 });
 
 // Variáveis para controle de tentativas de login

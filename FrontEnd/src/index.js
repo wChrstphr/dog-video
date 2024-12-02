@@ -92,3 +92,47 @@ function App() {
 root.render(<App />);
 
 reportWebVitals();
+
+// Solicitar permissão para notificações e registrar o service worker
+if ('Notification' in window && 'serviceWorker' in navigator) {
+  Notification.requestPermission().then((permission) => {
+    if (permission === 'granted') {
+      console.log('Permissão para notificações concedida.');
+      navigator.serviceWorker
+        .register('/sw.js') // Registrar o service worker para notificações
+        .then((registration) => {
+          console.log('Service Worker registrado:', registration);
+
+          // Chamar a função para assinar o usuário no Push Manager
+          subscribeUser();
+        })
+        .catch((err) => {
+          console.error('Erro ao registrar Service Worker:', err);
+        });
+    } else {
+      console.log('Permissão para notificações negada.');
+    }
+  });
+}
+
+// Função para assinar o usuário no Push Manager
+async function subscribeUser(idCliente = null, idPasseador = null) {
+  if ('serviceWorker' in navigator) {
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: 'BBH2oyhNjmKPnyR140S375tVHFM1wuSd7GW7ijm90Ja7NB2eX67YQRbDLVyW_QrLqiDpbIy9QecaBDC_K1AWCro' // Substitua pela chave pública gerada
+    });
+
+    // Envia a inscrição para o backend
+    await fetch('http://localhost:3001/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        subscription,
+        id_cliente: idCliente,
+        id_passeador: idPasseador
+      })
+    });
+  }
+}
