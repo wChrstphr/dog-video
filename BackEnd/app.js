@@ -388,62 +388,74 @@ app.put('/cliente/:id', (req, res) => {
   );
 });
 
-// Endpoint para buscar os passeadores
-app.get('/passeadores', (req, res) => {
-  const query = 'SELECT id_passeador, nome FROM passeadores';
+// Endpoint para buscar passeadores com imagens ou informações detalhadas de um passeador específico
+app.get('/passeadores/:id?', (req, res) => {
+  const passeadorId = req.params.id; // ID opcional
 
-  connection.query(query, (err, results) => {
-    if (err) {
-      console.error('Erro ao consultar passeadores:', err);
-      return res.status(500).send('Erro ao consultar passeadores');
-    }
-    res.json(results);
-  });
-});
+  if (passeadorId) {
+    // Caso o ID seja fornecido, busca detalhes do passeador e seus clientes associados
+    const queryPasseador = `
+      SELECT nome, email, imagem, cpf, telefone, endereco 
+      FROM passeadores 
+      WHERE id_passeador = ?`;
 
-// Endpoint para buscar informações detalhadas de um passeador e os clientes associados
-app.get('/passeador/:id', (req, res) => {
-  const passeadorId = req.params.id;
-  const queryPasseador = `
-    SELECT nome, email, imagem, cpf, telefone, endereco 
-    FROM passeadores 
-    WHERE id_passeador = ?`;
+    const queryClientes = `
+      SELECT DISTINCT clientes.nome 
+      FROM clientes
+      JOIN cachorros ON cachorros.id_cliente = clientes.id_cliente
+      WHERE cachorros.id_passeador = ?`;
 
-  const queryClientes = `
-    SELECT DISTINCT clientes.nome 
-    FROM clientes
-    JOIN cachorros ON cachorros.id_cliente = clientes.id_cliente
-    WHERE cachorros.id_passeador = ?`;
-
-  connection.query(queryPasseador, [passeadorId], (err, passeadorResults) => {
-    if (err) {
-      console.error('Erro ao consultar passeador:', err);
-      return res.status(500).send('Erro ao consultar passeador');
-    }
-
-    if (passeadorResults.length === 0) {
-      return res.status(404).send('Passeador não encontrado');
-    }
-
-    const passeador = passeadorResults[0];
-
-    if (passeador.imagem) {
-      passeador.imagem = `data:image/jpeg;base64,${passeador.imagem.toString('base64')}`;
-    }
-
-    // Consultar todos os clientes associados ao passeador
-    connection.query(queryClientes, [passeadorId], (err, clienteResults) => {
+    connection.query(queryPasseador, [passeadorId], (err, passeadorResults) => {
       if (err) {
-        console.error('Erro ao consultar clientes:', err);
-        return res.status(500).send('Erro ao consultar clientes');
+        console.error('Erro ao consultar passeador:', err);
+        return res.status(500).send('Erro ao consultar passeador');
       }
 
-      // Combina os nomes dos clientes em uma única string separada por vírgulas
-      const clientes = clienteResults.map(cliente => cliente.nome).join(', ');
+      if (passeadorResults.length === 0) {
+        return res.status(404).send('Passeador não encontrado');
+      }
 
-      res.json({ passeador, clientes });
+      const passeador = passeadorResults[0];
+
+      if (passeador.imagem) {
+        passeador.imagem = `data:image/jpeg;base64,${passeador.imagem.toString('base64')}`;
+      }
+
+      // Consultar todos os clientes associados ao passeador
+      connection.query(queryClientes, [passeadorId], (err, clienteResults) => {
+        if (err) {
+          console.error('Erro ao consultar clientes:', err);
+          return res.status(500).send('Erro ao consultar clientes');
+        }
+
+        // Combina os nomes dos clientes em uma única string separada por vírgulas
+        const clientes = clienteResults.map(cliente => cliente.nome).join(', ');
+
+        res.json({ success: true, passeador, clientes });
+      });
     });
-  });
+  } else {
+    // Caso o ID não seja fornecido, busca todos os passeadores com imagens
+    const queryTodosPasseadores = `
+      SELECT id_passeador, nome, imagem
+      FROM passeadores`;
+
+    connection.query(queryTodosPasseadores, (err, results) => {
+      if (err) {
+        console.error('Erro ao consultar passeadores:', err);
+        return res.status(500).json({ success: false, message: 'Erro ao consultar passeadores' });
+      }
+
+      // Formata os resultados
+      const passeadores = results.map(passeador => ({
+        id: passeador.id_passeador,
+        nome: passeador.nome,
+        imagem: passeador.imagem ? `data:image/jpeg;base64,${passeador.imagem.toString('base64')}` : null
+      }));
+
+      res.json({ success: true, passeadores });
+    });
+  }
 });
 
 // Endpoint para atualizar os dados de um passeador
@@ -492,14 +504,25 @@ app.post('/criarpasseador', (req, res) => {
 
 // Endpoint para excluir um passeador pelo ID
 app.delete('/passeadores/:id', (req, res) => {
-  const passeadorId = req.params.id;
+  const passeadorId = req.params.id; // ID recebido da URL
   const deleteQuery = 'DELETE FROM passeadores WHERE id_passeador = ?';
 
-  connection.query(deleteQuery, [passeadorId], (err) => {
+  // Confirma se o ID não está vazio
+  if (!passeadorId) {
+    return res.status(400).json({ success: false, message: 'ID do passeador não fornecido' });
+  }
+
+  connection.query(deleteQuery, [passeadorId], (err, result) => {
     if (err) {
       console.error('Erro ao excluir passeador:', err);
       return res.status(500).json({ success: false, message: 'Erro ao excluir passeador' });
     }
+
+    // Verifica se alguma linha foi afetada (confirmação de exclusão)
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: 'Passeador não encontrado' });
+    }
+
     res.json({ success: true, message: 'Passeador excluído com sucesso!' });
   });
 });

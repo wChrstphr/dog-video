@@ -3,50 +3,41 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Modal from "react-modal";
 
-function Web({onLogout}) {
-  const navigate = useNavigate(); // Hook do React Router para navegar
-  const [passeadores, setPasseadores] = useState([
-    { id: 1, nome: 'Passeador 1', imagem: '/passeador1.jpeg', existe: false },
-    { id: 2, nome: 'Passeador 2', imagem: '/passeador2.jpeg', existe: false },
-    { id: 3, nome: 'Passeador 3', imagem: '/passeador3.jpeg', existe: false },
-    { id: 4, nome: 'Passeador 4', imagem: '/passeador4.jpeg', existe: false },
-  ]);
-
+function Web({ onLogout }) {
+  const navigate = useNavigate();
+  const [passeadores, setPasseadores] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   const showModal = () => setIsModalVisible(true);
   const hideModal = () => setIsModalVisible(false);
-  const handleLogout = () => {
-    onLogout(); // Chama a função de logout
-    hideModal(); // Esconde o modal
-    navigate("/"); // Redireciona para a página de login
-  };
-  
-  useEffect(() => {
-    // Verifica se as imagens dos passeadores existem
-    passeadores.forEach((passeador, index) => {
-      const img = new Image();
-      img.src = passeador.imagem;
-      img.onload = () => {
-        setPasseadores((prev) => {
-          const newPasseadores = [...prev];
-          newPasseadores[index].existe = true;
-          return newPasseadores;
-        });
-      };
-      img.onerror = () => {
-        console.log(`Imagem do ${passeador.nome} não encontrada.`);
-      };
-    });
-  }, [passeadores]);
 
-  // const handlePasseadorClick = (id) => {
-  //   // Redireciona para a página do passeador com base no id
-  //   window.location.href = `/passeador/${id}`;
-  // };
+  const handleLogout = () => {
+    onLogout();
+    hideModal();
+    navigate("/");
+  };
+
+  useEffect(() => {
+    // Busca os passeadores do backend
+    const fetchPasseadores = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/passeadores');
+        const data = await response.json();
+
+        if (data.success) {
+          setPasseadores(data.passeadores);
+        } else {
+          console.error('Erro ao buscar passeadores:', data.message);
+        }
+      } catch (error) {
+        console.error('Erro ao conectar ao servidor:', error);
+      }
+    };
+
+    fetchPasseadores();
+  }, []);
 
   const handleDadosClienteClick = () => {
-    // Redireciona para a página de dados do cliente
     navigate('/dados-cliente');
   };
 
@@ -77,33 +68,33 @@ function Web({onLogout}) {
             </div>
           </div>
         </Modal>
-
         <img
           src="/logout.svg"
           alt="Ícone de logout"
           className="user-icon"
-          onClick={showModal} // Exibe o modal ao clicar
+          onClick={showModal}
         />
       </header>
 
-      <div className="footer-bar"></div> {/* Barrinha inferior */}
+      <div className="footer-bar"></div>
 
       <div className="passeador-titulo">
         <img src="/passeadores.svg" alt="Passeadores título" />
-      <p className="passeador-texto">PASSEADORES</p>
+        <p className="passeador-texto">PASSEADORES</p>
       </div>
-
 
       {/* Seção dos Passeadores */}
       <div className="passeadores">
-        {passeadores.map((passeador) =>
-          passeador.existe ? (
-            <div className="passeador" key={passeador.id} onClick={() => navigate('/cameras')}>
+        {passeadores.map((passeador) => (
+          <div className="passeador" key={passeador.id} onClick={() => navigate('/cameras')}>
+            {passeador.imagem ? (
               <img src={passeador.imagem} alt={passeador.nome} className="passeador-foto" />
-              <p className="passeador-nome">{passeador.nome}</p>
-            </div>
-          ) : null
-        )}
+            ) : (
+              <div className="placeholder">Sem Imagem</div>
+            )}
+            <p className="passeador-nome">{passeador.nome}</p>
+          </div>
+        ))}
       </div>
     </div>
   );

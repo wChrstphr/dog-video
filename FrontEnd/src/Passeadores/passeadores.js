@@ -19,14 +19,22 @@ function Passeadores() {
       try {
         const response = await fetch('http://localhost:3001/passeadores');
         const data = await response.json();
-        setPasseadores(data); // Armazena os passeadores como uma lista de objetos {id, nome}
+  
+        // Verifica se a resposta tem o formato esperado
+        if (data.success && Array.isArray(data.passeadores)) {
+          setPasseadores(data.passeadores); // Armazena apenas o array de passeadores
+        } else {
+          console.error('Erro ao buscar passeadores: Resposta inesperada', data);
+          setPasseadores([]); // Define passeadores como uma lista vazia se o formato não for válido
+        }
       } catch (error) {
         console.error('Erro ao buscar passeadores:', error);
+        setPasseadores([]); // Define passeadores como uma lista vazia em caso de erro
       }
     };
-
+  
     fetchPasseadores();
-  }, []);
+  }, []);  
 
   const showModal = (passeador) => {
     setSelectedPasseador(passeador);
@@ -40,14 +48,14 @@ function Passeadores() {
 
   const handleDelete = async () => {
     if (!selectedPasseador) return;
-
+  
     try {
-      const response = await fetch(`http://localhost:3001/passeadores/${selectedPasseador.id_passeador}`, {
+      const response = await fetch(`http://localhost:3001/passeadores/${selectedPasseador.id}`, {
         method: 'DELETE',
       });
-
+  
       if (response.ok) {
-        setPasseadores(passeadores.filter(p => p.id_passeador !== selectedPasseador.id_passeador));
+        setPasseadores(passeadores.filter(p => p.id !== selectedPasseador.id));
         hideModal();
       } else {
         console.error('Erro ao excluir passeador');
@@ -56,6 +64,7 @@ function Passeadores() {
       console.error('Erro ao excluir passeador:', error);
     }
   };
+  
 
   const toggleSearch = () => {
     setIsSearchVisible(!isSearchVisible);
@@ -150,8 +159,8 @@ function Passeadores() {
 
       <div className="passeador-list">
         {passeadoresFiltrados.map((passeador) => (
-          <div className="passeador-item" key={passeador.id_passeador}>
-            <span onClick={() => handlePasseadorClick(passeador.id_passeador)}>
+          <div className="passeador-item" key={passeador.id}>
+            <span onClick={() => handlePasseadorClick(passeador.id)}>
               {passeador.nome}
             </span>
             <button className="delete-button" onClick={() => showModal(passeador)}>

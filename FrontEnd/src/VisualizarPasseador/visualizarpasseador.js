@@ -14,11 +14,16 @@ function VisualizarPasseador() {
   useEffect(() => {
     const fetchPasseador = async () => {
       try {
-        const response = await fetch(`http://localhost:3001/passeador/${id}`);
+        const response = await fetch(`http://localhost:3001/passeadores/${id}`);
         const data = await response.json();
 
-        setPasseador(data.passeador);
-        setClientes(data.clientes); // Armazena a lista de clientes
+        if (data.success) {
+          setPasseador(data.passeador);
+          setClientes(data.clientes);
+        } else {
+          console.error('Erro na resposta do backend:', data.message);
+          setPasseador(null);
+        }
       } catch (error) {
         console.error('Erro ao buscar passeador:', error);
       } finally {
