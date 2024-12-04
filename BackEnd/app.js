@@ -4,13 +4,14 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const app = express();
 const port = 3001;
+const webPush = require('web-push');
 
 // Configuração do middleware
 app.use(cors());
-app.use(bodyParser.json({ limit: '10mb' })); // Limite aumentado para suportar imagens maiores
+app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 
-// Configuração da conexão com o banco de dados
+// Configuração do banco de dados
 const connection = mysql.createConnection({
   host: 'localhost',
   user: 'root',
@@ -24,6 +25,106 @@ connection.connect((err) => {
   } else {
     console.log('Conexão com o banco de dados estabelecida!');
   }
+});
+
+// Configuração das chaves VAPID
+webPush.setVapidDetails(
+  'mailto:232006663@aluno.unb.br',
+  'BBH2oyhNjmKPnyR140S375tVHFM1wuSd7GW7ijm90Ja7NB2eX67YQRbDLVyW_QrLqiDpbIy9QecaBDC_K1AWCro', //chave pública gerada
+  'Km-siZ1s_FTdpW594744qMlXuDgan3ve77AAAAWGTcU' //chave privada gerada
+);
+
+// Rota para salvar `subscriptions` no banco de dados
+app.post('/subscribe', (req, res) => {
+  const { subscription, id_cliente, id_passeador } = req.body;
+
+  const query = `
+    INSERT INTO subscriptions (endpoint, expiration_time, p256dh, auth, id_cliente, id_passeador)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `;
+  const values = [
+    subscription.endpoint,
+    subscription.expirationTime || null,
+    subscription.keys.p256dh,
+    subscription.keys.auth,
+    id_cliente || null,
+    id_passeador || null
+  ];
+
+  connection.query(query, values, (err) => {
+    if (err) {
+      console.error('Erro ao salvar subscription:', err);
+      return res.status(500).json({ success: false, message: 'Erro ao salvar subscription' });
+    }
+    res.status(201).json({ success: true, message: 'Inscrição salva com sucesso!' });
+  });
+});
+
+// Rota para criar e armazenar notificações
+app.post('/notificacoes', (req, res) => {
+  const { tipo, mensagem, id_cliente, id_passeador } = req.body;
+
+  const query = `
+    INSERT INTO notificacoes (tipo, mensagem, data_hora, id_cliente, id_passeador)
+    VALUES (?, ?, NOW(), ?, ?)
+  `;
+  const values = [tipo, mensagem, id_cliente || null, id_passeador || null];
+
+  connection.query(query, values, (err, result) => {
+    if (err) {
+      console.error('Erro ao salvar notificação:', err);
+      return res.status(500).json({ success: false, message: 'Erro ao salvar notificação' });
+    }
+
+    res.status(201).json({ success: true, message: 'Notificação criada com sucesso!', id: result.insertId });
+  });
+});
+
+// Rota para enviar notificações push
+app.post('/send-notification', (req, res) => {
+  const { id_notificacao } = req.body;
+
+  // Recupera a notificação pelo ID
+  const queryNotificacao = 'SELECT * FROM notificacoes WHERE id_notificacao = ?';
+  connection.query(queryNotificacao, [id_notificacao], (err, notificacaoResult) => {
+    if (err || notificacaoResult.length === 0) {
+      console.error('Erro ao buscar notificação:', err);
+      return res.status(404).json({ success: false, message: 'Notificação não encontrada' });
+    }
+
+    const notificacao = notificacaoResult[0];
+    const payload = JSON.stringify({ title: notificacao.tipo, body: notificacao.mensagem });
+
+    // Determina os usuários-alvo
+    const querySubscriptions = `
+      SELECT * FROM subscriptions 
+      WHERE (id_cliente = ? OR id_passeador = ?) 
+      OR (id_cliente IS NULL AND id_passeador IS NULL)
+    `;
+    connection.query(querySubscriptions, [notificacao.id_cliente, notificacao.id_passeador], (err, subscriptions) => {
+      if (err) {
+        console.error('Erro ao buscar subscriptions:', err);
+        return res.status(500).json({ success: false, message: 'Erro ao buscar subscriptions' });
+      }
+
+      // Envia notificações para cada assinatura
+      subscriptions.forEach((sub) => {
+        const pushSubscription = {
+          endpoint: sub.endpoint,
+          keys: {
+            p256dh: sub.p256dh,
+            auth: sub.auth
+          }
+        };
+
+        webPush.sendNotification(pushSubscription, payload).catch((error) => {
+          console.error('Erro ao enviar notificação push:', error);
+        });
+      });
+
+      res.status(200).json({ success: true, message: 'Notificações enviadas com sucesso!' });
+    });
+  });
 });
 
 // Variáveis para controle de tentativas de login
@@ -287,62 +388,74 @@ app.put('/cliente/:id', (req, res) => {
   );
 });
 
-// Endpoint para buscar os passeadores
-app.get('/passeadores', (req, res) => {
-  const query = 'SELECT id_passeador, nome FROM passeadores';
+// Endpoint para buscar passeadores com imagens ou informações detalhadas de um passeador específico
+app.get('/passeadores/:id?', (req, res) => {
+  const passeadorId = req.params.id; // ID opcional
 
-  connection.query(query, (err, results) => {
-    if (err) {
-      console.error('Erro ao consultar passeadores:', err);
-      return res.status(500).send('Erro ao consultar passeadores');
-    }
-    res.json(results);
-  });
-});
+  if (passeadorId) {
+    // Caso o ID seja fornecido, busca detalhes do passeador e seus clientes associados
+    const queryPasseador = `
+      SELECT nome, email, imagem, cpf, telefone, endereco 
+      FROM passeadores 
+      WHERE id_passeador = ?`;
 
-// Endpoint para buscar informações detalhadas de um passeador e os clientes associados
-app.get('/passeador/:id', (req, res) => {
-  const passeadorId = req.params.id;
-  const queryPasseador = `
-    SELECT nome, email, imagem, cpf, telefone, endereco 
-    FROM passeadores 
-    WHERE id_passeador = ?`;
+    const queryClientes = `
+      SELECT DISTINCT clientes.nome 
+      FROM clientes
+      JOIN cachorros ON cachorros.id_cliente = clientes.id_cliente
+      WHERE cachorros.id_passeador = ?`;
 
-  const queryClientes = `
-    SELECT DISTINCT clientes.nome 
-    FROM clientes
-    JOIN cachorros ON cachorros.id_cliente = clientes.id_cliente
-    WHERE cachorros.id_passeador = ?`;
-
-  connection.query(queryPasseador, [passeadorId], (err, passeadorResults) => {
-    if (err) {
-      console.error('Erro ao consultar passeador:', err);
-      return res.status(500).send('Erro ao consultar passeador');
-    }
-
-    if (passeadorResults.length === 0) {
-      return res.status(404).send('Passeador não encontrado');
-    }
-
-    const passeador = passeadorResults[0];
-
-    if (passeador.imagem) {
-      passeador.imagem = `data:image/jpeg;base64,${passeador.imagem.toString('base64')}`;
-    }
-
-    // Consultar todos os clientes associados ao passeador
-    connection.query(queryClientes, [passeadorId], (err, clienteResults) => {
+    connection.query(queryPasseador, [passeadorId], (err, passeadorResults) => {
       if (err) {
-        console.error('Erro ao consultar clientes:', err);
-        return res.status(500).send('Erro ao consultar clientes');
+        console.error('Erro ao consultar passeador:', err);
+        return res.status(500).send('Erro ao consultar passeador');
       }
 
-      // Combina os nomes dos clientes em uma única string separada por vírgulas
-      const clientes = clienteResults.map(cliente => cliente.nome).join(', ');
+      if (passeadorResults.length === 0) {
+        return res.status(404).send('Passeador não encontrado');
+      }
 
-      res.json({ passeador, clientes });
+      const passeador = passeadorResults[0];
+
+      if (passeador.imagem) {
+        passeador.imagem = `data:image/jpeg;base64,${passeador.imagem.toString('base64')}`;
+      }
+
+      // Consultar todos os clientes associados ao passeador
+      connection.query(queryClientes, [passeadorId], (err, clienteResults) => {
+        if (err) {
+          console.error('Erro ao consultar clientes:', err);
+          return res.status(500).send('Erro ao consultar clientes');
+        }
+
+        // Combina os nomes dos clientes em uma única string separada por vírgulas
+        const clientes = clienteResults.map(cliente => cliente.nome).join(', ');
+
+        res.json({ success: true, passeador, clientes });
+      });
     });
-  });
+  } else {
+    // Caso o ID não seja fornecido, busca todos os passeadores com imagens
+    const queryTodosPasseadores = `
+      SELECT id_passeador, nome, imagem
+      FROM passeadores`;
+
+    connection.query(queryTodosPasseadores, (err, results) => {
+      if (err) {
+        console.error('Erro ao consultar passeadores:', err);
+        return res.status(500).json({ success: false, message: 'Erro ao consultar passeadores' });
+      }
+
+      // Formata os resultados
+      const passeadores = results.map(passeador => ({
+        id: passeador.id_passeador,
+        nome: passeador.nome,
+        imagem: passeador.imagem ? `data:image/jpeg;base64,${passeador.imagem.toString('base64')}` : null
+      }));
+
+      res.json({ success: true, passeadores });
+    });
+  }
 });
 
 // Endpoint para atualizar os dados de um passeador
@@ -391,14 +504,25 @@ app.post('/criarpasseador', (req, res) => {
 
 // Endpoint para excluir um passeador pelo ID
 app.delete('/passeadores/:id', (req, res) => {
-  const passeadorId = req.params.id;
+  const passeadorId = req.params.id; // ID recebido da URL
   const deleteQuery = 'DELETE FROM passeadores WHERE id_passeador = ?';
 
-  connection.query(deleteQuery, [passeadorId], (err) => {
+  // Confirma se o ID não está vazio
+  if (!passeadorId) {
+    return res.status(400).json({ success: false, message: 'ID do passeador não fornecido' });
+  }
+
+  connection.query(deleteQuery, [passeadorId], (err, result) => {
     if (err) {
       console.error('Erro ao excluir passeador:', err);
       return res.status(500).json({ success: false, message: 'Erro ao excluir passeador' });
     }
+
+    // Verifica se alguma linha foi afetada (confirmação de exclusão)
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: 'Passeador não encontrado' });
+    }
+
     res.json({ success: true, message: 'Passeador excluído com sucesso!' });
   });
 });
