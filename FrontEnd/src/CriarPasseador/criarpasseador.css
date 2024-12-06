@@ -176,3 +176,19 @@ body {
     display: none;
   }
   
+  .error {
+    color: red;
+    font-size: 12px;
+    margin-top: 1px;
+    display: block;
+    clear: both;
+  }
+
+  .form-group {
+    margin-bottom: 1px;
+  }
+
+  .input-container {
+    position: relative;
+    margin-bottom: 4px;
+  }

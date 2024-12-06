@@ -105,110 +105,132 @@ function CriarCliente() {
 
       <div className="form-container">
         <form className="client-form">
-          <div className="input-container">
-            <FaUser className="input-icon" />
-            <input
-              ref={nomeRef}
-              type="text"
-              placeholder="Nome do cliente"
-              className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, emailRef)}
-            />
+
+          <div className="form-group">
+            <div className="input-container">
+              <FaUser className="input-icon" />
+              <input
+                ref={nomeRef}
+                type="text"
+                placeholder="Nome do cliente"
+                className="form-input"
+                onKeyDown={(e) => handleKeyDown(e, emailRef)}
+              />
+            </div>
             {errors.nome && <p className="error">{errors.nome}</p>}
           </div>
-          <div className="input-container">
-            <FaEnvelope className="input-icon" />
-            <input
-              ref={emailRef}
-              type="email"
-              placeholder="Email"
-              className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, cpfRef)}
-            />
-            {errors.email && <p className="error">{errors.email}</p>}
+        
+          <div className="form-group">
+            <div className="input-container">
+              <FaEnvelope className="input-icon" />
+              <input
+                ref={emailRef}
+                type="email"
+                placeholder="Email"
+                className="form-input"
+                onKeyDown={(e) => handleKeyDown(e, cpfRef)}
+              />
+            </div>
+              {errors.email && <p className="error">{errors.email}</p>}
           </div>
-          <div className="input-container">
-            <FaAddressCard className="input-icon" />
-            <input
-              ref={cpfRef}
-              type="text"
-              placeholder="CPF"
-              className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, caesRef)}
-            />
-            {errors.cpf && <p className="error">{errors.cpf}</p>}
+
+          <div className="form-group">
+            <div className="input-container">
+              <FaAddressCard className="input-icon" />
+              <input
+                ref={cpfRef}
+                type="text"
+                placeholder="CPF"
+                className="form-input"
+                onKeyDown={(e) => handleKeyDown(e, caesRef)}
+              />
+            </div>
+              {errors.cpf && <p className="error">{errors.cpf}</p>}
           </div>
-          <div className="input-container">
-            <FaDog className="input-icon" />
-            <input
-              ref={caesRef}
-              type="text"
-              placeholder="Cães (separados por vírgula)"
-              className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, telefoneRef)}
-            />
+
+            <div className="input-container">
+              <FaDog className="input-icon" />
+              <input
+                ref={caesRef}
+                type="text"
+                placeholder="Cães (separados por vírgula)"
+                className="form-input"
+                onKeyDown={(e) => handleKeyDown(e, telefoneRef)}
+              />
+            </div>
+
+          <div className="form-group">
+            <div className="input-container">
+              <FaPhone className="input-icon" />
+              <input
+                ref={telefoneRef}
+                type="tel"
+                placeholder="Telefone"
+                className="form-input"
+                onKeyDown={(e) => handleKeyDown(e, enderecoRef)}
+              />
+            </div>
+              {errors.telefone && <p className="error">{errors.telefone}</p>}
           </div>
-          <div className="input-container">
-            <FaPhone className="input-icon" />
-            <input
-              ref={telefoneRef}
-              type="tel"
-              placeholder="Telefone"
-              className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, enderecoRef)}
-            />
-            {errors.telefone && <p className="error">{errors.telefone}</p>}
+
+            <div className="input-container">
+              <FaHome className="input-icon" />
+              <input
+                ref={enderecoRef}
+                type="text"
+                placeholder="Endereço"
+                className="form-input"
+                onKeyDown={(e) => handleKeyDown(e, passeadorRef)}
+              />
+            </div>
+
+          <div className="form-group">
+            <div className="input-container">
+              <FaUserAlt className="input-icon" />
+              <input
+                ref={passeadorRef}
+                type="text"
+                placeholder="Passeador"
+                className="form-input"
+                onKeyDown={(e) => handleKeyDown(e, pacoteRef)}
+              />
+            </div>
+              {errors.passeador && <p className="error">{errors.passeador}</p>}
           </div>
-          <div className="input-container">
-            <FaHome className="input-icon" />
-            <input
-              ref={enderecoRef}
-              type="text"
-              placeholder="Endereço"
-              className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, passeadorRef)}
-            />
+
+            <div className="input-container">
+              <FaCalendarAlt className="input-icon" />
+              <input
+                ref={pacoteRef}
+                type="text"
+                placeholder="Pacote"
+                className="form-input"
+                onKeyDown={(e) => handleKeyDown(e, horarioRef)}
+              />
+            </div>
+
+          <div className="form-group">  
+            <div className="input-container">
+              <FaClock className="input-icon" />
+              <input
+                ref={horarioRef}
+                type="text"
+                placeholder="Horário de passeio (HH:MM)"
+                className="form-input"
+                onKeyDown={(e) => handleKeyDown(e, anotacaoRef)}
+              />
+            </div>
+              {errors.horario && <p className="error">{errors.horario}</p>}
           </div>
-          <div className="input-container">
-            <FaUserAlt className="input-icon" />
-            <input
-              ref={passeadorRef}
-              type="text"
-              placeholder="Passeador"
-              className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, pacoteRef)}
-            />
-            {errors.passeador && <p className="error">{errors.passeador}</p>}
-          </div>
-          <div className="input-container">
-            <FaCalendarAlt className="input-icon" />
-            <input
-              ref={pacoteRef}
-              type="text"
-              placeholder="Pacote"
-              className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, horarioRef)}
-            />
-          </div>
-          <div className="input-container">
-            <FaClock className="input-icon" />
-            <input
-              ref={horarioRef}
-              type="text"
-              placeholder="Horário de passeio (HH:MM)"
-              className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, anotacaoRef)}
-            />
-            {errors.horario && <p className="error">{errors.horario}</p>}
-          </div>
-          <div className="input-container">
-            <FaBook className="input-icon" />
-            <textarea
-              ref={anotacaoRef}
-              placeholder="Anotações"
-              className="form-textarea"
-            />
-          </div>
+          
+            <div className="input-container">
+              <FaBook className="input-icon" />
+              <textarea
+                ref={anotacaoRef}
+                placeholder="Anotações"
+                className="form-textarea"
+              />
+            </div>
 
           <div className="button-group">
             <button
