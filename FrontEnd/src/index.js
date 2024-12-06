@@ -18,7 +18,7 @@ import Cameras from './Cameras/cameras';
 import VisualizarPasseador from './VisualizarPasseador/visualizarpasseador';
 import EditarPasseador from './EditarPasseador/editarpasseador';
 import RedefinirSenha from './RedefinirSenha/redefinir';
-
+<script src="https://maps.googleapis.com/maps/api/js?key=SUA_CHAVE_API&libraries=places"></script>
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
 Modal.setAppElement('#root');  // Defina o elemento para os modais

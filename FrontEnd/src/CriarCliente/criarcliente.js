@@ -1,14 +1,13 @@
 import './criarcliente.css';
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 import { FaUser, FaEnvelope, FaAddressCard, FaDog, FaPhone, FaHome, FaCalendarAlt, FaClock, FaBook, FaUserAlt } from "react-icons/fa";
 
 function CriarCliente() {
-
   const navigate = useNavigate();
-
-  // Referências para os inputs
+  const [errors, setErrors] = useState({});
+  
   const nomeRef = useRef(null);
   const emailRef = useRef(null);
   const cpfRef = useRef(null);
@@ -21,50 +20,68 @@ function CriarCliente() {
   const createButtonRef = useRef(null);
   const anotacaoRef = useRef(null);
 
-  // Função para gerenciar a troca de foco
   const handleKeyDown = (e, nextRef) => {
     if (e.key === "Enter") {
-      e.preventDefault(); // Previne a submissão do formulário ao pressionar Enter
+      e.preventDefault();
       if (nextRef) {
-        // Certifique-se de que o elemento existe antes de tentar focar
         if (typeof nextRef === 'string' && nextRef === 'create-button') {
-          if (createButtonRef.current) {
-            createButtonRef.current.focus(); // Foca no botão "Criar" se a referência existir
-          }
+          if (createButtonRef.current) createButtonRef.current.focus();
         } else if (nextRef.current) {
-          nextRef.current.focus(); // Foca no próximo input se a referência existir
+          nextRef.current.focus();
         }
       }
     }
   };
 
-  // Função para lidar com a criação do cliente
-  const handleCreate = async (e) => {
-    e.preventDefault(); // Previne o comportamento padrão do formulário
+  const isNomeValido = (nome) => /^[A-Z][a-zA-Z\s]*$/.test(nome);
+  const isTelefoneValido = (telefone) => /^[0-9]{10,11}$/.test(telefone);
+  const isPasseadorValido = (passeador) => /^[A-Z][a-zA-Z\s]*$/.test(passeador);
+  const isCpfValido = (cpf) => {
+    cpf = cpf.replace(/\D/g, '');
+    if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+    let soma = 0, resto;
+    for (let i = 1; i <= 9; i++) soma += parseInt(cpf.substring(i - 1, i)) * (11 - i);
+    resto = (soma * 10) % 11;
+    if (resto === 10 || resto === 11) resto = 0;
+    if (resto !== parseInt(cpf.substring(9, 10))) return false;
+    soma = 0;
+    for (let i = 1; i <= 10; i++) soma += parseInt(cpf.substring(i - 1, i)) * (12 - i);
+    resto = (soma * 10) % 11;
+    if (resto === 10 || resto === 11) resto = 0;
+    return resto === parseInt(cpf.substring(10, 11));
+  };
+  const isEmailValido = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isHorarioValido = (horario) => /^([01]\d|2[0-3]):([0-5]\d)$/.test(horario);
 
-    // Captura os valores dos inputs
+  const handleCreate = async (e) => {
+    e.preventDefault();
+
     const nome = nomeRef.current.value;
     const email = emailRef.current.value;
     const cpf = cpfRef.current.value;
     const telefone = telefoneRef.current.value;
     const endereco = enderecoRef.current.value;
+    const passeador = passeadorRef.current.value;
     const pacote = pacoteRef.current.value;
     const horario = horarioRef.current.value;
     const anotacao = anotacaoRef.current.value;
-    const caes = caesRef.current.value.split(',').map(cao => cao.trim()); // Divide os nomes dos cães por vírgula
+    const caes = caesRef.current.value.split(',').map(cao => cao.trim());
+
+    const newErrors = {};
+    if (!isNomeValido(nome)) newErrors.nome = "Nome deve começar com letra maiúscula e conter apenas letras.";
+    if (!isEmailValido(email)) newErrors.email = "E-mail inválido.";
+    if (!isCpfValido(cpf)) newErrors.cpf = "CPF inválido.";
+    if (!isTelefoneValido(telefone)) newErrors.telefone = "Telefone deve ter 10 ou 11 dígitos.";
+    if (!isPasseadorValido(passeador)) newErrors.passeador = "Passeador deve começar com letra maiúscula e conter apenas letras.";
+    if (!isHorarioValido(horario)) newErrors.horario = "Horário inválido. Use o formato HH:MM (24 horas).";
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) return;
 
     try {
-      // Envia os dados para o backend
       const response = await axios.post('http://localhost:3001/criarcliente', {
-        nome,
-        email,
-        cpf,
-        telefone,
-        endereco,
-        pacote,
-        horario,
-        anotacao,
-        caes
+        nome, email, cpf, telefone, endereco, passeador, pacote, horario, anotacao, caes
       });
 
       if (response.data.success) {
@@ -86,7 +103,6 @@ function CriarCliente() {
         <div className="footer-bar"></div>
       </header>
 
-      {/* Formulário de Criação de Cliente */}
       <div className="form-container">
         <form className="client-form">
           <div className="input-container">
@@ -96,8 +112,9 @@ function CriarCliente() {
               type="text"
               placeholder="Nome do cliente"
               className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, emailRef)} // Mover o foco para o próximo campo (email)
+              onKeyDown={(e) => handleKeyDown(e, emailRef)}
             />
+            {errors.nome && <p className="error">{errors.nome}</p>}
           </div>
           <div className="input-container">
             <FaEnvelope className="input-icon" />
@@ -108,6 +125,7 @@ function CriarCliente() {
               className="form-input"
               onKeyDown={(e) => handleKeyDown(e, cpfRef)}
             />
+            {errors.email && <p className="error">{errors.email}</p>}
           </div>
           <div className="input-container">
             <FaAddressCard className="input-icon" />
@@ -118,6 +136,7 @@ function CriarCliente() {
               className="form-input"
               onKeyDown={(e) => handleKeyDown(e, caesRef)}
             />
+            {errors.cpf && <p className="error">{errors.cpf}</p>}
           </div>
           <div className="input-container">
             <FaDog className="input-icon" />
@@ -138,6 +157,7 @@ function CriarCliente() {
               className="form-input"
               onKeyDown={(e) => handleKeyDown(e, enderecoRef)}
             />
+            {errors.telefone && <p className="error">{errors.telefone}</p>}
           </div>
           <div className="input-container">
             <FaHome className="input-icon" />
@@ -158,6 +178,7 @@ function CriarCliente() {
               className="form-input"
               onKeyDown={(e) => handleKeyDown(e, pacoteRef)}
             />
+            {errors.passeador && <p className="error">{errors.passeador}</p>}
           </div>
           <div className="input-container">
             <FaCalendarAlt className="input-icon" />
@@ -178,6 +199,7 @@ function CriarCliente() {
               className="form-input"
               onKeyDown={(e) => handleKeyDown(e, anotacaoRef)}
             />
+            {errors.horario && <p className="error">{errors.horario}</p>}
           </div>
           <div className="input-container">
             <FaBook className="input-icon" />
@@ -188,7 +210,6 @@ function CriarCliente() {
             />
           </div>
 
-          {/* Botões */}
           <div className="button-group">
             <button
               type="button"

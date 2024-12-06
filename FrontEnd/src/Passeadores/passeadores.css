@@ -11,6 +11,8 @@ body {
     display: flex;
     flex-direction: column;
     width: 100%;
+    justify-content: start;
+    display: flex;
 }
 
 .Web-header {
@@ -183,6 +185,7 @@ body {
     width: 60%;
     margin-left: 180px;
     margin-top: 5px;
+    justify-content: start;
   }
   
   .search-input {
