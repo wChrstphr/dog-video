@@ -70,7 +70,7 @@ function App() {
               )
             }
           />
-          <Route path="/dados-cliente" element={<DadosCliente onLogout={handleLogout} />} />
+          <Route path="/dados-cliente/:id" element={<DadosCliente />} />
           <Route path="/admin" element={<Admin onLogout={handleLogout} />} />
           <Route path="/clientes" element={<Clientes />} />
           <Route path="/passeadores" element={<Passeadores />} />

@@ -38,9 +38,14 @@ function Login({ onLogin }) {
         setError('');
         onLogin(data.userType);
   
+        // Salvar o id_cliente no localStorage
+        localStorage.setItem('id_cliente', data.id_cliente);
+  
         // Redireciona para a tela de redefinição com o id do cliente, se alterar_senha for 1
         if (data.alterar_senha === 1) {
           navigate(`/redefinir/${data.id_cliente}`);
+        } else {
+          navigate('/'); // Redireciona para a tela inicial
         }
       } else {
         setError(data.message);

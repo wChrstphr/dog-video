@@ -217,6 +217,149 @@ app.get('/clientes', (req, res) => {
   });
 });
 
+// Endpoint unificado para buscar os dados completos de um cliente
+app.get('/clientes/:id', (req, res) => {
+  const clienteId = req.params.id;
+
+  // Consulta para buscar informações básicas do cliente
+  const queryCliente = `
+    SELECT * 
+    FROM clientes 
+    WHERE id_cliente = ?`;
+
+  // Consulta para buscar os cachorros do cliente
+  const queryCachorros = `
+    SELECT nome 
+    FROM cachorros 
+    WHERE id_cliente = ?`;
+
+  // Consulta para buscar o passeador do cliente via cachorros
+  const queryPasseador = `
+    SELECT p.nome AS passeador_nome
+    FROM passeadores p
+    JOIN cachorros c ON c.id_passeador = p.id_passeador
+    WHERE c.id_cliente = ?
+    LIMIT 1`;
+
+  // Consultar os dados do cliente
+  connection.query(queryCliente, [clienteId], (err, clienteResults) => {
+    if (err) {
+      console.error('Erro ao consultar cliente:', err);
+      return res.status(500).json({ success: false, message: 'Erro ao consultar cliente' });
+    }
+
+    if (clienteResults.length === 0) {
+      return res.status(404).json({ success: false, message: 'Cliente não encontrado' });
+    }
+
+    const cliente = clienteResults[0];
+
+    // Formatar horário para mostrar apenas HH:MM, se disponível
+    if (cliente.horario_passeio) {
+      cliente.horario_passeio = cliente.horario_passeio.slice(0, 5);
+    }
+
+    // Consultar os cachorros associados ao cliente
+    connection.query(queryCachorros, [clienteId], (err, cachorroResults) => {
+      if (err) {
+        console.error('Erro ao consultar cachorros:', err);
+        return res.status(500).json({ success: false, message: 'Erro ao consultar cachorros' });
+      }
+
+      const caes = cachorroResults.map(cachorro => cachorro.nome);
+      cliente.caes = caes; // Adiciona os cães ao objeto cliente
+
+      // Consultar o passeador associado aos cachorros do cliente
+      connection.query(queryPasseador, [clienteId], (err, passeadorResults) => {
+        if (err) {
+          console.error('Erro ao consultar passeador:', err);
+          return res.status(500).json({ success: false, message: 'Erro ao consultar passeador' });
+        }
+
+        const passeadorNome = passeadorResults.length > 0 ? passeadorResults[0].passeador_nome : null;
+        cliente.passeador = passeadorNome; // Adiciona o nome do passeador ao cliente
+
+        // Retorna os dados consolidados
+        res.json({
+          success: true,
+          cliente: {
+            ...cliente,
+            caes,
+            passeador: passeadorNome
+          },
+        });
+      });
+    });
+  });
+});
+
+// Endpoint para atualizar um cliente
+app.put('/clientes/:id', (req, res) => {
+  const clienteId = req.params.id;
+  const { nome, email, cpf, telefone, endereco, pacote, horario_passeio, anotacoes, caes, id_passeador } = req.body;
+
+  // Verifica se o `id_passeador` é válido
+  if (!id_passeador || isNaN(id_passeador)) {
+    console.error('ID do passeador inválido:', id_passeador);
+    return res.status(400).json({ success: false, message: 'ID do passeador inválido ou não fornecido' });
+  }
+
+  // Query para atualizar os dados do cliente
+  const updateClienteQuery = `
+    UPDATE clientes
+    SET nome = ?, email = ?, cpf = ?, telefone = ?, endereco = ?, pacote = ?, horario_passeio = ?, anotacoes = ?
+    WHERE id_cliente = ?`;
+
+  connection.query(
+    updateClienteQuery,
+    [nome, email, cpf, telefone, endereco, pacote, horario_passeio, anotacoes, clienteId],
+    (err) => {
+      if (err) {
+        console.error('Erro ao atualizar cliente:', err);
+        return res.status(500).send('Erro ao atualizar cliente');
+      }
+
+      // Atualiza o ID do passeador para os cachorros associados ao cliente
+      const updatePasseadorQuery = `
+        UPDATE cachorros 
+        SET id_passeador = ? 
+        WHERE id_cliente = ?`;
+
+      connection.query(updatePasseadorQuery, [id_passeador, clienteId], (err) => {
+        if (err) {
+          console.error('Erro ao atualizar passeador dos cachorros:', err);
+          return res.status(500).json({ success: false, message: 'Erro ao atualizar passeador dos cachorros' });
+        }
+
+        // Verifica se há novos cães para adicionar
+        if (caes && caes.length > 0) {
+          const deleteCachorrosQuery = 'DELETE FROM cachorros WHERE id_cliente = ?';
+          connection.query(deleteCachorrosQuery, [clienteId], (err) => {
+            if (err) {
+              console.error('Erro ao deletar cachorros:', err);
+              return res.status(500).send('Erro ao deletar cachorros');
+            }
+
+            const insertDogQuery = 'INSERT INTO cachorros (nome, id_cliente, id_passeador) VALUES ?';
+            const dogValues = caes.map(cao => [cao, clienteId, id_passeador]);
+
+            connection.query(insertDogQuery, [dogValues], (err) => {
+              if (err) {
+                console.error('Erro ao inserir novos cães:', err);
+                return res.status(500).send('Erro ao inserir novos cães');
+              }
+
+              res.json({ success: true, message: 'Cliente e passeador atualizados com sucesso!' });
+            });
+          });
+        } else {
+          res.json({ success: true, message: 'Cliente atualizado com sucesso!' });
+        }
+      });
+    }
+  );
+});
+
 // Endpoint para criar um cliente
 app.post('/criarcliente', (req, res) => {
   const { nome, email, cpf, telefone, endereco, pacote, horario, anotacao, caes, id_passeador } = req.body;
@@ -277,115 +420,6 @@ app.delete('/clientes/:id', (req, res) => {
       res.json({ success: true, message: 'Cliente e seus cachorros deletados com sucesso!' });
     });
   });
-});
-
-// Endpoint para buscar informações de um cliente específico, seus cachorros e o passeador
-app.get('/cliente/:id', (req, res) => {
-  const clienteId = req.params.id;
-
-  // Query para buscar as informações do cliente
-  const queryCliente = 'SELECT * FROM clientes WHERE id_cliente = ?';
-  const queryCachorros = 'SELECT nome FROM cachorros WHERE id_cliente = ?';
-  const queryPasseador = `
-    SELECT p.nome AS passeador_nome
-    FROM passeadores p
-    JOIN cachorros c ON c.id_passeador = p.id_passeador
-    WHERE c.id_cliente = ?
-    LIMIT 1
-  `;
-
-  // Consultar os dados do cliente
-  connection.query(queryCliente, [clienteId], (err, clienteResults) => {
-    if (err) {
-      console.error('Erro ao consultar cliente:', err);
-      return res.status(500).send('Erro ao consultar cliente');
-    }
-
-    if (clienteResults.length === 0) {
-      return res.status(404).send('Cliente não encontrado');
-    }
-
-    const cliente = clienteResults[0];
-
-    // Formatar horário para mostrar apenas HH:MM
-    if (cliente.horario_passeio) {
-      cliente.horario_passeio = cliente.horario_passeio.slice(0, 5);
-    }
-
-    // Consultar os cachorros associados ao cliente
-    connection.query(queryCachorros, [clienteId], (err, cachorroResults) => {
-      if (err) {
-        console.error('Erro ao consultar cachorros:', err);
-        return res.status(500).send('Erro ao consultar cachorros');
-      }
-
-      const caes = cachorroResults.map(cachorro => cachorro.nome);
-      cliente.caes = caes; // Adiciona os cães ao objeto cliente
-
-      // Consultar o passeador associado aos cachorros do cliente
-      connection.query(queryPasseador, [clienteId], (err, passeadorResults) => {
-        if (err) {
-          console.error('Erro ao consultar passeador:', err);
-          return res.status(500).send('Erro ao consultar passeador');
-        }
-
-        const passeadorNome = passeadorResults.length > 0 ? passeadorResults[0].passeador_nome : null;
-        cliente.passeador = passeadorNome; // Adiciona o nome do passeador ao cliente
-
-        // Retorna os dados do cliente, cachorros e passeador
-        res.json(cliente);
-      });
-    });
-  });
-});
-
-// Endpoint para atualizar um cliente
-app.put('/cliente/:id', (req, res) => {
-  const clienteId = req.params.id;
-  const { nome, email, cpf, telefone, endereco, pacote, horario_passeio, anotacoes, caes, id_passeador } = req.body;
-
-  // Query para atualizar os dados do cliente
-  const updateClienteQuery = `
-    UPDATE clientes
-    SET nome = ?, email = ?, cpf = ?, telefone = ?, endereco = ?, pacote = ?, horario_passeio = ?, anotacoes = ?
-    WHERE id_cliente = ?`;
-
-  // Executa a atualização do cliente
-  connection.query(
-    updateClienteQuery,
-    [nome, email, cpf, telefone, endereco, pacote, horario_passeio, anotacoes, clienteId],
-    (err) => {
-      if (err) {
-        console.error('Erro ao atualizar cliente:', err);
-        return res.status(500).send('Erro ao atualizar cliente');
-      }
-
-      // Atualiza os cães associados ao cliente, com o id_passeador atualizado
-      const deleteCachorrosQuery = 'DELETE FROM cachorros WHERE id_cliente = ?';
-      connection.query(deleteCachorrosQuery, [clienteId], (err) => {
-        if (err) {
-          console.error('Erro ao deletar cachorros:', err);
-          return res.status(500).send('Erro ao deletar cachorros');
-        }
-
-        if (caes && caes.length > 0) {
-          const insertDogQuery = 'INSERT INTO cachorros (nome, id_cliente, id_passeador) VALUES ?';
-          const dogValues = caes.map((cao) => [cao, clienteId, id_passeador]); // Inclui id_passeador para cada cachorro
-
-          connection.query(insertDogQuery, [dogValues], (err) => {
-            if (err) {
-              console.error('Erro ao inserir cães:', err);
-              return res.status(500).send('Erro ao inserir cães');
-            }
-
-            res.json({ success: true, message: 'Cliente e passeador atualizados com sucesso!' });
-          });
-        } else {
-          res.json({ success: true, message: 'Cliente atualizado com sucesso!' });
-        }
-      });
-    }
-  );
 });
 
 // Endpoint para buscar passeadores com imagens ou informações detalhadas de um passeador específico
@@ -459,7 +493,7 @@ app.get('/passeadores/:id?', (req, res) => {
 });
 
 // Endpoint para atualizar os dados de um passeador
-app.put('/passeador/:id', (req, res) => {
+app.put('/passeadores/:id', (req, res) => {
   const passeadorId = req.params.id;
   const { nome, email, cpf, telefone, endereco, imagem } = req.body;
 

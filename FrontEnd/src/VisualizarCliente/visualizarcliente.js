@@ -12,9 +12,14 @@ function VisualizarCliente() {
   useEffect(() => {
     const fetchCliente = async () => {
       try {
-        const response = await fetch(`http://localhost:3001/cliente/${id}`); // Faz a requisição para o backend
+        const response = await fetch(`http://localhost:3001/clientes/${id}`); // Faz a requisição para o backend
         const data = await response.json();
-        setCliente(data); // Armazena os dados do cliente
+  
+        if (data.success) {
+          setCliente(data.cliente); // Armazena os dados do cliente
+        } else {
+          console.error('Erro no servidor:', data.message);
+        }
       } catch (error) {
         console.error('Erro ao buscar cliente:', error);
       } finally {
@@ -22,7 +27,7 @@ function VisualizarCliente() {
       }
     };
     fetchCliente();
-  }, [id]);
+  }, [id]);  
 
   if (loading) {
     return <div>Carregando...</div>; // Mensagem enquanto carrega

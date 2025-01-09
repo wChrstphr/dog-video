@@ -1,24 +1,50 @@
 import "./dados.css";
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import Modal from "react-modal";
 
 function Dados({ onLogout }) {
   const navigate = useNavigate();
+  const { id } = useParams(); // Obtém o ID do cliente logado da URL
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [dadosCliente, setDadosCliente] = useState(null);
 
   const showModal = () => setIsModalVisible(true);
   const hideModal = () => setIsModalVisible(false);
+
   const handleLogout = () => {
-    onLogout(); // Chama a função de logout
-    hideModal(); // Esconde o modal
-    navigate("/"); // Redireciona para a página de login
+    onLogout();
+    hideModal();
+    navigate("/");
   };
+
+  useEffect(() => {
+    // Busca os dados do cliente no backend
+    const fetchDadosCliente = async () => {
+      try {
+        const response = await fetch(`http://localhost:3001/clientes/${id}`);
+        const data = await response.json();
+
+        if (data.success) {
+          setDadosCliente(data.cliente);
+        } else {
+          console.error("Erro ao buscar dados do cliente:", data.message);
+        }
+      } catch (error) {
+        console.error("Erro ao conectar ao servidor:", error);
+      }
+    };
+
+    fetchDadosCliente();
+  }, [id]);
+
+  if (!dadosCliente) {
+    return <div>Carregando dados do cliente...</div>;
+  }
 
   return (
     <div className="Dados">
       <header className="Web-header">
-        {/* Modal para confirmar logout */}
         <Modal
           isOpen={isModalVisible}
           onRequestClose={hideModal}
@@ -49,18 +75,12 @@ function Dados({ onLogout }) {
           src="/logotipo.svg"
           className="Web-logotipo"
           alt="Dogvideo Logotipo"
-        />
-        <img
-          src="/logout.svg"
-          alt="Ícone de logout"
-          className="logout"
-          onClick={showModal}
-        />
+        />       
         <div className="footer-bar"></div>
       </header>
 
       <main className="Main-content">
-        <h1>Pedro de Alcântara João Carlos Leopoldo</h1>
+        <h1>{dadosCliente.nome}</h1>
 
         {/* Primeira linha de cards */}
         <div className="Dados-grid">
@@ -70,9 +90,9 @@ function Dados({ onLogout }) {
             </div>
             <div className="Card-content">
               <ul>
-                <li>Cachorro1</li>
-                <li>Cachorro2</li>
-                <li>Cachorro3</li>
+                {dadosCliente.caes.map((cachorro, index) => (
+                  <li key={index}>{cachorro}</li>
+                ))}
               </ul>
             </div>
           </div>
@@ -81,19 +101,14 @@ function Dados({ onLogout }) {
             <div className="Card-header-bg">
               <div className="Card-header">ASSINATURA</div>
             </div>
-            <div className="Card-content">Plano</div>
+            <div className="Card-content">{dadosCliente.pacote}</div>
           </div>
 
           <div className="Card">
             <div className="Card-header-bg">
               <div className="Card-header">HORÁRIO</div>
             </div>
-            <div className="Card-content">
-              <ul>
-                <li>08 - 08:45 hrs</li>
-                <li>Segunda a sexta</li>
-              </ul>
-            </div>
+            <div className="Card-content">{dadosCliente.horario_passeio}</div>
           </div>
         </div>
 
@@ -105,9 +120,9 @@ function Dados({ onLogout }) {
             </div>
             <div className="Card-content">
               <ul>
-                <li>cliente@gmail.com</li>
-                <li>CPF: 000.000.000-00</li>
-                <li>(61) 9999-99999</li>
+                <li>{dadosCliente.email}</li>
+                <li>CPF: {dadosCliente.cpf}</li>
+                <li>{dadosCliente.telefone}</li>
               </ul>
             </div>
           </div>
@@ -116,16 +131,14 @@ function Dados({ onLogout }) {
             <div className="Card-header-bg">
               <div className="Card-header">PASSEADOR</div>
             </div>
-            <div className="Card-content">Passeador 1</div>
+            <div className="Card-content">{dadosCliente.passeador || "Nenhum passeador"}</div>
           </div>
 
           <div className="Card">
             <div className="Card-header-bg">
               <div className="Card-header">ENDEREÇO</div>
             </div>
-            <div className="Card-content">
-              Rua das Laranjaeiras apt. 1003 Torre 07 Residencial DogVideo
-            </div>
+            <div className="Card-content">{dadosCliente.endereco}</div>
           </div>
         </div>
       </main>

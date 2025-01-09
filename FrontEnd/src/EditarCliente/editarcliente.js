@@ -8,8 +8,8 @@ function EditarCliente() {
   const { id } = useParams(); // Captura o ID da URL
   const [cliente, setCliente] = useState(null); // Armazena os dados do cliente
   const [loading, setLoading] = useState(true); // Controla o estado de carregamento
-  const [passeadores, setPasseadores] = useState([]); // Armazena a lista de passeadores
-  const [selectedPasseadorId, setSelectedPasseadorId] = useState(""); // Armazena o passeador selecionado
+  const [passeadores, setPasseadores] = useState([]); // Lista de passeadores
+  const [selectedPasseadorId, setSelectedPasseadorId] = useState(""); // Passeador selecionado
 
   // Referências para os inputs
   const nomeRef = useRef(null);
@@ -22,14 +22,18 @@ function EditarCliente() {
   const horarioRef = useRef(null);
   const anotacaoRef = useRef(null);
 
-  // Função para buscar os dados do cliente e dos passeadores
   useEffect(() => {
     const fetchCliente = async () => {
       try {
-        const response = await fetch(`http://localhost:3001/cliente/${id}`);
+        const response = await fetch(`http://localhost:3001/clientes/${id}`);
         const data = await response.json();
-        setCliente(data); // Armazena os dados do cliente
-        setSelectedPasseadorId(data.id_passeador); // Define o passeador atual do cliente
+
+        if (data.success && data.cliente) {
+          setCliente(data.cliente);
+          setSelectedPasseadorId(data.cliente.id_passeador || ""); // Define o passeador atual
+        } else {
+          console.error('Erro: Cliente não encontrado ou resposta inesperada', data);
+        }
       } catch (error) {
         console.error('Erro ao buscar cliente:', error);
       } finally {
@@ -41,7 +45,12 @@ function EditarCliente() {
       try {
         const response = await fetch('http://localhost:3001/passeadores');
         const data = await response.json();
-        setPasseadores(data); // Armazena a lista de passeadores
+
+        if (data.success && Array.isArray(data.passeadores)) {
+          setPasseadores(data.passeadores);
+        } else {
+          console.error('Erro ao buscar passeadores ou resposta inesperada', data);
+        }
       } catch (error) {
         console.error('Erro ao buscar passeadores:', error);
       }
@@ -51,18 +60,17 @@ function EditarCliente() {
     fetchPasseadores();
   }, [id]);
 
-  // Preencher os campos com os dados do cliente carregado
   useEffect(() => {
     if (cliente) {
-      nomeRef.current.value = cliente.nome;
-      emailRef.current.value = cliente.email;
-      cpfRef.current.value = cliente.cpf;
-      caesRef.current.value = cliente.caes.join(', ');
-      telefoneRef.current.value = cliente.telefone;
-      enderecoRef.current.value = cliente.endereco;
-      pacoteRef.current.value = cliente.pacote;
-      horarioRef.current.value = cliente.horario_passeio;
-      anotacaoRef.current.value = cliente.anotacoes;
+      nomeRef.current.value = cliente.nome || '';
+      emailRef.current.value = cliente.email || '';
+      cpfRef.current.value = cliente.cpf || '';
+      caesRef.current.value = cliente.caes ? cliente.caes.join(', ') : '';
+      telefoneRef.current.value = cliente.telefone || '';
+      enderecoRef.current.value = cliente.endereco || '';
+      pacoteRef.current.value = cliente.pacote || '';
+      horarioRef.current.value = cliente.horario_passeio || '';
+      anotacaoRef.current.value = cliente.anotacoes || '';
     }
   }, [cliente]);
 
@@ -74,41 +82,42 @@ function EditarCliente() {
     return <div>Cliente não encontrado</div>;
   }
 
-  // Função para salvar as alterações
   const handleSave = async (e) => {
     e.preventDefault();
-
+    
     const updatedCliente = {
-      nome: nomeRef.current.value,
-      email: emailRef.current.value,
-      cpf: cpfRef.current.value,
-      caes: caesRef.current.value.split(',').map(cao => cao.trim()),
-      telefone: telefoneRef.current.value,
-      endereco: enderecoRef.current.value,
-      pacote: pacoteRef.current.value,
-      horario_passeio: horarioRef.current.value,
-      anotacoes: anotacaoRef.current.value,
-      id_passeador: selectedPasseadorId // Inclui o id do passeador selecionado
+      nome: nomeRef.current.value || cliente.nome,
+      email: emailRef.current.value || cliente.email,
+      cpf: cpfRef.current.value || cliente.cpf,
+      caes: caesRef.current.value ? caesRef.current.value.split(',').map(cao => cao.trim()) : cliente.caes,
+      telefone: telefoneRef.current.value || cliente.telefone,
+      endereco: enderecoRef.current.value || cliente.endereco,
+      pacote: pacoteRef.current.value || cliente.pacote,
+      horario_passeio: horarioRef.current.value || cliente.horario_passeio,
+      anotacoes: anotacaoRef.current.value || cliente.anotacoes,
+      id_passeador: selectedPasseadorId || cliente.id_passeador, // Inclui o ID do passeador
     };
-
+  
+    console.log('Dados enviados:', updatedCliente); // Verifica o que está sendo enviado
+  
     try {
-      const response = await fetch(`http://localhost:3001/cliente/${id}`, {
+      const response = await fetch(`http://localhost:3001/clientes/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(updatedCliente),
+        body: JSON.stringify(updatedCliente), // Envia os dados atualizados
       });
-
+  
       if (response.ok) {
-        navigate(`/visualizarcliente/${id}`);
+        navigate(`/visualizarcliente/${id}`); // Redireciona após salvar
       } else {
         console.error('Erro ao atualizar cliente');
       }
     } catch (error) {
       console.error('Erro ao enviar os dados do cliente:', error);
     }
-  };
+  };  
 
   return (
     <div className="Web">
@@ -146,17 +155,21 @@ function EditarCliente() {
           <div className="input-container">
             <FaUserAlt className="input-icon" />
             <select
-              className="form-input"
-              value={selectedPasseadorId}
-              onChange={(e) => setSelectedPasseadorId(e.target.value)}
-            >
-              <option value="">Selecione o Passeador</option>
-              {passeadores.map((passeador) => (
-                <option key={passeador.id_passeador} value={passeador.id_passeador}>
-                  {passeador.nome}
-                </option>
-              ))}
-            </select>
+  className="form-input"
+  value={selectedPasseadorId}
+  onChange={(e) => {
+    const selectedId = e.target.value;
+    setSelectedPasseadorId(selectedId);
+    console.log("Passeador selecionado (ID):", selectedId); // Log do ID selecionado
+  }}
+>
+  <option value="">Selecione o Passeador</option>
+  {passeadores.map((passeador) => (
+    <option key={passeador.id} value={passeador.id}>
+      {passeador.nome}
+    </option>
+  ))}
+</select>
           </div>
           <div className="input-container">
             <FaCalendarAlt className="input-icon" />
