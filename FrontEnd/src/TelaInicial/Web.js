@@ -38,8 +38,13 @@ function Web({ onLogout }) {
   }, []);
 
   const handleDadosClienteClick = () => {
-    navigate('/dados-cliente');
-  };
+    const idCliente = localStorage.getItem('id_cliente'); // Recupera o ID do cliente logado
+    if (idCliente) {
+      navigate(`/dados-cliente/${idCliente}`); // Redireciona para a página do cliente logado
+    } else {
+      console.error('ID do cliente não encontrado no localStorage.');
+    }
+  };  
 
   return (
     <div className="Web">
