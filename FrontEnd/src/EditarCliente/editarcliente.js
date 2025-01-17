@@ -73,6 +73,12 @@ function EditarCliente() {
     }
   }, [cliente]);
 
+  // Recupera o ID do passeador do localStorage
+  useEffect(() => {
+    const localIdPasseador = localStorage.getItem('passeadorId'); // Recupera o ID do passeador salvo localmente
+    setSelectedPasseadorId(localIdPasseador || ""); // Define o passeador selecionado como o ID salvo
+  }, []);
+
   if (loading) {
     return <div>Carregando...</div>;
   }
@@ -83,7 +89,10 @@ function EditarCliente() {
 
   const handleSave = async (e) => {
     e.preventDefault();
-
+  
+    // Recupera o ID do passeador salvo localmente
+    const localPasseadorId = localStorage.getItem('passeadorId');
+  
     const updatedCliente = {
       nome: nomeRef.current.value || cliente.nome,
       email: emailRef.current.value || cliente.email,
@@ -94,9 +103,9 @@ function EditarCliente() {
       pacote: cliente.pacote || "",
       horario_passeio: horarioRef.current.value || cliente.horario_passeio,
       anotacoes: anotacaoRef.current.value || cliente.anotacoes,
-      id_passeador: selectedPasseadorId || cliente.id_passeador, // Garante que sempre haverá um id_passeador
+      id_passeador: selectedPasseadorId || localPasseadorId || cliente.id_passeador, // Usa o passeador salvo localmente como fallback
     };
-
+  
     try {
       const response = await fetch(`http://localhost:3001/clientes/${id}`, {
         method: 'PUT',
@@ -105,17 +114,36 @@ function EditarCliente() {
         },
         body: JSON.stringify(updatedCliente),
       });
-
+  
       if (response.ok) {
         navigate(`/visualizarcliente/${id}`);
       } else {
-        console.error('Erro ao atualizar cliente');
+        const data = await response.json();
+        if (data.message && data.message.includes('ID do passeador inválido')) {
+          // Reenvia a requisição com o passeador salvo localmente
+          updatedCliente.id_passeador = localPasseadorId;
+          const retryResponse = await fetch(`http://localhost:3001/clientes/${id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(updatedCliente),
+          });
+  
+          if (retryResponse.ok) {
+            navigate(`/visualizarcliente/${id}`);
+          } else {
+            console.error('Erro ao atualizar cliente com ID local do passeador');
+          }
+        } else {
+          console.error('Erro ao atualizar cliente:', data);
+        }
       }
     } catch (error) {
       console.error('Erro ao enviar os dados do cliente:', error);
     }
   };
-
+  
   return (
     <div className="Web">
       <header className="Web-header">

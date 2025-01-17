@@ -17,6 +17,11 @@ function VisualizarCliente() {
   
         if (data.success) {
           setCliente(data.cliente); // Armazena os dados do cliente
+  
+          // Salva o ID do passeador no localStorage
+          if (data.cliente.id_passeador) {
+            localStorage.setItem('passeadorId', data.cliente.id_passeador);
+          }
         } else {
           console.error('Erro no servidor:', data.message);
         }
@@ -26,9 +31,10 @@ function VisualizarCliente() {
         setLoading(false); // Remove o estado de carregamento
       }
     };
+  
     fetchCliente();
-  }, [id]);  
-
+  }, [id]);
+  
   if (loading) {
     return <div>Carregando...</div>; // Mensagem enquanto carrega
   }
