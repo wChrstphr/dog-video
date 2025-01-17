@@ -18,7 +18,6 @@ function EditarCliente() {
   const caesRef = useRef(null);
   const telefoneRef = useRef(null);
   const enderecoRef = useRef(null);
-  const pacoteRef = useRef(null);
   const horarioRef = useRef(null);
   const anotacaoRef = useRef(null);
 
@@ -68,9 +67,9 @@ function EditarCliente() {
       caesRef.current.value = cliente.caes ? cliente.caes.join(', ') : '';
       telefoneRef.current.value = cliente.telefone || '';
       enderecoRef.current.value = cliente.endereco || '';
-      pacoteRef.current.value = cliente.pacote || '';
       horarioRef.current.value = cliente.horario_passeio || '';
       anotacaoRef.current.value = cliente.anotacoes || '';
+      setSelectedPasseadorId(cliente.id_passeador || ""); // Atualiza o passeador selecionado ao carregar o cliente
     }
   }, [cliente]);
 
@@ -84,7 +83,7 @@ function EditarCliente() {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    
+
     const updatedCliente = {
       nome: nomeRef.current.value || cliente.nome,
       email: emailRef.current.value || cliente.email,
@@ -92,32 +91,30 @@ function EditarCliente() {
       caes: caesRef.current.value ? caesRef.current.value.split(',').map(cao => cao.trim()) : cliente.caes,
       telefone: telefoneRef.current.value || cliente.telefone,
       endereco: enderecoRef.current.value || cliente.endereco,
-      pacote: pacoteRef.current.value || cliente.pacote,
+      pacote: cliente.pacote || "",
       horario_passeio: horarioRef.current.value || cliente.horario_passeio,
       anotacoes: anotacaoRef.current.value || cliente.anotacoes,
-      id_passeador: selectedPasseadorId || cliente.id_passeador, // Inclui o ID do passeador
+      id_passeador: selectedPasseadorId || cliente.id_passeador, // Garante que sempre haverá um id_passeador
     };
-  
-    console.log('Dados enviados:', updatedCliente); // Verifica o que está sendo enviado
-  
+
     try {
       const response = await fetch(`http://localhost:3001/clientes/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(updatedCliente), // Envia os dados atualizados
+        body: JSON.stringify(updatedCliente),
       });
-  
+
       if (response.ok) {
-        navigate(`/visualizarcliente/${id}`); // Redireciona após salvar
+        navigate(`/visualizarcliente/${id}`);
       } else {
         console.error('Erro ao atualizar cliente');
       }
     } catch (error) {
       console.error('Erro ao enviar os dados do cliente:', error);
     }
-  };  
+  };
 
   return (
     <div className="Web">
@@ -155,25 +152,29 @@ function EditarCliente() {
           <div className="input-container">
             <FaUserAlt className="input-icon" />
             <select
-  className="form-input"
-  value={selectedPasseadorId}
-  onChange={(e) => {
-    const selectedId = e.target.value;
-    setSelectedPasseadorId(selectedId);
-    console.log("Passeador selecionado (ID):", selectedId); // Log do ID selecionado
-  }}
->
-  <option value="">Selecione o Passeador</option>
-  {passeadores.map((passeador) => (
-    <option key={passeador.id} value={passeador.id}>
-      {passeador.nome}
-    </option>
-  ))}
-</select>
+              className="form-input"
+              value={selectedPasseadorId}
+              onChange={(e) => setSelectedPasseadorId(e.target.value)}
+            >
+              <option value="">Selecione o Passeador</option>
+              {passeadores.map((passeador) => (
+                <option key={passeador.id} value={passeador.id}>
+                  {passeador.nome}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="input-container">
             <FaCalendarAlt className="input-icon" />
-            <input ref={pacoteRef} type="text" placeholder="Pacote" className="form-input" />
+            <select
+              className="form-input"
+              value={cliente.pacote || ""}
+              onChange={(e) => setCliente({ ...cliente, pacote: e.target.value })}
+            >
+              <option value="">Selecione o Pacote</option>
+              <option value="Semestral">Semestral</option>
+              <option value="Mensal">Mensal</option>
+            </select>
           </div>
           <div className="input-container">
             <FaClock className="input-icon" />
