@@ -298,13 +298,7 @@ app.put('/clientes/:id', (req, res) => {
   const clienteId = req.params.id;
   const { nome, email, cpf, telefone, endereco, pacote, horario_passeio, anotacoes, caes, id_passeador } = req.body;
 
-  // Verifica se o `id_passeador` é válido
-  if (!id_passeador || isNaN(id_passeador)) {
-    console.error('ID do passeador inválido:', id_passeador);
-    return res.status(400).json({ success: false, message: 'ID do passeador inválido ou não fornecido' });
-  }
-
-  // Query para atualizar os dados do cliente
+  // Atualiza os dados do cliente
   const updateClienteQuery = `
     UPDATE clientes
     SET nome = ?, email = ?, cpf = ?, telefone = ?, endereco = ?, pacote = ?, horario_passeio = ?, anotacoes = ?
@@ -319,43 +313,68 @@ app.put('/clientes/:id', (req, res) => {
         return res.status(500).send('Erro ao atualizar cliente');
       }
 
-      // Atualiza o ID do passeador para os cachorros associados ao cliente
-      const updatePasseadorQuery = `
-        UPDATE cachorros 
-        SET id_passeador = ? 
-        WHERE id_cliente = ?`;
+      // Atualiza o ID do passeador apenas se ele for fornecido e válido
+      if (id_passeador && !isNaN(id_passeador)) {
+        const updatePasseadorQuery = `
+          UPDATE cachorros 
+          SET id_passeador = ? 
+          WHERE id_cliente = ?`;
+      
+        connection.query(updatePasseadorQuery, [id_passeador, clienteId], (err) => {
+          if (err) {
+            console.error('Erro ao atualizar passeador dos cachorros:', err);
+            return res.status(500).json({ success: false, message: 'Erro ao atualizar passeador dos cachorros' });
+          }
+        });
+      } else {
+        console.warn(`ID do passeador inválido: ${id_passeador}. Atualização do passeador ignorada.`);
+      }      
 
-      connection.query(updatePasseadorQuery, [id_passeador, clienteId], (err) => {
-        if (err) {
-          console.error('Erro ao atualizar passeador dos cachorros:', err);
-          return res.status(500).json({ success: false, message: 'Erro ao atualizar passeador dos cachorros' });
-        }
-
-        // Verifica se há novos cães para adicionar
-        if (caes && caes.length > 0) {
-          const deleteCachorrosQuery = 'DELETE FROM cachorros WHERE id_cliente = ?';
-          connection.query(deleteCachorrosQuery, [clienteId], (err) => {
-            if (err) {
-              console.error('Erro ao deletar cachorros:', err);
-              return res.status(500).send('Erro ao deletar cachorros');
-            }
-
+      // Verifica se há novos cães para adicionar
+      if (caes && caes.length > 0) {
+        // Consulta para buscar os nomes dos cachorros existentes
+        const selectCachorrosQuery = 'SELECT nome FROM cachorros WHERE id_cliente = ?';
+        connection.query(selectCachorrosQuery, [clienteId], (err, existingDogs) => {
+          if (err) {
+            console.error('Erro ao consultar cachorros existentes:', err);
+            return res.status(500).send('Erro ao consultar cachorros existentes');
+          }
+      
+          const existingDogNames = existingDogs.map(dog => dog.nome); // Nomes dos cachorros existentes no banco
+          const newDogs = caes.filter(cao => !existingDogNames.includes(cao)); // Cachorros novos
+          const dogsToDelete = existingDogNames.filter(existingDog => !caes.includes(existingDog)); // Cachorros a excluir
+      
+          // Exclui cachorros que não estão mais na lista
+          if (dogsToDelete.length > 0) {
+            const deleteDogsQuery = 'DELETE FROM cachorros WHERE id_cliente = ? AND nome IN (?)';
+            connection.query(deleteDogsQuery, [clienteId, dogsToDelete], (err) => {
+              if (err) {
+                console.error('Erro ao deletar cachorros:', err);
+                return res.status(500).send('Erro ao deletar cachorros');
+              }
+            });
+          }
+      
+          // Insere cachorros novos
+          if (newDogs.length > 0) {
             const insertDogQuery = 'INSERT INTO cachorros (nome, id_cliente, id_passeador) VALUES ?';
-            const dogValues = caes.map(cao => [cao, clienteId, id_passeador]);
-
+            const dogValues = newDogs.map(cao => [cao, clienteId, id_passeador || null]);
+      
             connection.query(insertDogQuery, [dogValues], (err) => {
               if (err) {
                 console.error('Erro ao inserir novos cães:', err);
                 return res.status(500).send('Erro ao inserir novos cães');
               }
-
-              res.json({ success: true, message: 'Cliente e passeador atualizados com sucesso!' });
+      
+              res.json({ success: true, message: 'Cliente e cachorros atualizados com sucesso!' });
             });
-          });
-        } else {
-          res.json({ success: true, message: 'Cliente atualizado com sucesso!' });
-        }
-      });
+          } else {
+            res.json({ success: true, message: 'Cliente atualizado com sucesso!' });
+          }
+        });
+      } else {
+        res.json({ success: true, message: 'Cliente atualizado sem mudanças nos cachorros!' });
+      }      
     }
   );
 });
