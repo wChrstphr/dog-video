@@ -7,9 +7,9 @@ body {
     font-family: 'Manrope', sans-serif;
 }
 
-.Web {
+.Web-Criar-Passeador {
     text-align: center;
-    background-color: #2E55FF;
+    background-color: black;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -17,7 +17,7 @@ body {
 }
 
 .Web-header {
-    background-color: #0024BD;
+    background-color: black;
     height: 90px;
     display: flex;
     align-items: center;
@@ -31,7 +31,7 @@ body {
 }
 
 .footer-bar {
-    background-color: #D69958;
+    background-color: white;
     height: 5px;
     width: 100%;
     margin-top: 90px;

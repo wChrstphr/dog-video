@@ -6,7 +6,7 @@ body {
 
 .Web {
   text-align: center;
-  background-color: #2e55ff;
+  background-color: black;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -18,7 +18,7 @@ body {
 }
 
 .Web-header {
-  background-color: #0024bd;
+  background-color: black;
   height: 90px;
   display: flex;
   justify-content: space-between;
@@ -27,7 +27,7 @@ body {
 }
 
 .footer-bar {
-  background-color: #D69958;
+  background-color: white;
   height: 5px;
   position: absolute;
   margin-top: 90px;
@@ -57,7 +57,7 @@ body {
 }
 
 .Card {
-  background-color: #d08b56;
+  background-color: white;
   border-radius: 10px;
   padding: 20px;
   width: 200px;
@@ -68,7 +68,7 @@ body {
 }
 
 .Card-header-bg {
-  background-color: #e9be91;
+  background-color: black;
   padding: 5px;
   border-radius: 10px;
 }
@@ -76,7 +76,7 @@ body {
 .Card-header {
   font-size: 18px;
   font-weight: bold;
-  color: black;
+  color: white;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -87,6 +87,7 @@ body {
   margin-top: 20px;
   font-weight: bold;
   overflow-wrap: break-word;
+  color: black;
 }
 
 ul {
@@ -117,7 +118,7 @@ li {
 }
 
 .modal-container {
-  background: #0024bd;
+  background: black;
   border-radius: 10px;
   padding: 20px;
   width: 300px;

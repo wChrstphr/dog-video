@@ -4,9 +4,9 @@ body {
     padding: 0;
 }
 
-.Web {
+.Web-Passeador {
     text-align: center;
-    background-color: #2E55FF;
+    background-color: black;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -14,7 +14,7 @@ body {
 }
 
 .Web-header {
-    background-color: #0024BD;
+    background-color: black;
     height: 90px;
     display: flex;
     align-items: center;
@@ -44,7 +44,7 @@ body {
 }
 
 .icon-container {
-    background-color: #D69958;
+    background-color: white;
     padding: 10px;
     border-radius: 20px;
     display: flex;
@@ -87,10 +87,11 @@ body {
 
 .passeador-item span {
     padding-left: 40px;
+    font-weight: bold;
 }
 
 .delete-button {
-    background: #FA6A6A;
+    background: red;
     border-radius: 25%;
     padding: 5px;
     border: none;
@@ -108,7 +109,7 @@ body {
 
 
 .footer-bar {
-    background-color: #D69958;
+    background-color: white;
     height: 5px;
     width: 100%;
     margin-top: 90px;
@@ -140,7 +141,7 @@ body {
   }
   
   .modal-container {
-    background: #0024bd;
+    background: black;
     border-radius: 10px;
     padding: 20px;
     width: 300px;
@@ -190,14 +191,15 @@ body {
     padding: 10px;
     font-size: 18px;
     border-radius: 25px;
-    border: 1px solid #0024bd;
+    border: 1px solid white;
+    background-color: #d3d3d3;
   }
   
   .filter-menu {
     position: absolute;
     top: 180px;
     right: 20px;
-    background-color: #d08b56;
+    background-color: black;
     border: 1px solid #ddd;
     border-radius: 20px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -214,10 +216,11 @@ body {
     text-align: left;
     width: 100%;
     cursor: pointer;
+    font-weight: bold;
 }
 
 .filter-button:hover {
-    background-color: #D69958;
+    background-color: #d3d3d3;
 }
 
 /* Responsividade para tablets */

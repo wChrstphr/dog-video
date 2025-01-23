@@ -92,7 +92,7 @@ function Clientes() {
   }, [clientes, busca, sortDirection]);
 
   return (
-    <div className="Web">
+    <div className="Web-Clientes">
       <header className="Web-header">
         <img src="/logotipo.svg" className="Web-logotipo" alt="Dogvideo Logomarca" />
         <div className="footer-bar"></div>

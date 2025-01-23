@@ -16,7 +16,7 @@ function Admin({ onLogout }) {
   };
 
   return (
-    <div className="Web">
+    <div className="Web-Admin">
       <header className="Web-header">
         <img src="/logotipo.svg" className="Web-logotipo" alt="Dogvideo Logomarca" />
 

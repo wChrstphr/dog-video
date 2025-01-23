@@ -43,7 +43,7 @@ function VisualizarPasseador() {
   }
 
   return (
-    <div className="Web">
+    <div className="Web-Passeadores">
       <header className="Web-header">
         <img src="/logotipo.svg" className="Web-logotipo" alt="Dogvideo Logomarca" />
         <div className="footer-bar"></div>

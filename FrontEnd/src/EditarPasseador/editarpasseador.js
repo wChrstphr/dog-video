@@ -71,7 +71,7 @@ function EditarPasseador() {
   };
 
   return (
-    <div className="Web">
+    <div className="WebPasseador">
       <header className="Web-header">
         <img src="/logotipo.svg" className="Web-logotipo" alt="Dogvideo Logomarca" />
         <div className="footer-bar"></div>

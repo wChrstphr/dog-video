@@ -7,9 +7,9 @@ body {
     font-family: 'Manrope', sans-serif;
 }
 
-.Web {
+.Web-Clientes {
     text-align: center;
-    background-color: #2E55FF;
+    background-color: black;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -17,7 +17,7 @@ body {
 }
 
 .Web-header {
-    background-color: #0024BD;
+    background-color: black;
     height: 90px;
     display: flex;
     align-items: center;
@@ -47,7 +47,7 @@ body {
 }
 
 .icon-container {
-    background-color: #D69958;
+    background-color: white;
     padding: 10px;
     border-radius: 20px;
     display: flex;
@@ -76,10 +76,10 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #001B7A;
+    background-color: white;
     border-radius: 15px;
     padding: 5px;
-    color: white;
+    color: black;
     font-size: 25px;
     width: 80%;
     margin: 0 auto;
@@ -88,10 +88,11 @@ body {
 
 .client-item span {
     padding-left: 40px;
+    font-weight: bold;
 }
 
 .delete-button {
-    background: #FA6A6A;
+    background: red;
     border-radius: 25%;
     padding: 5px;
     border: none;
@@ -190,7 +191,7 @@ body {
     padding: 10px;
     font-size: 18px;
     border-radius: 5px;
-    border: 1px solid #0024bd;
+    border: 1px solid #d3d3d3;
   }
   
   .filter-menu {

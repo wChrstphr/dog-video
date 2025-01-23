@@ -111,7 +111,7 @@ function EditarCliente() {
   };
 
   return (
-    <div className="Web">
+    <div className="Web-Editar-Cliente">
       <header className="Web-header">
         <img src="/logotipo.svg" className="Web-logotipo" alt="Dogvideo Logomarca" />
         <div className="footer-bar"></div>

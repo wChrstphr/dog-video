@@ -1,11 +1,11 @@
 body {
-  background-color: #2E55FF;
+  background-color: black;
   padding: 0;
 }
 
-.Web {
+.Web-Inicial {
   text-align: center;
-  background-color: #2E55FF;
+  background-color: black;
   min-height: 100vh;
   justify-content: space-between;
   min-height: 100vh;
@@ -27,8 +27,8 @@ body {
   }
 }
 
-.Web-header {
-  background-color: #0024BD;
+.Web-header-inicial {
+  background-color: black;
   height: 90px;
   display: flex;
   align-items: center;
@@ -45,11 +45,10 @@ body {
   padding-right: 20px;
 }
 
-.footer-bar {
-  background-color: #D69958;
+.footer-bar-inicial {
+  background-color: white;
   height: 5px;
   position: absolute;
-  margin-top: 90px;
   width: 100%;
 }
 
@@ -120,22 +119,22 @@ body {
   color: white;
 }
 
-.passeador-titulo {
+.passeador-titulo-inicial {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 10px 0;
+  margin: 20px 0;
   position: relative;
   max-width: 100%;
 }
 
 
-.passeador-titulo img {
+.passeador-titulo-inicial img {
   width: 500px;
   height: auto;
 }
 
-.passeador-texto {
+.passeador-texto-inicial {
   font-family: 'Manrope', sans-serif;
   font-size: 30px;
   font-weight: bold;

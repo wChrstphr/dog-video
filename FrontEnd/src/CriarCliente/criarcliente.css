@@ -7,9 +7,9 @@ body {
     font-family: 'Manrope', sans-serif;
 }
 
-.Web {
+.Web-Criar-Cliente {
     text-align: center;
-    background-color: #2E55FF;
+    background-color: black;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
