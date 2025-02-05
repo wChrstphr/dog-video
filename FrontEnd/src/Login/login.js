@@ -29,7 +29,7 @@ function Login({ onLogin }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email: username, senha: password }),
+        body: JSON.stringify({ email: username, senha: password }), // Mantém o envio normal
       });
   
       const data = await response.json();
@@ -48,9 +48,10 @@ function Login({ onLogin }) {
           navigate('/'); // Redireciona para a tela inicial
         }
       } else {
-        setError(data.message);
+        setError('Email ou senha incorretos.');
       }
     } catch (error) {
+      console.error('Erro ao fazer login:', error);
       setError('Erro ao conectar ao servidor. Tente novamente mais tarde.');
     }
   };  

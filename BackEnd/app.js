@@ -5,6 +5,8 @@ const cors = require('cors');
 const app = express();
 const port = 3001;
 const webPush = require('web-push');
+const bcrypt = require('bcrypt'); 
+const saltRounds = 10;
 
 // Configuração do middleware
 app.use(cors());
@@ -147,28 +149,15 @@ app.post('/login', (req, res) => {
     }
   }
 
-  // Consulta para autenticação
-  const query = 'SELECT * FROM clientes WHERE email = ? AND senha = ?';
-  connection.query(query, [email, senha], (err, results) => {
+  // Consulta para buscar o cliente pelo email
+  const query = 'SELECT * FROM clientes WHERE email = ?';
+  connection.query(query, [email], async (err, results) => {
     if (err) {
       console.error('Erro ao consultar o banco de dados:', err);
-      return res.status(500).send('Erro ao consultar o banco de dados');
+      return res.status(500).json({ success: false, message: 'Erro ao consultar o banco de dados' });
     }
 
-    if (results.length > 0) {
-      // Login bem-sucedido: reseta tentativas de login
-      loginAttempts[email] = { attempts: 0, lastAttempt: Date.now() };
-      const user = results[0];
-      const userType = user.tipo === 1 ? 'admin' : 'user';
-
-      // Retorna resposta de sucesso e dados do usuário
-      res.json({
-        success: true,
-        userType: userType,
-        alterar_senha: user.alterar_senha,
-        id_cliente: user.id_cliente
-      });
-    } else {
+    if (results.length === 0) {
       // Incrementa o contador de tentativas de login falhas
       if (!loginAttempts[email]) {
         loginAttempts[email] = { attempts: 1, lastAttempt: Date.now() };
@@ -177,31 +166,74 @@ app.post('/login', (req, res) => {
         loginAttempts[email].lastAttempt = Date.now();
       }
 
-      // Retorna resposta de erro após tentativa falha
-      res.json({ success: false, message: 'Email ou senha incorretos' });
+      return res.status(401).json({ success: false, message: 'Email ou senha incorretos' });
     }
+
+    const cliente = results[0];
+
+    // Compara a senha digitada com o hash armazenado no banco
+    const match = await bcrypt.compare(senha, cliente.senha);
+
+    if (!match) {
+      // Incrementa o contador de tentativas de login falhas
+      if (!loginAttempts[email]) {
+        loginAttempts[email] = { attempts: 1, lastAttempt: Date.now() };
+      } else {
+        loginAttempts[email].attempts += 1;
+        loginAttempts[email].lastAttempt = Date.now();
+      }
+
+      return res.status(401).json({ success: false, message: 'Email ou senha incorretos' });
+    }
+
+    // Login bem-sucedido: reseta tentativas de login
+    loginAttempts[email] = { attempts: 0, lastAttempt: Date.now() };
+
+    const userType = cliente.tipo === 1 ? 'admin' : 'user';
+
+    // Retorna resposta de sucesso e dados do usuário
+    res.json({
+      success: true,
+      userType: userType,
+      alterar_senha: cliente.alterar_senha,
+      id_cliente: cliente.id_cliente,
+    });
   });
 });
 
 // Endpoint para alterar a senha
-app.post('/alterar-senha', (req, res) => {
+app.post('/alterar-senha', async (req, res) => {
   const { novaSenha, id_cliente } = req.body;
 
   if (!id_cliente) {
     return res.status(400).json({ success: false, message: 'ID do cliente não fornecido' });
   }
 
-  const query = 'UPDATE clientes SET senha = ?, alterar_senha = 0 WHERE id_cliente = ?';
+  try {
+    // Gera o hash da nova senha antes de salvar no banco
+    const hashedPassword = await bcrypt.hash(novaSenha, saltRounds);
 
-  connection.query(query, [novaSenha, id_cliente], (err) => {
-    if (err) {
-      console.error('Erro ao atualizar a senha:', err);
-      return res.status(500).json({ success: false, message: 'Erro ao atualizar a senha' });
-    }
+    // Atualiza a senha do cliente no banco de dados
+    const query = 'UPDATE clientes SET senha = ?, alterar_senha = 0 WHERE id_cliente = ?';
 
-    // Retorna JSON para confirmação de sucesso
-    res.json({ success: true, message: 'Senha alterada com sucesso!' });
-  });
+    connection.query(query, [hashedPassword, id_cliente], (err, result) => {
+      if (err) {
+        console.error('Erro ao atualizar senha:', err);
+        return res.status(500).json({ success: false, message: 'Erro ao atualizar senha' });
+      }
+
+      // Verifica se o ID do cliente existe no banco de dados
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ success: false, message: 'Cliente não encontrado' });
+      }
+
+      res.json({ success: true, message: 'Senha redefinida com sucesso!' });
+    });
+
+  } catch (error) {
+    console.error('Erro ao criptografar senha:', error);
+    res.status(500).json({ success: false, message: 'Erro ao processar senha' });
+  }
 });
 
 // Endpoint para aparecer os clientes
@@ -380,37 +412,48 @@ app.put('/clientes/:id', (req, res) => {
 });
 
 // Endpoint para criar um cliente
-app.post('/criarcliente', (req, res) => {
+app.post('/criarcliente', async (req, res) => {
   const { nome, email, cpf, telefone, endereco, pacote, horario, anotacao, caes, id_passeador } = req.body;
 
-  // Query para inserir um novo cliente
-  const insertClientQuery = 'INSERT INTO clientes (nome, email, cpf, telefone, endereco, pacote, horario_passeio, anotacoes, tipo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)';
+  try {
+    // Gera o hash da senha padrão "dog123"
+    const hashedPassword = await bcrypt.hash('dog123', saltRounds);
 
-  connection.query(insertClientQuery, [nome, email, cpf, telefone, endereco, pacote, horario, anotacao], (err, result) => {
-    if (err) {
-      console.error('Erro ao inserir cliente:', err);
-      return res.status(500).send('Erro ao inserir cliente');
-    }
+    // Query para inserir um novo cliente com a senha encriptada
+    const insertClientQuery = `
+      INSERT INTO clientes (nome, email, cpf, telefone, endereco, pacote, horario_passeio, anotacoes, tipo, senha)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+    `;
 
-    const clienteId = result.insertId;
+    connection.query(insertClientQuery, [nome, email, cpf, telefone, endereco, pacote, horario, anotacao, hashedPassword], (err, result) => {
+      if (err) {
+        console.error('Erro ao inserir cliente:', err);
+        return res.status(500).send('Erro ao inserir cliente');
+      }
 
-    // Verifica se há cães para adicionar
-    if (caes && caes.length > 0) {
-      const insertDogQuery = 'INSERT INTO cachorros (nome, id_cliente, id_passeador) VALUES ?';
-      const dogValues = caes.map((cao) => [cao, clienteId, id_passeador]); // Inclui id_passeador
+      const clienteId = result.insertId;
 
-      connection.query(insertDogQuery, [dogValues], (err) => {
-        if (err) {
-          console.error('Erro ao inserir cães:', err);
-          return res.status(500).send('Erro ao inserir cães');
-        }
+      // Verifica se há cães para adicionar
+      if (caes && caes.length > 0) {
+        const insertDogQuery = 'INSERT INTO cachorros (nome, id_cliente, id_passeador) VALUES ?';
+        const dogValues = caes.map((cao) => [cao, clienteId, id_passeador]);
 
-        res.json({ success: true, message: 'Cliente e cães adicionados com sucesso!' });
-      });
-    } else {
-      res.json({ success: true, message: 'Cliente adicionado com sucesso!' });
-    }
-  });
+        connection.query(insertDogQuery, [dogValues], (err) => {
+          if (err) {
+            console.error('Erro ao inserir cães:', err);
+            return res.status(500).send('Erro ao inserir cães');
+          }
+
+          res.json({ success: true, message: 'Cliente e cães adicionados com sucesso!' });
+        });
+      } else {
+        res.json({ success: true, message: 'Cliente adicionado com sucesso!' });
+      }
+    });
+  } catch (error) {
+    console.error('Erro ao criar hash da senha:', error);
+    res.status(500).send('Erro ao processar senha');
+  }
 });
 
 // Endpoint para excluir um cliente e seus cachorros

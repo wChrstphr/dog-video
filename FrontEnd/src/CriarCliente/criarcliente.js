@@ -45,17 +45,19 @@ function CriarCliente() {
   // Função para lidar com a criação do cliente
   const handleCreate = async (e) => {
     e.preventDefault();
-
+  
     // Captura os valores dos inputs
     const nome = nomeRef.current.value;
     const email = emailRef.current.value;
     const cpf = cpfRef.current.value;
     const telefone = telefoneRef.current.value;
     const endereco = enderecoRef.current.value;
+    const pacoteSelecionado = pacote; // Captura o pacote selecionado
     const horario = horarioRef.current.value;
     const anotacao = anotacaoRef.current.value;
-    const caes = caesRef.current.value.split(',').map(cao => cao.trim());
-
+    const caes = caesRef.current.value.split(',').map((cao) => cao.trim());
+    const id_passeador = selectedPasseadorId;
+  
     try {
       // Envia os dados para o backend
       const response = await axios.post('http://localhost:3001/criarcliente', {
@@ -64,16 +66,16 @@ function CriarCliente() {
         cpf,
         telefone,
         endereco,
-        pacote,
+        pacote: pacoteSelecionado,
         horario,
         anotacao,
         caes,
-        id_passeador: selectedPasseadorId
+        id_passeador, // Inclui o ID do passeador
       });
-
+  
       if (response.data.success) {
-        alert(response.data.message);
-        navigate("/clientes");
+        alert('Cliente criado com sucesso!');
+        navigate("/clientes"); // Redireciona após criação
       } else {
         alert('Erro ao criar cliente.');
       }
@@ -81,7 +83,7 @@ function CriarCliente() {
       console.error('Erro ao criar cliente:', error);
       alert('Erro ao criar cliente.');
     }
-  };
+  };  
 
   return (
     <div className="Web">
