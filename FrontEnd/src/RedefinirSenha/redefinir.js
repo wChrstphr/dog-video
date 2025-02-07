@@ -24,7 +24,7 @@ function Redefinir() {
     }
 
     if (newPassword === 'dog123') {
-      setError('Sua senha deve ser diferente da inicial');
+      setError('Sua senha deve ser diferente da inicial.');
       return;
     }
 
@@ -34,7 +34,7 @@ function Redefinir() {
     }
 
     try {
-      // Envia a nova senha para o back-end
+      // Envia a nova senha para o backend (hash será aplicado no servidor)
       const response = await fetch('http://localhost:3001/alterar-senha', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -45,13 +45,12 @@ function Redefinir() {
 
       if (data.success) {
         setError('');
-        navigate('/'); // Redireciona para a página principal após sucesso
+        navigate('/'); // Redireciona para a página inicial após redefinição
       } else {
         setError(data.message);
       }
     } catch (error) {
       console.error('Erro ao redefinir a senha:', error);
-      // Por algum motivo so funciona sem a mesnagems de erro ao conectar ao servidor
     }
   };
 

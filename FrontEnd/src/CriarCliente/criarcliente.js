@@ -14,54 +14,50 @@ function CriarCliente() {
   const caesRef = useRef(null);
   const telefoneRef = useRef(null);
   const enderecoRef = useRef(null);
-  const pacoteRef = useRef(null);
   const horarioRef = useRef(null);
-  const createButtonRef = useRef(null);
   const anotacaoRef = useRef(null);
 
   // Estado para armazenar passeadores e o passeador selecionado
   const [passeadores, setPasseadores] = useState([]);
   const [selectedPasseadorId, setSelectedPasseadorId] = useState("");
+  const [pacote, setPacote] = useState(""); // Estado para o pacote selecionado
 
   // Função para buscar passeadores do backend
   useEffect(() => {
     const fetchPasseadores = async () => {
       try {
         const response = await axios.get('http://localhost:3001/passeadores');
-        setPasseadores(response.data);
+        if (response.data.success && Array.isArray(response.data.passeadores)) {
+          setPasseadores(response.data.passeadores);
+        } else {
+          console.error('Erro: Formato de resposta inválido.', response.data);
+          setPasseadores([]); // Garante que será um array vazio em caso de erro
+        }
       } catch (error) {
         console.error('Erro ao buscar passeadores:', error);
+        setPasseadores([]); // Garante que será um array vazio em caso de falha
       }
     };
 
     fetchPasseadores();
   }, []);
 
-  // Função para gerenciar a troca de foco
-  const handleKeyDown = (e, nextRef) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      if (nextRef && nextRef.current) {
-        nextRef.current.focus();
-      }
-    }
-  };
-
   // Função para lidar com a criação do cliente
   const handleCreate = async (e) => {
     e.preventDefault();
-
+  
     // Captura os valores dos inputs
     const nome = nomeRef.current.value;
     const email = emailRef.current.value;
     const cpf = cpfRef.current.value;
     const telefone = telefoneRef.current.value;
     const endereco = enderecoRef.current.value;
-    const pacote = pacoteRef.current.value;
+    const pacoteSelecionado = pacote; // Captura o pacote selecionado
     const horario = horarioRef.current.value;
     const anotacao = anotacaoRef.current.value;
-    const caes = caesRef.current.value.split(',').map(cao => cao.trim());
-
+    const caes = caesRef.current.value.split(',').map((cao) => cao.trim());
+    const id_passeador = selectedPasseadorId;
+  
     try {
       // Envia os dados para o backend
       const response = await axios.post('http://localhost:3001/criarcliente', {
@@ -70,16 +66,16 @@ function CriarCliente() {
         cpf,
         telefone,
         endereco,
-        pacote,
+        pacote: pacoteSelecionado,
         horario,
         anotacao,
         caes,
-        id_passeador: selectedPasseadorId // Enviar o ID do passeador selecionado
+        id_passeador, // Inclui o ID do passeador
       });
-
+  
       if (response.data.success) {
-        alert(response.data.message);
-        navigate("/clientes");
+        alert('Cliente criado com sucesso!');
+        navigate("/clientes"); // Redireciona após criação
       } else {
         alert('Erro ao criar cliente.');
       }
@@ -87,7 +83,7 @@ function CriarCliente() {
       console.error('Erro ao criar cliente:', error);
       alert('Erro ao criar cliente.');
     }
-  };
+  };  
 
   return (
     <div className="Web">
@@ -98,7 +94,7 @@ function CriarCliente() {
 
       {/* Formulário de Criação de Cliente */}
       <div className="form-container">
-        <form className="client-form">
+        <form className="client-form" onSubmit={handleCreate}>
           <div className="input-container">
             <FaUser className="input-icon" />
             <input
@@ -106,7 +102,6 @@ function CriarCliente() {
               type="text"
               placeholder="Nome do cliente"
               className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, emailRef)}
             />
           </div>
           <div className="input-container">
@@ -116,7 +111,6 @@ function CriarCliente() {
               type="email"
               placeholder="Email"
               className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, cpfRef)}
             />
           </div>
           <div className="input-container">
@@ -126,7 +120,6 @@ function CriarCliente() {
               type="text"
               placeholder="CPF"
               className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, caesRef)}
             />
           </div>
           <div className="input-container">
@@ -136,7 +129,6 @@ function CriarCliente() {
               type="text"
               placeholder="Cães (separados por vírgula)"
               className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, telefoneRef)}
             />
           </div>
           <div className="input-container">
@@ -146,7 +138,6 @@ function CriarCliente() {
               type="tel"
               placeholder="Telefone"
               className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, enderecoRef)}
             />
           </div>
           <div className="input-container">
@@ -156,7 +147,6 @@ function CriarCliente() {
               type="text"
               placeholder="Endereço"
               className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, pacoteRef)}
             />
           </div>
           <div className="input-container">
@@ -165,25 +155,27 @@ function CriarCliente() {
               className="form-input"
               value={selectedPasseadorId}
               onChange={(e) => setSelectedPasseadorId(e.target.value)}
-              onKeyDown={(e) => handleKeyDown(e, pacoteRef)}
             >
               <option value="">Selecione o Passeador</option>
-              {passeadores.map((passeador) => (
-                <option key={passeador.id_passeador} value={passeador.id_passeador}>
-                  {passeador.nome}
-                </option>
-              ))}
+              {Array.isArray(passeadores) &&
+                passeadores.map((passeador) => (
+                  <option key={passeador.id} value={passeador.id}>
+                    {passeador.nome}
+                  </option>
+                ))}
             </select>
           </div>
           <div className="input-container">
             <FaCalendarAlt className="input-icon" />
-            <input
-              ref={pacoteRef}
-              type="text"
-              placeholder="Pacote"
+            <select
               className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, horarioRef)}
-            />
+              value={pacote}
+              onChange={(e) => setPacote(e.target.value)}
+            >
+              <option value="">Selecione o Pacote</option>
+              <option value="Semestral">Semestral</option>
+              <option value="Mensal">Mensal</option>
+            </select>
           </div>
           <div className="input-container">
             <FaClock className="input-icon" />
@@ -192,7 +184,6 @@ function CriarCliente() {
               type="text"
               placeholder="Horário de passeio (HH:MM)"
               className="form-input"
-              onKeyDown={(e) => handleKeyDown(e, anotacaoRef)}
             />
           </div>
           <div className="input-container">
@@ -214,10 +205,8 @@ function CriarCliente() {
               Cancelar
             </button>
             <button
-              ref={createButtonRef}
               type="submit"
               className="create-button"
-              onClick={handleCreate}
             >
               Criar
             </button>
