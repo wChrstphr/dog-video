@@ -17,35 +17,32 @@ function Login({ onLogin }) {
       setError('Todos os campos são obrigatórios.');
       return;
     }
-  
+
     if (password.length < 6) {
       setError('Sua senha deve ter pelo menos 6 caracteres.');
       return;
     }
-  
+
     try {
       const response = await fetch('http://localhost:3001/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email: username, senha: password }), // Mantém o envio normal
+        body: JSON.stringify({ email: username, senha: password }),
       });
-  
+
       const data = await response.json();
-  
+
       if (data.success) {
         setError('');
         onLogin(data.userType);
-  
-        // Salvar o id_cliente no localStorage
         localStorage.setItem('id_cliente', data.id_cliente);
-  
-        // Redireciona para a tela de redefinição com o id do cliente, se alterar_senha for 1
+
         if (data.alterar_senha === 1) {
           navigate(`/redefinir/${data.id_cliente}`);
         } else {
-          navigate('/'); // Redireciona para a tela inicial
+          navigate('/');
         }
       } else {
         setError('Email ou senha incorretos.');
@@ -54,7 +51,7 @@ function Login({ onLogin }) {
       console.error('Erro ao fazer login:', error);
       setError('Erro ao conectar ao servidor. Tente novamente mais tarde.');
     }
-  };  
+  };
 
   const handleKeyDown = (event, field) => {
     if (event.key === 'Enter') {
@@ -71,32 +68,44 @@ function Login({ onLogin }) {
   };
 
   return (
-    <div className="Login">
-      <img src="/dog.png" alt="Logo" className="logo" />
-      <label htmlFor="username">Email</label>
-      <input
-        type="text"
-        placeholder="Insira seu email"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-        onKeyDown={(e) => handleKeyDown(e, 'username')}
-      />
-      <label htmlFor="password">Senha</label>
-      <div className="password-container">
+    <div
+      className="login-background"
+      style={{
+        backgroundImage: `url('/loginDog.svg')`,
+        backgroundRepeat: 'repeat',
+        backgroundSize: 'auto',
+      }}
+    >
+      <div className="login-container">
+        <h2>Login</h2>
+        <label htmlFor="username">Email</label>
         <input
-          type={showPassword ? 'text' : 'password'}
-          placeholder="Insira a senha"
-          value={password}
-          ref={passwordInputRef}
-          onChange={(e) => setPassword(e.target.value)}
-          onKeyDown={(e) => handleKeyDown(e, 'password')}
+          className="input-login"
+          type="text"
+          placeholder="Insira seu email"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          onKeyDown={(e) => handleKeyDown(e, 'username')}
         />
-        <span className="password-toggle-icon" onClick={togglePasswordVisibility}>
-          {showPassword ? <FaEye /> : <FaEyeSlash />}
-        </span>
+
+        <label htmlFor="password">Senha</label>
+        <div className="password-container">
+          <input
+            className="input-login"
+            type={showPassword ? 'text' : 'password'}
+            placeholder="Insira a senha"
+            value={password}
+            ref={passwordInputRef}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={(e) => handleKeyDown(e, 'password')}
+          />
+          <span className="password-toggle-icon" onClick={togglePasswordVisibility}>
+            {showPassword ? <FaEye /> : <FaEyeSlash />}
+          </span>
+        </div>
+        {error && <p className="error">{error}</p>}
+        <button className="button-login" onClick={handleLogin}>LOGAR</button>
       </div>
-      {error && <p className="error">{error}</p>}
-      <button onClick={handleLogin}>LOGAR</button>
     </div>
   );
 }

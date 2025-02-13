@@ -5,46 +5,79 @@
     justify-content: center;
     height: 85vh;
     padding: 0 20px;
+    background-color: white;
   }
   .logo {
     max-width: 350px; 
     margin-top: 0px;
   }
 
-  input {
+  .login-background {
+    background-color: #ffffff;
+    background-image: ('/FrontEnd/public/loginDog.svg');
+    background-repeat: repeat; /* Repetir o SVG */
+    background-size: contain; /* Ajustar tamanho do SVG */
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  
+  .login-container {
+    background-color: #000000; /* Fundo preto */
+    padding: 40px;
+    border-radius: 30px; /* Bordas arredondadas maiores */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0px 4px 30px rgba(0, 0, 0, 0.5); /* Sombreamento */
+  }
+
+  /* Estilo do título */
+  .login-container h2 {
+    font-family: 'Times New Roman', serif; /* Fonte elegante */
+    font-size: 36px; /* Tamanho maior */
+    color: #ffffff; /* Texto branco */
+  }
+
+
+  .input-login {
     margin: 10px;
-    padding: 8px;
-    width: 450px;
-    height: 35px;
+    padding: 10px;
+    width: 300px; /* Ajustar largura menor */
+    height: auto;
     border: none;
-    border-radius: 15px;
-    background-color: #D69958;
+    border-radius: 20px; /* Bordas arredondadas */
+    background-color: #000000;
     outline: none;
     text-align: left;
     font-family: 'Manrope', sans-serif;
-    font-weight: normal;
-    font-size: 20px;
-    color: #fff;
+    color: #ffffff;
+    border: 3px solid #ffffff;
   }
-
-  button {
+  
+  /* Botão de login */
+  .button-login {
     padding: 10px;
-    width: 160px;
-    height: 55px;
-    margin-top: 40px;
-    border: none;
-    border-radius: 15px;
-    background-color: #D69958;
-    text-align: center;
-    font-family: 'Manrope', sans-serif;
-    font-weight: initial;
-    font-size: 25px;
-    color: #fff;
-    cursor: pointer; 
+    font-size: large;
+    width: auto;
+    height: auto;
+    margin-top: 20px;
+    border-radius: 20px; /* Bordas arredondadas */
+    background-color: #ffffff;
+    color: #000000;
+    font-weight: bold;
   }
-  button:active {
+  
+  /* Efeito hover no botão */
+  .button-login:hover {
+      background-color: #f1f1f1; /* Cor mais clara ao passar o mouse */
+  }
+  
+  .button-login:active {
     background-color: #fff;
-    color: #D69958;
+    color: #6e6861;
     transform: scale(0.95);
   }
 
@@ -67,10 +100,8 @@
   }
   
   .password-container {
-    display: flex;
-    align-items: center;
-    position: relative;
-  }
+    position :relative 
+}
   
   .password-toggle-icon {
     position: absolute;
@@ -81,6 +112,13 @@
   
   /* Estilos para telas menores que 768px (tablets e smartphones) */
   @media (max-width: 768px) {
+
+    .login-container {
+        width: auto;
+        padding: 20px;
+        margin: auto;
+      }
+    
     input {
         width: 100%;
         max-width: 350px;
