@@ -1,5 +1,5 @@
 import './criarcliente.css';
-import React, { useRef, useState} from 'react';
+import React, { useRef, useState, useEffect} from 'react';
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 import { FaUser, FaEnvelope, FaAddressCard, FaDog, FaPhone, FaHome, FaCalendarAlt, FaClock, FaBook, FaUserAlt } from "react-icons/fa";
@@ -78,7 +78,6 @@ function CriarCliente() {
   
   // Modifique a função validateCPF para usar o CPF formatado
   const validateCPF = (cpf) => {
-    const cleaned = cpf.replace(/\D/g, '');
     cpf = cpf.replace(/[^\d]+/g, '');
   
     // Verifica se o CPF tem 11 dígitos ou se todos os dígitos são iguais
