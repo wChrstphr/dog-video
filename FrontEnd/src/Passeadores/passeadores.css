@@ -147,6 +147,7 @@ body {
     width: 300px;
     max-width: 90%;
     text-align: center;
+    border: 3px solid #ffffff;
   }
   
   .modal-title {
@@ -222,6 +223,22 @@ body {
 .filter-button:hover {
     background-color: #d3d3d3;
 }
+
+.filter-divider {
+    border-top: 1px solid #555;
+    margin: 10px 0;
+  }
+
+  .clientes-list {
+    margin-left: 40px;
+    font-size: 16px;
+    color: #888;
+  }
+  
+  .cliente-item {
+    margin: 5px 0;
+  }
+  
 
 /* Responsividade para tablets */
 @media (max-width: 768px) {

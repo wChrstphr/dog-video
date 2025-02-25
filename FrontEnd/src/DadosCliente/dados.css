@@ -1,5 +1,5 @@
 body {
-  background-color: #2e55ff;
+  background-color: #000000;
   padding: 0;
   margin: 0;
 }
@@ -156,6 +156,24 @@ li {
   color: white;
 }
 
+.reset-password-button {
+  background-color: #000000;
+  color: rgb(255, 255, 255);
+  border: 2px solid #ffffff;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 16px;
+  font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-bottom: 20px;
+}
+
+.reset-password-button:hover {
+  background-color: #747070;
+}
+
 /* Responsividade para telas menores */
 @media (max-width: 768px) {
   .Web-header {
@@ -260,5 +278,10 @@ li {
 
   .modal-container {
     width: 100%;
+  }
+
+  .reset-password-button {
+    font-size: 14px;
+    padding: 8px 16px;
   }
 }

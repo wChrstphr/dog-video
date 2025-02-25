@@ -185,7 +185,6 @@ body {
     width: 70%;
   }
   
-/* O design do pesquisar está puxando do passeador */
   .search-input {
     width: 100%;
     padding: 10px;
@@ -198,29 +197,54 @@ body {
     position: absolute;
     top: 180px;
     right: 20px;
-    background-color: #d08b56;
+    background-color: #313130;
     border: 1px solid #ddd;
     border-radius: 20px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    width: 150px;
+    width: 200px;
     z-index: 1000;
-    font-weight: bold;
-}
+    padding: 10px; /* Ajuste do padding */
+  }  
 
-.filter-button {
+  .filter-button {
     background: none;
     border: none;
-    padding: 2px;
-    font-size: 20px;
+    padding: 5px 10px; /* Ajuste do padding */
+    font-size: 16px;
     text-align: left;
     width: 100%;
     cursor: pointer;
-}
+    color: white;
+    margin-bottom: 2px; /* Reduzido de 5px para 2px */
+  }  
 
 .filter-button:hover {
-    background-color: #D69958;
+    background-color: #726e6a;
 }
 
+.filter-select {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    background-color: #313130;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    cursor: pointer;
+  }
+  
+  .filter-select option {
+    background-color: #313130;
+    color: white;
+  }
+
+  .filter-divider {
+    border-top: 1px solid #555;
+    margin: 10px 0;
+  }
+  
+  
 /* Responsividade para tablets */
 @media (max-width: 768px) {
     .client-list {
@@ -319,15 +343,14 @@ body {
         padding: 8px 15px;
     }
 
-    .filter-button{
-      height: 10px;
-      margin-top: 20px;
-      width: 50%;
-      font-size: 7px;
-    }
-
-    .filter-menu{
-      height: 120px;
-      margin-top: 20px;
-    }
+    .filter-menu {
+        width: 150px;
+        padding: 10px;
+      }
+    
+      .filter-button,
+      .filter-select {
+        font-size: 14px;
+        padding: 8px;
+      }
 }

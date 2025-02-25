@@ -14,6 +14,9 @@ function Clientes() {
   const [sortDirection, setSortDirection] = useState('asc');
   const [isFilterMenuVisible, setIsFilterMenuVisible] = useState(false);
   const searchInputRef = useRef(null);
+  const [filtroPasseador, setFiltroPasseador] = useState('');
+  const [filtroPacote, setFiltroPacote] = useState('');
+  const [passeadores, setPasseadores] = useState([]);
 
   useEffect(() => {
     axios.get('http://localhost:3001/clientes')
@@ -22,6 +25,22 @@ function Clientes() {
       })
       .catch(error => {
         console.error('Erro ao buscar clientes:', error);
+      });
+
+    axios.get('http://localhost:3001/passeadores')
+      .then(response => {
+        if (Array.isArray(response.data)) {
+          setPasseadores(response.data);
+        } else if (response.data && Array.isArray(response.data.passeadores)) {
+          setPasseadores(response.data.passeadores);
+        } else {
+          console.error('Dados de passeadores inválidos:', response.data);
+          setPasseadores([]);
+        }
+      })
+      .catch(error => {
+        console.error('Erro ao buscar passeadores:', error);
+        setPasseadores([]);
       });
   }, []);
 
@@ -61,7 +80,6 @@ function Clientes() {
     try {
       const response = await axios.delete(`http://localhost:3001/clientes/${selectedCliente.id_cliente}`);
       if (response.data.success) {
-        // Atualiza a lista de clientes após a exclusão
         setClientes(clientes.filter(cliente => cliente.id_cliente !== selectedCliente.id_cliente));
         hideModal();
       } else {
@@ -79,18 +97,21 @@ function Clientes() {
 
   const clientesFiltrados = useMemo(() => {
     const normalizedBusca = normalizeText(busca);
-    const filteredClientes = clientes.filter((cliente) =>
-      normalizeText(cliente.nome).includes(normalizedBusca)
-    );
-    return filteredClientes.sort((a, b) => {
-      if (sortDirection === 'asc') {
-        return a.nome.localeCompare(b.nome);
-      } else {
-        return b.nome.localeCompare(a.nome);
-      }
-    });
-  }, [clientes, busca, sortDirection]);
-
+    return clientes
+      .filter((cliente) =>
+        normalizeText(cliente.nome).includes(normalizedBusca) &&
+        (filtroPasseador === '' || (cliente.id_passeador && cliente.id_passeador.toString() === filtroPasseador)) &&
+        (filtroPacote === '' || cliente.pacote === filtroPacote)
+      )
+      .sort((a, b) => {
+        if (sortDirection === 'asc') {
+          return a.nome.localeCompare(b.nome);
+        } else {
+          return b.nome.localeCompare(a.nome);
+        }
+      });
+  }, [clientes, busca, sortDirection, filtroPasseador, filtroPacote]);
+  
   return (
     <div className="Web-Clientes">
       <header className="Web-header">
@@ -128,9 +149,33 @@ function Clientes() {
           <button onClick={() => handleSort('asc')} className="filter-button">
             Ordenar A-Z
           </button>
+          <div className="filter-divider"></div>
           <button onClick={() => handleSort('desc')} className="filter-button">
             Ordenar Z-A
           </button>
+          <div className="filter-divider"></div>
+          <select
+            value={filtroPasseador}
+            onChange={(e) => setFiltroPasseador(e.target.value)}
+            className="filter-select"
+          >
+            <option value="">Passeadores</option>
+            {Array.isArray(passeadores) && passeadores.map((passeador) => (
+              <option key={passeador.id} value={passeador.id.toString()}>
+                {passeador.nome}
+              </option>
+            ))}
+          </select>
+          <div className="filter-divider"></div>
+          <select
+            value={filtroPacote}
+            onChange={(e) => setFiltroPacote(e.target.value)}
+            className="filter-select"
+          >
+            <option value="">Pacotes</option>
+            <option value="Semestral">Semestral</option>
+            <option value="Mensal">Mensal</option>
+          </select>
         </div>
       )}
 

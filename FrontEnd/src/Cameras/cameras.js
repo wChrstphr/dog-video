@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Modal from 'react-modal';
 import { FaLocationArrow, FaRegCommentAlt } from 'react-icons/fa';
 import Chat from "./chat";
+import Map from "./Map";
 
 function Cameras({ onLogout }) {
   const navigate = useNavigate();
@@ -35,9 +36,9 @@ function Cameras({ onLogout }) {
   };
 
   const handleDadosClienteClick = () => {
-    const idCliente = localStorage.getItem('id_cliente'); // Recupera o ID do cliente logado
+    const idCliente = localStorage.getItem('id_cliente');
     if (idCliente) {
-      navigate(`/dados-cliente/${idCliente}`); // Redireciona para a página do cliente logado
+      navigate(`/dados-cliente/${idCliente}`);
     } else {
       console.error('ID do cliente não encontrado no localStorage.');
     }
@@ -133,17 +134,10 @@ function Cameras({ onLogout }) {
       <Modal
         isOpen={isMapVisible}
         onRequestClose={hideMap}
-        className="modal-container"
-        overlayClassName="modal-overlay"
-        ariaHideApp={false}
+        className="modal-map-container"
+        overlayClassName="modal-map-overlay"
       >
-        <div className="modal-content">
-          <h2>Localização do Passeador</h2>
-          <div id="map"></div>
-          <button className="modal-button" onClick={hideMap}>
-            Fechar
-          </button>
-        </div>
+        <Map onClose={hideMap} />
       </Modal>
 
       <Modal
