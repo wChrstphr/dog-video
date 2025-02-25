@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Modal from 'react-modal';
 import { FaLocationArrow, FaRegCommentAlt } from 'react-icons/fa';
+import Chat from "./chat";
 
 function Cameras({ onLogout }) {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ function Cameras({ onLogout }) {
 
   // Defina os horários desejados para abrir e fechar as câmeras (24h)
   // TÚLIO FAÇA COM QUE PUXE DO BANCO DE DADOS ESSES HORÁRIOS E IMPLEMENTE AQUI
-  const openHour = 20;
+  const openHour = 0;
   const openMinute = 6;
   const closeHour = 20;
   const closeMinute = 7;
@@ -34,8 +35,13 @@ function Cameras({ onLogout }) {
   };
 
   const handleDadosClienteClick = () => {
-    navigate('/dados-cliente');
-  };
+    const idCliente = localStorage.getItem('id_cliente'); // Recupera o ID do cliente logado
+    if (idCliente) {
+      navigate(`/dados-cliente/${idCliente}`); // Redireciona para a página do cliente logado
+    } else {
+      console.error('ID do cliente não encontrado no localStorage.');
+    }
+  };  
 
   useEffect(() => {
     const checkCameraVisibility = () => {
@@ -63,6 +69,13 @@ function Cameras({ onLogout }) {
           <img src="/user.svg" alt="Ícone do Usuário" className="user-icon" />
           Dados do Cliente
         </div>
+
+        <img
+        src="/Back.svg"
+        alt="Ícone de voltar"
+        className="back-icon"
+        onClick={() => navigate("/")}
+      />
 
         <Modal
           isOpen={isModalVisible}
@@ -136,18 +149,17 @@ function Cameras({ onLogout }) {
       <Modal
         isOpen={isChatVisible}
         onRequestClose={hideChat}
-        className="modal-container"
-        overlayClassName="modal-overlay"
-        ariaHideApp={false}
+        className="modal-chat-container"
+        overlayClassName="modal-chat-overlay"
       >
-        <div className="modal-content">
-          <h2>Chat com o Passeador</h2>
-          <div id="chat-box">Aqui será o chat...</div>
-          <button className="modal-button" onClick={hideChat}>
-            Fechar
-          </button>
-        </div>
+        <Chat 
+          userId={localStorage.getItem('id_cliente')} // ID do cliente logado
+          receiverId={'id_passeador'}                // Substitua pelo ID do passeador correspondente
+          onClose={hideChat} 
+        />
       </Modal>
+
+
 
       <div className="footer-bar"></div>
     </div>

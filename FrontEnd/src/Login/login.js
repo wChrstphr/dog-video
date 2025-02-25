@@ -12,42 +12,49 @@ function Login({ onLogin }) {
     const passwordInputRef = useRef(null);
     const navigate = useNavigate();
 
-    const handleLogin = async () => {
-        if (!username || !password) {
-            setError('Todos os campos são obrigatórios.');
-            return;
+  const handleLogin = async () => {
+    if (!username || !password) {
+      setError('Todos os campos são obrigatórios.');
+      return;
+    }
+  
+    if (password.length < 6) {
+      setError('Sua senha deve ter pelo menos 6 caracteres.');
+      return;
+    }
+  
+    try {
+      const response = await fetch('http://localhost:3001/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: username, senha: password }), // Mantém o envio normal
+      });
+  
+      const data = await response.json();
+  
+      if (data.success) {
+        setError('');
+        onLogin(data.userType);
+  
+        // Salvar o id_cliente no localStorage
+        localStorage.setItem('id_cliente', data.id_cliente);
+  
+        // Redireciona para a tela de redefinição com o id do cliente, se alterar_senha for 1
+        if (data.alterar_senha === 1) {
+          navigate(`/redefinir/${data.id_cliente}`);
+        } else {
+          navigate('/'); // Redireciona para a tela inicial
         }
-
-        if (password.length < 6) {
-            setError('Sua senha deve ter pelo menos 6 caracteres.');
-            return;
-        }
-
-        try {
-            const response = await fetch('http://localhost:3001/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ email: username, senha: password }),
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                setError('');
-                onLogin(data.userType);
-                
-                if (data.alterar_senha === 1) {
-                    navigate(`/redefinir/${data.id_cliente}`);
-                }
-            } else {
-                setError(data.message);
-            }
-        } catch (error) {
-            setError('Erro ao conectar ao servidor. Tente novamente mais tarde.');
-        }
-    };
+      } else {
+        setError('Email ou senha incorretos.');
+      }
+    } catch (error) {
+      console.error('Erro ao fazer login:', error);
+      setError('Erro ao conectar ao servidor. Tente novamente mais tarde.');
+    }
+  };  
 
     const handleKeyDown = (event, field) => {
         if (event.key === 'Enter') {

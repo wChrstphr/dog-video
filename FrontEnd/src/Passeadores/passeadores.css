@@ -75,10 +75,10 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #001B7A;
+    background-color: #ffffff;
     border-radius: 15px;
     padding: 5px;
-    color: white;
+    color: rgb(0, 0, 0);
     font-size: 25px;
     width: 80%;
     margin: 0 auto;
