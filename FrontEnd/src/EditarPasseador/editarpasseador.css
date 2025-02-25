@@ -176,3 +176,11 @@ body {
     display: none;
   }
   
+  .error-message {
+    color: red;
+    font-size: 12px;
+    font-weight: bold;
+    margin-top: 5px;
+    font-family: 'Manrope', sans-serif;
+    text-align: left; 
+  }
