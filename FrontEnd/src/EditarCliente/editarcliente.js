@@ -5,12 +5,11 @@ import { FaUser, FaEnvelope, FaAddressCard, FaDog, FaPhone, FaHome, FaCalendarAl
 
 function EditarCliente() {
   const navigate = useNavigate();
-  const { id } = useParams();
-  const [cliente, setCliente] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [passeadores, setPasseadores] = useState([]);
-  const [selectedPasseadorId, setSelectedPasseadorId] = useState("");
-
+  const { id } = useParams(); // Captura o ID da URL
+  const [cliente, setCliente] = useState(null); // Armazena os dados do cliente
+  const [loading, setLoading] = useState(true); // Controla o estado de carregamento
+  const [passeadores, setPasseadores] = useState([]); // Lista de passeadores
+  const [selectedPasseadorId, setSelectedPasseadorId] = useState(""); // Passeador selecionado
   const nomeRef = useRef(null);
   const emailRef = useRef(null);
   const cpfRef = useRef(null);
@@ -19,7 +18,6 @@ function EditarCliente() {
   const enderecoRef = useRef(null);
   const horarioRef = useRef(null);
   const anotacaoRef = useRef(null);
-
   const [nomeError, setNomeError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [cpfError, setCpfError] = useState('');
@@ -108,7 +106,7 @@ function EditarCliente() {
 
         if (data.success && data.cliente) {
           setCliente(data.cliente);
-          setSelectedPasseadorId(data.cliente.id_passeador || "");
+          setSelectedPasseadorId(data.cliente.id_passeador || ""); // Define o passeador atual
         } else {
           console.error('Erro: Cliente não encontrado ou resposta inesperada', data);
         }
@@ -148,9 +146,15 @@ function EditarCliente() {
       enderecoRef.current.value = cliente.endereco || '';
       horarioRef.current.value = formatHorario(cliente.horario_passeio) || '';
       anotacaoRef.current.value = cliente.anotacoes || '';
-      setSelectedPasseadorId(cliente.id_passeador || "");
+      setSelectedPasseadorId(cliente.id_passeador || ""); // Atualiza o passeador selecionado ao carregar o cliente
     }
   }, [cliente]);
+
+  // Recupera o ID do passeador do localStorage
+  useEffect(() => {
+    const localIdPasseador = localStorage.getItem('passeadorId'); // Recupera o ID do passeador salvo localmente
+    setSelectedPasseadorId(localIdPasseador || ""); // Define o passeador selecionado como o ID salvo
+  }, []);
 
   if (loading) {
     return <div>Carregando...</div>;
@@ -162,29 +166,50 @@ function EditarCliente() {
 
   const handleSave = async (e) => {
     e.preventDefault();
-
+  
     const isNomeValid = validateNome(nomeRef.current.value);
-    const isEmailValid = validateEmail(emailRef.current.value);
-    const isCPFValid = validateCPF(cpfRef.current.value);
-    const isTelefoneValid = validateTelefone(telefoneRef.current.value);
-    const isHorarioValid = validateHorario(horarioRef.current.value);
+const isEmailValid = validateEmail(emailRef.current.value);
+const isCPFValid = validateCPF(cpfRef.current.value);
+const isTelefoneValid = validateTelefone(telefoneRef.current.value);
+const isHorarioValid = validateHorario(horarioRef.current.value);
+const localPasseadorId = localStorage.getItem('passeadorId');
 
-    if (isNomeValid && isEmailValid && isCPFValid && isTelefoneValid && isHorarioValid) {
-      const updatedCliente = {
-        nome: nomeRef.current.value,
-        email: emailRef.current.value,
-        cpf: cpfRef.current.value.replace(/\D/g, ''),
-        caes: caesRef.current.value.split(',').map(cao => cao.trim()),
-        telefone: telefoneRef.current.value.replace(/\D/g, ''),
-        endereco: enderecoRef.current.value,
-        pacote: cliente.pacote,
-        horario_passeio: horarioRef.current.value,
-        anotacoes: anotacaoRef.current.value,
-        id_passeador: selectedPasseadorId,
-      };
+if (!isNomeValid || !isEmailValid || !isCPFValid || !isTelefoneValid || !isHorarioValid) {
+  alert('Por favor, corrija os erros destacados antes de editar.');
+  return;
+}
 
-      try {
-        const response = await fetch(`http://localhost:3001/clientes/${id}`, {
+try {
+  const updatedCliente = {
+    nome: nomeRef.current.value || cliente.nome,
+    email: emailRef.current.value || cliente.email,
+    cpf: (cpfRef.current.value || cliente.cpf).replace(/\D/g, ''),
+    caes: caesRef.current.value 
+      ? caesRef.current.value.split(',').map(cao => cao.trim()) 
+      : cliente.caes,
+    telefone: (telefoneRef.current.value || cliente.telefone).replace(/\D/g, ''),
+    endereco: enderecoRef.current.value || cliente.endereco,
+    pacote: cliente.pacote ?? "", // Retorna o seu operando do lado direito quando o seu operador do lado esquerdo é null ou undefined
+    horario_passeio: horarioRef.current.value || cliente.horario_passeio,
+    anotacoes: anotacaoRef.current.value || cliente.anotacoes,
+    id_passeador: selectedPasseadorId || localPasseadorId || cliente.id_passeador,
+  };
+
+  const response = await fetch(`http://localhost:3001/clientes/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(updatedCliente),
+  });
+
+  if (response.ok) {
+    navigate(`/visualizarcliente/${id}`);
+  } else {
+    const data = await response.json();
+    if (data.message?.includes('ID do passeador inválido')) {
+      updatedCliente.id_passeador = localPasseadorId;
+      const retryResponse = await fetch(`http://localhost:3001/clientes/${id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -192,20 +217,19 @@ function EditarCliente() {
           body: JSON.stringify(updatedCliente),
         });
 
-        if (response.ok) {
+        if (retryResponse.ok) {
           navigate(`/visualizarcliente/${id}`);
-        } else {
-          const data = await response.json();
-          console.error('Erro ao atualizar cliente:', data);
-        }
-      } catch (error) {
-        console.error('Erro ao enviar os dados do cliente:', error);
+      } else {
+        console.error('Erro ao atualizar cliente com ID local do passeador');
       }
     } else {
-      console.error('Formulário contém erros');
+      console.error('Erro ao atualizar cliente:', data);
     }
-  };
-
+  }
+} catch (error) {
+  console.error('Erro ao enviar os dados do cliente:', error);
+}
+  
   return (
     <div className="Web-Editar-Cliente">
       <header className="Web-header">

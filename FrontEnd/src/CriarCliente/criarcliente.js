@@ -27,9 +27,28 @@ function CriarCliente() {
   // Outros estados
   const [passeadores, setPasseadores] = useState([]);
   const [selectedPasseadorId, setSelectedPasseadorId] = useState("");
-  const [pacote, setPacote] = useState("");
+  const [pacote, setPacote] = useState(""); // Estado para o pacote selecionado
 
-  // Funções de validação
+  // Função para buscar passeadores do backend
+  useEffect(() => {
+    const fetchPasseadores = async () => {
+      try {
+        const response = await axios.get('http://localhost:3001/passeadores');
+        if (response.data.success && Array.isArray(response.data.passeadores)) {
+          setPasseadores(response.data.passeadores);
+        } else {
+          console.error('Erro: Formato de resposta inválido.', response.data);
+          setPasseadores([]); // Garante que será um array vazio em caso de erro
+        }
+      } catch (error) {
+        console.error('Erro ao buscar passeadores:', error);
+        setPasseadores([]); // Garante que será um array vazio em caso de falha
+        }
+    };
+    fetchPasseadores();
+  }, []);
+        
+      // Funções de validação
   const validateNome = (nome) => {
     if (!/^[A-Z][a-z]{1,}/.test(nome)) {
       setNomeError('O nome deve começar com letra maiúscula e ter pelo menos 2 caracteres');
@@ -134,16 +153,17 @@ function CriarCliente() {
     return true;
   };
   
-
   // Função para lidar com a criação do cliente
   const handleCreate = async (e) => {
     e.preventDefault();
   
+    // Captura os valores dos inputs
     const nome = nomeRef.current.value;
     const email = emailRef.current.value;
     const cpf = cpfRef.current.value;
     const telefone = telefoneRef.current.value;
     const endereco = enderecoRef.current.value;
+    const pacoteSelecionado = pacote; // Captura o pacote selecionado
     const horario = horarioRef.current.value;
     const anotacao = anotacaoRef.current.value;
     const caes = caesRef.current.value.split(',').map((cao) => cao.trim());
@@ -156,31 +176,34 @@ function CriarCliente() {
     const isTelefoneValid = validateTelefone(telefone);
     const isHorarioValid = validateHorario(horario);
 
-    if (isNomeValid && isEmailValid && isCPFValid && isTelefoneValid && isHorarioValid) {
-      try {
-        const response = await axios.post('http://localhost:3001/criarcliente', {
-          nome,
-          email,
-          cpf,
-          telefone,
-          endereco,
-          pacote,
-          horario,
-          anotacao,
-          caes,
-          id_passeador,
-        });
-    
-        if (response.data.success) {
-          alert('Cliente criado com sucesso!');
-          navigate("/clientes");
-        } else {
-          alert('Erro ao criar cliente.');
-        }
-      } catch (error) {
-        console.error('Erro ao criar cliente:', error);
-        alert('Erro ao criar cliente.');
+    if (!isNomeValid || !isEmailValid || !isCPFValid || !isTelefoneValid || !isHorarioValid) {
+      alert('Por favor, corrija os erros destacados antes de enviar.');
+      return;
+    }
+
+    try {
+      const response = await axios.post('http://localhost:3001/criarcliente', {
+        nome,
+        email,
+        cpf,
+        telefone,
+        endereco,
+        pacote: pacoteSelecionado, // Mantemos a nomenclatura da main
+        horario,
+        anotacao,
+        caes,
+        id_passeador,
+      });
+
+      if (response.data.success) {
+        alert('Cliente criado com sucesso!');
+        navigate("/clientes");
+      } else {
+        alert('Erro ao criar cliente: ' + (response.data.message || 'Erro desconhecido'));
       }
+    } catch (error) {
+      console.error('Erro ao criar cliente:', error);
+      alert('Erro ao conectar com o servidor. Tente novamente mais tarde.');
     }
   };
 

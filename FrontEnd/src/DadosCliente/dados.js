@@ -90,7 +90,6 @@ function Dados({ onLogout }) {
       </header>
 
       <main className="Main-content">
-
         <h1>{dadosCliente.nome}</h1>
 
         {/* Primeira linha de cards */}

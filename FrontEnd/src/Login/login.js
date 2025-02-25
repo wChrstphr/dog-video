@@ -29,7 +29,7 @@ function Login({ onLogin }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email: username, senha: password }),
+        body: JSON.stringify({ email: username, senha: password }), // Mantém o envio normal
       });
 
       const data = await response.json();
@@ -37,6 +37,7 @@ function Login({ onLogin }) {
       if (data.success) {
         setError('');
         onLogin(data.userType);
+
         localStorage.setItem('id_cliente', data.id_cliente);
 
         if (data.alterar_senha === 1) {
