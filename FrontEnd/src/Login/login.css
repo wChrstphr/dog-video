@@ -27,30 +27,31 @@
 
 
 .login-container {
-  background-color: #000000; /* Fundo preto */
+  background-color: #000000;
+  border: 3px solid #ffffff;
   padding: 40px;
-  border-radius: 30px; /* Bordas arredondadas maiores */
+  border-radius: 30px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: 0px 4px 30px rgba(0, 0, 0, 0.5); /* Sombreamento */
+  box-shadow: 0px 4px 30px rgba(0, 0, 0, 0.5);
 }
 
 /* Estilo do título */
 .login-container h2 {
-  font-family: 'Times New Roman', serif; /* Fonte elegante */
-  font-size: 36px; /* Tamanho maior */
-  color: #ffffff; /* Texto branco */
+  font-family: 'Manrope', sans-serif;
+  font-size: 36px;
+  color: #ffffff;
 }
 
 
 .input-login {
   margin: 10px;
   padding: 10px;
-  width: 300px; /* Ajustar largura menor */
+  width: 300px;
   height: auto;
   border: none;
-  border-radius: 20px; /* Bordas arredondadas */
+  border-radius: 20px;
   background-color: #000000;
   outline: none;
   text-align: left;
@@ -66,7 +67,7 @@
   width: auto;
   height: auto;
   margin-top: 20px;
-  border-radius: 20px; /* Bordas arredondadas */
+  border-radius: 20px;
   background-color: #ffffff;
   color: #000000;
   font-weight: bold;
@@ -74,7 +75,7 @@
 
 /* Efeito hover no botão */
 .button-login:hover {
-    background-color: #f1f1f1; /* Cor mais clara ao passar o mouse */
+    background-color: #f1f1f1;
 }
 
 .button-login:active {

@@ -35,7 +35,6 @@ function Chat({ userId, receiverId, onClose }) {
     <div className="chat-container">
       <div className="chat-header">
         <h2>Chat</h2>
-        <button className="close-button" onClick={onClose}>X</button>
       </div>
       <div className="chat-messages">
         {messages.map((msg, index) => (
@@ -51,7 +50,7 @@ function Chat({ userId, receiverId, onClose }) {
           onChange={(e) => setInputMessage(e.target.value)}
           placeholder="Digite sua mensagem..."
         />
-        <button type="submit">Enviar</button>
+        <button className="button-chat" type="submit">Enviar</button>
       </form>
     </div>
   );
