@@ -238,7 +238,17 @@ body {
   .cliente-item {
     margin: 5px 0;
   }
-  
+
+  .filter-select {
+    width: 100%;
+    padding: 5px;
+    font-size: 14px;
+    background-color: #d3d3d3;
+    color: black;
+    border: none;
+    border-radius: 5px;
+    margin-bottom: 10px;
+  }  
 
 /* Responsividade para tablets */
 @media (max-width: 768px) {

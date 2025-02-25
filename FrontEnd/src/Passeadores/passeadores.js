@@ -13,28 +13,44 @@ function Passeadores() {
   const [sortDirection, setSortDirection] = useState('asc');
   const [isFilterMenuVisible, setIsFilterMenuVisible] = useState(false);
   const searchInputRef = useRef(null);
+  const [clientes, setClientes] = useState([]);
+  const [filtroCliente, setFiltroCliente] = useState('');
+
 
   useEffect(() => {
-    const fetchPasseadores = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('http://localhost:3001/passeadores');
-        const data = await response.json();
+        const [passeadoresResponse, clientesResponse] = await Promise.all([
+          fetch('http://localhost:3001/passeadores'),
+          fetch('http://localhost:3001/clientes')
+        ]);
   
-        // Verifica se a resposta tem o formato esperado
-        if (data.success && Array.isArray(data.passeadores)) {
-          setPasseadores(data.passeadores); // Armazena apenas o array de passeadores
+        const passeadoresData = await passeadoresResponse.json();
+        const clientesData = await clientesResponse.json();
+  
+        if (passeadoresData.success && Array.isArray(passeadoresData.passeadores)) {
+          setPasseadores(passeadoresData.passeadores);
         } else {
-          console.error('Erro ao buscar passeadores: Resposta inesperada', data);
-          setPasseadores([]); // Define passeadores como uma lista vazia se o formato não for válido
+          console.error('Erro ao buscar passeadores: Resposta inesperada', passeadoresData);
+          setPasseadores([]);
+        }
+  
+        if (clientesData.success && Array.isArray(clientesData.clientes)) {
+          setClientes(clientesData.clientes);
+        } else {
+          console.error('Erro ao buscar clientes: Resposta inesperada', clientesData);
+          setClientes([]);
         }
       } catch (error) {
-        console.error('Erro ao buscar passeadores:', error);
-        setPasseadores([]); // Define passeadores como uma lista vazia em caso de erro
+        console.error('Erro ao buscar dados:', error);
+        setPasseadores([]);
+        setClientes([]);
       }
     };
   
-    fetchPasseadores();
-  }, []);  
+    fetchData();
+  }, []);
+  
 
   const showModal = (passeador) => {
     setSelectedPasseador(passeador);
@@ -94,18 +110,23 @@ function Passeadores() {
 
   const passeadoresFiltrados = useMemo(() => {
     const normalizedBusca = normalizeText(busca);
-    const filteredPasseadores = passeadores.filter((passeador) =>
-      normalizeText(passeador.nome).includes(normalizedBusca)
-    );
-
-    return filteredPasseadores.sort((a, b) => {
-      if (sortDirection === 'asc') {
-        return a.nome.localeCompare(b.nome);
-      } else {
-        return b.nome.localeCompare(a.nome);
-      }
-    });
-  }, [busca, sortDirection, passeadores]);
+    return passeadores
+      .filter((passeador) => {
+        const passaFiltroNome = normalizeText(passeador.nome).includes(normalizedBusca);
+        const passaFiltroCliente =
+          filtroCliente === '' ||
+          clientes.some((cliente) => cliente.id_passeador === passeador.id && cliente.id_cliente.toString() === filtroCliente);
+  
+        return passaFiltroNome && passaFiltroCliente;
+      })
+      .sort((a, b) => {
+        if (sortDirection === 'asc') {
+          return a.nome.localeCompare(b.nome);
+        } else {
+          return b.nome.localeCompare(a.nome);
+        }
+      });
+  }, [busca, sortDirection, passeadores, filtroCliente, clientes]);  
 
   return (
     <div className="Web-Passeador">
@@ -144,9 +165,23 @@ function Passeadores() {
           <button onClick={() => handleSort('asc')} className="filter-button">
             Ordenar A-Z
           </button>
+          <div className="filter-divider"></div>
           <button onClick={() => handleSort('desc')} className="filter-button">
             Ordenar Z-A
           </button>
+          <div className="filter-divider"></div>
+          <select
+            value={filtroCliente}
+            onChange={(e) => setFiltroCliente(e.target.value)}
+            className="filter-select"
+          >
+            <option value="">Clientes</option>
+            {clientes.map((cliente) => (
+              <option key={cliente.id_cliente} value={cliente.id_cliente}>
+                {cliente.nome}
+              </option>
+            ))}
+          </select>
         </div>
       )}
 
