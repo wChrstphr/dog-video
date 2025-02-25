@@ -2,6 +2,7 @@ import "./dados.css";
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Modal from "react-modal";
+import Redefinir from "../RedefinirSenha/redefinir";
 
 function Dados({ onLogout }) {
   const navigate = useNavigate();
@@ -16,6 +17,10 @@ function Dados({ onLogout }) {
     onLogout();
     hideModal();
     navigate("/");
+  };
+
+  const handleResetPassword = () => {
+    navigate(`/redefinir/${id}`);
   };
 
   useEffect(() => {
@@ -75,7 +80,12 @@ function Dados({ onLogout }) {
           src="/logotipo.svg"
           className="Web-logotipo"
           alt="Dogvideo Logotipo"
-        />       
+        />
+               
+        <button className="reset-password-button" onClick={handleResetPassword}>
+          Redefinir Senha
+        </button>
+
         <div className="footer-bar"></div>
       </header>
 

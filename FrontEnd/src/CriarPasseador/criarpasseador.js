@@ -16,13 +16,77 @@ function CriarPasseador() {
   // Estado para armazenar a imagem em base64
   const [selectedImage, setSelectedImage] = useState(null);
 
+  // Estados para armazenar mensagens de erro
+  const [nomeError, setNomeError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [cpfError, setCpfError] = useState('');
+  const [telefoneError, setTelefoneError] = useState('');
+
+  // Funções de validação
+  const validateNome = (nome) => {
+    if (!/^[A-Z][a-z]{1,}/.test(nome)) {
+      setNomeError('O nome deve começar com letra maiúscula e ter pelo menos 2 caracteres');
+      return false;
+    }
+    setNomeError('');
+    return true;
+  };
+
+  const validateEmail = (email) => {
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      setEmailError('Email inválido');
+      return false;
+    }
+    setEmailError('');
+    return true;
+  };
+
+  const validateCPF = (cpf) => {
+    const cleaned = cpf.replace(/\D/g, '');
+    if (cleaned.length !== 11 || /^(\d)\1+$/.test(cleaned)) {
+      setCpfError('CPF inválido');
+      return false;
+    }
+    setCpfError('');
+    return true;
+  };
+
+  const validateTelefone = (telefone) => {
+    const cleaned = telefone.replace(/\D/g, '');
+    if (!/^\d{11}$/.test(cleaned)) {
+      setTelefoneError('Telefone deve ter DDD e 9 dígitos');
+      return false;
+    }
+    setTelefoneError('');
+    return true;
+  };
+
+  // Funções de formatação
+  const formatCPF = (cpf) => {
+    const cleaned = cpf.replace(/\D/g, '');
+    const match = cleaned.match(/^(\d{3})(\d{3})(\d{3})(\d{2})$/);
+    if (match) {
+      return `${match[1]}.${match[2]}.${match[3]}-${match[4]}`;
+    }
+    return cpf;
+  };
+
+  const formatTelefone = (telefone) => {
+    const cleaned = telefone.replace(/\D/g, '');
+    const match = cleaned.match(/^(\d{2})(\d{5})(\d{4})$/);
+    if (match) {
+      return `(${match[1]}) ${match[2]}-${match[3]}`;
+    }
+    return telefone;
+  };
+
   // Função para lidar com a seleção de imagem
   const handleImageChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       const reader = new FileReader();
       reader.onloadend = () => {
-        setSelectedImage(reader.result); // Define a imagem em base64
+        setSelectedImage(reader.result);
       };
       reader.readAsDataURL(file);
     }
@@ -32,46 +96,52 @@ function CriarPasseador() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const newPasseador = {
-      nome: nomeRef.current.value,
-      email: emailRef.current.value,
-      cpf: cpfRef.current.value,
-      telefone: telefoneRef.current.value,
-      endereco: enderecoRef.current.value,
-      imagem: selectedImage,
-    };
+    const isNomeValid = validateNome(nomeRef.current.value);
+    const isEmailValid = validateEmail(emailRef.current.value);
+    const isCPFValid = validateCPF(cpfRef.current.value);
+    const isTelefoneValid = validateTelefone(telefoneRef.current.value);
 
-    try {
-      const response = await fetch(`http://localhost:3001/criarpasseador`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newPasseador),
-      });
+    if (isNomeValid && isEmailValid && isCPFValid && isTelefoneValid) {
+      const newPasseador = {
+        nome: nomeRef.current.value,
+        email: emailRef.current.value,
+        cpf: cpfRef.current.value.replace(/\D/g, ''),
+        telefone: telefoneRef.current.value.replace(/\D/g, ''),
+        endereco: enderecoRef.current.value,
+        imagem: selectedImage,
+      };
 
-      if (response.ok) {
-        navigate("/passeadores"); // Redireciona para a lista de passeadores
-      } else {
-        console.error('Erro ao criar passeador');
+      try {
+        const response = await fetch(`http://localhost:3001/criarpasseador`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newPasseador),
+        });
+
+        if (response.ok) {
+          navigate("/passeadores");
+        } else {
+          console.error('Erro ao criar passeador');
+        }
+      } catch (error) {
+        console.error('Erro ao enviar dados:', error);
       }
-    } catch (error) {
-      console.error('Erro ao enviar dados:', error);
+    } else {
+      console.error('Formulário contém erros');
     }
   };
 
   return (
-    <div className="Web">
+    <div className="Web-Criar-Passeador">
       <header className="Web-header">
         <img src="/logotipo.svg" className="Web-logotipo" alt="Dogvideo Logomarca" />
         <div className="footer-bar"></div>
       </header>
 
-      {/* Formulário de Criação de Passeador */}
       <div className="form-container">
         <form className="passeador-form" onSubmit={handleSubmit}>
-
-          {/* Campo de seleção de imagem */}
           <div className="image-container">
             <label htmlFor="image-upload" className="image-upload-label">
               {selectedImage ? (
@@ -93,26 +163,61 @@ function CriarPasseador() {
 
           <div className="input-container">
             <FaUser className="input-icon" />
-            <input ref={nomeRef} type="text" placeholder="Nome do passeador" className="form-input" />
-          </div>
+            <input 
+              ref={nomeRef} 
+              type="text" 
+              placeholder="Nome do passeador" 
+              className="form-input"
+              onChange={(e) => validateNome(e.target.value)}
+            />
+            </div>
+            {nomeError && <div className="error-message">{nomeError}</div>}
           <div className="input-container">
             <FaEnvelope className="input-icon" />
-            <input ref={emailRef} type="email" placeholder="Email" className="form-input" />
-          </div>
+            <input 
+              ref={emailRef} 
+              type="email" 
+              placeholder="Email" 
+              className="form-input"
+              onChange={(e) => validateEmail(e.target.value)}
+            />
+            </div>
+            {emailError && <div className="error-message">{emailError}</div>}
           <div className="input-container">
             <FaAddressCard className="input-icon" />
-            <input ref={cpfRef} type="text" placeholder="CPF" className="form-input" />
-          </div>
+            <input 
+              ref={cpfRef} 
+              type="text" 
+              placeholder="CPF" 
+              className="form-input"
+              onChange={(e) => {
+                const formatted = formatCPF(e.target.value);
+                e.target.value = formatted;
+                validateCPF(formatted);
+              }}
+            />
+            </div>
+            {cpfError && <div className="error-message">{cpfError}</div>}
           <div className="input-container">
             <FaPhone className="input-icon" />
-            <input ref={telefoneRef} type="tel" placeholder="Telefone" className="form-input" />
-          </div>
+            <input 
+              ref={telefoneRef} 
+              type="tel" 
+              placeholder="Telefone" 
+              className="form-input"
+              onChange={(e) => {
+                const formatted = formatTelefone(e.target.value);
+                e.target.value = formatted;
+                validateTelefone(formatted);
+              }}
+            />
+            </div>
+            {telefoneError && <div className="error-message">{telefoneError}</div>}
           <div className="input-container">
             <FaHome className="input-icon" />
             <input ref={enderecoRef} type="text" placeholder="Endereço" className="form-input" />
           </div>
 
-          {/* Botões */}
           <div className="button-group">
             <button
               type="button"

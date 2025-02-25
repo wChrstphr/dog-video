@@ -88,7 +88,7 @@ function Redefinir() {
           onChange={(e) => setNewPassword(e.target.value)}
           onKeyDown={(e) => handleKeyDown(e, 'newPassword')}
         />
-        <span className="password-toggle-icon" onClick={() => togglePasswordVisibility('newPassword')}>
+        <span className="password-toggle-icon" onClick={() => togglePasswordVisibility('newPassword')} style={{ color: 'black' }}>
           {showPassword.newPassword ? <FaEye /> : <FaEyeSlash />}
         </span>
       </div>
@@ -102,7 +102,7 @@ function Redefinir() {
           onChange={(e) => setConfirmPassword(e.target.value)}
           onKeyDown={(e) => handleKeyDown(e, 'confirmPassword')}
         />
-        <span className="password-toggle-icon" onClick={() => togglePasswordVisibility('confirmPassword')}>
+        <span className="password-toggle-icon" onClick={() => togglePasswordVisibility('confirmPassword')} style={{ color: 'black' }}>
           {showPassword.confirmPassword ? <FaEye /> : <FaEyeSlash />}
         </span>
       </div>

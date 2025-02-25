@@ -1,12 +1,12 @@
 body {
-  background-color: #2e55ff;
+  background-color: #000000;
   padding: 0;
   margin: 0;
 }
 
 .Web {
   text-align: center;
-  background-color: #2e55ff;
+  background-color: black;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -18,7 +18,7 @@ body {
 }
 
 .Web-header {
-  background-color: #0024bd;
+  background-color: black;
   height: 90px;
   display: flex;
   justify-content: space-between;
@@ -27,7 +27,7 @@ body {
 }
 
 .footer-bar {
-  background-color: #D69958;
+  background-color: white;
   height: 5px;
   position: absolute;
   margin-top: 90px;
@@ -57,7 +57,7 @@ body {
 }
 
 .Card {
-  background-color: #d08b56;
+  background-color: white;
   border-radius: 10px;
   padding: 20px;
   width: 200px;
@@ -68,7 +68,7 @@ body {
 }
 
 .Card-header-bg {
-  background-color: #e9be91;
+  background-color: black;
   padding: 5px;
   border-radius: 10px;
 }
@@ -76,7 +76,7 @@ body {
 .Card-header {
   font-size: 18px;
   font-weight: bold;
-  color: black;
+  color: white;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -87,6 +87,7 @@ body {
   margin-top: 20px;
   font-weight: bold;
   overflow-wrap: break-word;
+  color: black;
 }
 
 ul {
@@ -117,7 +118,7 @@ li {
 }
 
 .modal-container {
-  background: #0024bd;
+  background: black;
   border-radius: 10px;
   padding: 20px;
   width: 300px;
@@ -153,6 +154,24 @@ li {
 .yes-button {
   background-color: #d08b56;
   color: white;
+}
+
+.reset-password-button {
+  background-color: #000000;
+  color: rgb(255, 255, 255);
+  border: 2px solid #ffffff;
+  padding: 5px 20px;
+  border-radius: 35px;
+  font-size: 16px;
+  font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-bottom: 20px;
+}
+
+.reset-password-button:hover {
+  background-color: #747070;
 }
 
 /* Responsividade para telas menores */
@@ -259,5 +278,10 @@ li {
 
   .modal-container {
     width: 100%;
+  }
+
+  .reset-password-button {
+    font-size: 14px;
+    padding: 8px 16px;
   }
 }
