@@ -3,110 +3,182 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  width: 100%;
+  height: 85vh;
+  padding: 0 20px;
   background-color: white;
-  position: relative;
-  overflow: hidden;
+}
+.logo {
+  max-width: 350px; 
+  margin-top: 0px;
 }
 
-/* Padrão de fundo com o logotipo */
-.background-pattern {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: url('../NovoLogotipo.svg');
-  background-size: 400px;
-  background-repeat: repeat;
-  opacity: 1;
-  z-index: 1;
+.login-background {
+  background-color: #ffffff;
+  background-image: ('/FrontEnd/public/loginDog.svg');
+  background-repeat: repeat-x;
+  background-size: contain;
+  background-position: center top;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
+
+
 
 .login-container {
-  background: rgba(0, 0, 0, 0.8);
+  background-color: #000000; /* Fundo preto */
   padding: 40px;
-  border-radius: 25px;
-  width: 100%;
-  max-width: 450px;
-  position: relative;
-  z-index: 2;
+  border-radius: 30px; /* Bordas arredondadas maiores */
   display: flex;
   flex-direction: column;
   align-items: center;
+  box-shadow: 0px 4px 30px rgba(0, 0, 0, 0.5); /* Sombreamento */
 }
 
-.input-Login {
-  width: 100%;
-  height: 40px; /* Definindo altura fixa para ambos */
-  padding: 12px;
-  margin: 8px 0;
-  border: 1px solid #ffffff;
-  border-radius: 20px;
-  background: #000000;
-  color: white;
-  font-size: 16px;
+/* Estilo do título */
+.login-container h2 {
+  font-family: 'Times New Roman', serif; /* Fonte elegante */
+  font-size: 36px; /* Tamanho maior */
+  color: #ffffff; /* Texto branco */
+}
+
+
+.input-login {
+  margin: 10px;
+  padding: 10px;
+  width: 300px; /* Ajustar largura menor */
+  height: auto;
+  border: none;
+  border-radius: 20px; /* Bordas arredondadas */
+  background-color: #000000;
   outline: none;
-  box-sizing: border-box; /* Garante que padding não afete a largura total */
+  text-align: left;
+  font-family: 'Manrope', sans-serif;
+  color: #ffffff;
+  border: 3px solid #ffffff;
+}
+
+/* Botão de login */
+.button-login {
+  padding: 10px;
+  font-size: large;
+  width: auto;
+  height: auto;
+  margin-top: 20px;
+  border-radius: 20px; /* Bordas arredondadas */
+  background-color: #ffffff;
+  color: #000000;
+  font-weight: bold;
+}
+
+/* Efeito hover no botão */
+.button-login:hover {
+    background-color: #f1f1f1; /* Cor mais clara ao passar o mouse */
+}
+
+.button-login:active {
+  background-color: #fff;
+  color: #6e6861;
+  transform: scale(0.95);
+}
+
+.Login label {
+  width: 450px;
+  margin-top: 5px;
+  text-align: left;
+  font-family: 'Manrope', sans-serif;
+  font-weight: normal;
+  font-size: 25px;
+  color: #fff;
+}
+
+.error {
+  margin-top: 10px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 18px;
+  color: red;
+  font-weight: bold;
 }
 
 .password-container {
-  width: 100%;
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.password-container .input-Login {
-  padding-right: 40px; /* Espaço para o ícone */
+  position :relative 
 }
 
 .password-toggle-icon {
   position: absolute;
-  right: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: white;
+  right: 30px;
   cursor: pointer;
-  z-index: 2;
+  color: #fff;
 }
 
-.button-Login {
-  width: 160px;
-  padding: 12px;
-  margin-top: 20px;
-  background: #ffffff;
-  border: none;
-  border-radius: 15px;
-  color: rgb(0, 0, 0);
-  font-size: 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-button:active {
-  transform: scale(0.95);
-}
-
-.error {
-  color: red;
-  font-size: 14px;
-  margin-top: 10px;
-  text-align: center;
-}
-
+/* Estilos para telas menores que 768px (tablets e smartphones) */
 @media (max-width: 768px) {
+
   .login-container {
-      width: 90%;
+      width: auto;
+      padding: 20px;
+      margin: auto;
+    }
+  
+  input {
+      width: 100%;
+      max-width: 350px;
+      font-size: 18px;
+  }
+
+  button {
+      width: 100%;
+      max-width: 150px;
+      font-size: 22px;
+  }
+
+  .Login label {
+      max-width: 350px;
+      font-size: 22px;
+  }
+
+  .password-container {
+      width: 380px;
+      font-size: 22px;;
+}
+
+  .password-toggle-icon {
+    right: 25px;
+    top: 35%;
+}
+}
+
+/* Estilos para telas menores que 480px (smartphones pequenos) */
+@media (max-width: 480px) {
+  .logo {
       max-width: 350px;
   }
-}
 
-@media (max-width: 480px) {
-  .login-container {
-      width: 95%;
+  input {
+      width: 100%;
       max-width: 300px;
+      font-size: 16px;
+  }
+
+  button {
+      width: 100%;
+      max-width: 140px;
+      font-size: 20px;
+  }
+
+  .Login label {
+      max-width: 300px;
+      font-size: 20px;
+  }
+
+  .password-container {
+      width: 340px;
+      font-size: 22px;;
+  }
+
+  .password-toggle-icon {
+      right: 25px;
+      top: 35%;
   }
 }
-  
