@@ -167,7 +167,7 @@ function EditarCliente() {
   const handleSave = async (e) => {
     e.preventDefault();
   
-    const isNomeValid = validateNome(nomeRef.current.value);
+const isNomeValid = validateNome(nomeRef.current.value);
 const isEmailValid = validateEmail(emailRef.current.value);
 const isCPFValid = validateCPF(cpfRef.current.value);
 const isTelefoneValid = validateTelefone(telefoneRef.current.value);
@@ -229,6 +229,7 @@ try {
 } catch (error) {
   console.error('Erro ao enviar os dados do cliente:', error);
 }
+  }
   
   return (
     <div className="Web-Editar-Cliente">
