@@ -2,10 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
 
 const containerStyle = {
-    width: '100%',
-    height: '400px',
+    width: '80%',
+    height: '300px',
     borderRadius: '10px',
-    overflow: 'hidden'
+    overflow: 'hidden',
+    border: '5px solid gray',
+    position: 'relative',
+    left: '55%'
   };
   
 
