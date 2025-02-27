@@ -2,7 +2,6 @@ import "./dados.css";
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Modal from "react-modal";
-import Redefinir from "../RedefinirSenha/redefinir";
 
 function Dados({ onLogout }) {
   const navigate = useNavigate();
@@ -10,7 +9,6 @@ function Dados({ onLogout }) {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [dadosCliente, setDadosCliente] = useState(null);
 
-  const showModal = () => setIsModalVisible(true);
   const hideModal = () => setIsModalVisible(false);
 
   const handleLogout = () => {
