@@ -1,145 +1,185 @@
 .Login {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 85vh;
-    padding: 0 20px;
-  }
-  .logo {
-    max-width: 350px; 
-    margin-top: 0px;
-  }
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 85vh;
+  padding: 0 20px;
+  background-color: white;
+}
+.logo {
+  max-width: 350px; 
+  margin-top: 0px;
+}
 
+.login-background {
+  background-color: #ffffff;
+  background-image: ('/FrontEnd/public/loginDog.svg');
+  background-repeat: repeat-x;
+  background-size: contain;
+  background-position: center top;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+
+
+.login-container {
+  background-color: #000000;
+  border: 3px solid #ffffff;
+  padding: 40px;
+  border-radius: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0px 4px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Estilo do título */
+.login-container h2 {
+  font-family: 'Manrope', sans-serif;
+  font-size: 36px;
+  color: #ffffff;
+}
+
+
+.input-login {
+  margin: 10px;
+  padding: 10px;
+  width: 300px;
+  height: auto;
+  border: none;
+  border-radius: 20px;
+  background-color: #000000;
+  outline: none;
+  text-align: left;
+  font-family: 'Manrope', sans-serif;
+  color: #ffffff;
+  border: 3px solid #ffffff;
+}
+
+/* Botão de login */
+.button-login {
+  padding: 10px;
+  font-size: large;
+  width: auto;
+  height: auto;
+  margin-top: 20px;
+  border-radius: 20px;
+  background-color: #ffffff;
+  color: #000000;
+  font-weight: bold;
+}
+
+/* Efeito hover no botão */
+.button-login:hover {
+    background-color: #f1f1f1;
+}
+
+.button-login:active {
+  background-color: #fff;
+  color: #6e6861;
+  transform: scale(0.95);
+}
+
+.Login label {
+  width: 450px;
+  margin-top: 5px;
+  text-align: left;
+  font-family: 'Manrope', sans-serif;
+  font-weight: normal;
+  font-size: 25px;
+  color: #fff;
+}
+
+.error {
+  margin-top: 10px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 18px;
+  color: red;
+  font-weight: bold;
+}
+
+.password-container {
+  position :relative 
+}
+
+.password-toggle-icon {
+  position: absolute;
+  right: 30px;
+  cursor: pointer;
+  color: #fff;
+}
+
+/* Estilos para telas menores que 768px (tablets e smartphones) */
+@media (max-width: 768px) {
+
+  .login-container {
+      width: auto;
+      padding: 20px;
+      margin: auto;
+    }
+  
   input {
-    margin: 10px;
-    padding: 8px;
-    width: 450px;
-    height: 35px;
-    border: none;
-    border-radius: 15px;
-    background-color: #D69958;
-    outline: none;
-    text-align: left;
-    font-family: 'Manrope', sans-serif;
-    font-weight: normal;
-    font-size: 20px;
-    color: #fff;
+      width: 100%;
+      max-width: 350px;
+      font-size: 18px;
   }
 
   button {
-    padding: 10px;
-    width: 160px;
-    height: 55px;
-    margin-top: 40px;
-    border: none;
-    border-radius: 15px;
-    background-color: #D69958;
-    text-align: center;
-    font-family: 'Manrope', sans-serif;
-    font-weight: initial;
-    font-size: 25px;
-    color: #fff;
-    cursor: pointer; 
-  }
-  button:active {
-    background-color: #fff;
-    color: #D69958;
-    transform: scale(0.95);
+      width: 100%;
+      max-width: 150px;
+      font-size: 22px;
   }
 
   .Login label {
-    width: 450px;
-    margin-top: 5px;
-    text-align: left;
-    font-family: 'Manrope', sans-serif;
-    font-weight: normal;
-    font-size: 25px;
-    color: #fff;
+      max-width: 350px;
+      font-size: 22px;
   }
 
-  .error {
-    margin-top: 10px;
-    font-family: 'Manrope', sans-serif;
-    font-size: 18px;
-    color: red;
-    font-weight: bold;
-  }
-  
   .password-container {
-    display: flex;
-    align-items: center;
-    position: relative;
-  }
-  
+      width: 380px;
+      font-size: 22px;;
+}
+
   .password-toggle-icon {
-    position: absolute;
-    right: 30px;
-    cursor: pointer;
-    color: #fff;
-  }
-  
-  /* Estilos para telas menores que 768px (tablets e smartphones) */
-  @media (max-width: 768px) {
-    input {
-        width: 100%;
-        max-width: 350px;
-        font-size: 18px;
-    }
-  
-    button {
-        width: 100%;
-        max-width: 150px;
-        font-size: 22px;
-    }
-  
-    .Login label {
-        max-width: 350px;
-        font-size: 22px;
-    }
-  
-    .password-container {
-        width: 380px;
-        font-size: 22px;;
+    right: 25px;
+    top: 35%;
+}
+}
+
+/* Estilos para telas menores que 480px (smartphones pequenos) */
+@media (max-width: 480px) {
+  .logo {
+      max-width: 350px;
   }
 
-    .password-toggle-icon {
+  input {
+      width: 100%;
+      max-width: 300px;
+      font-size: 16px;
+  }
+
+  button {
+      width: 100%;
+      max-width: 140px;
+      font-size: 20px;
+  }
+
+  .Login label {
+      max-width: 300px;
+      font-size: 20px;
+  }
+
+  .password-container {
+      width: 340px;
+      font-size: 22px;;
+  }
+
+  .password-toggle-icon {
       right: 25px;
       top: 35%;
+  }
 }
-  }
-  
-  /* Estilos para telas menores que 480px (smartphones pequenos) */
-  @media (max-width: 480px) {
-    .logo {
-        max-width: 350px;
-    }
-  
-    input {
-        width: 100%;
-        max-width: 300px;
-        font-size: 16px;
-    }
-  
-    button {
-        width: 100%;
-        max-width: 140px;
-        font-size: 20px;
-    }
-  
-    .Login label {
-        max-width: 300px;
-        font-size: 20px;
-    }
-  
-    .password-container {
-        width: 340px;
-        font-size: 22px;;
-    }
-  
-    .password-toggle-icon {
-        right: 25px;
-        top: 35%;
-    }
-  }
-  

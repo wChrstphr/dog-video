@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Modal from 'react-modal';
 import { FaLocationArrow, FaRegCommentAlt } from 'react-icons/fa';
+import Chat from "./chat";
+import Map from "./Map";
 
 function Cameras({ onLogout }) {
   const navigate = useNavigate();
@@ -160,34 +162,26 @@ function Cameras({ onLogout }) {
       <Modal
         isOpen={isMapVisible}
         onRequestClose={hideMap}
-        className="modal-container"
-        overlayClassName="modal-overlay"
-        ariaHideApp={false}
+        className="modal-map-container"
+        overlayClassName="modal-map-overlay"
       >
-        <div className="modal-content">
-          <h2>Localização do Passeador</h2>
-          <div id="map"></div>
-          <button className="modal-button" onClick={hideMap}>
-            Fechar
-          </button>
-        </div>
+        <Map onClose={hideMap} />
       </Modal>
 
       <Modal
         isOpen={isChatVisible}
         onRequestClose={hideChat}
-        className="modal-container"
-        overlayClassName="modal-overlay"
-        ariaHideApp={false}
+        className="modal-chat-container"
+        overlayClassName="modal-chat-overlay"
       >
-        <div className="modal-content">
-          <h2>Chat com o Passeador</h2>
-          <div id="chat-box">Aqui será o chat...</div>
-          <button className="modal-button" onClick={hideChat}>
-            Fechar
-          </button>
-        </div>
+        <Chat 
+          userId={localStorage.getItem('id_cliente')} // ID do cliente logado
+          receiverId={'id_passeador'}                // Substitua pelo ID do passeador correspondente
+          onClose={hideChat} 
+        />
       </Modal>
+
+
 
       <div className="footer-bar"></div>
     </div>

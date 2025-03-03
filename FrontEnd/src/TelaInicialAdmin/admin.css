@@ -1,19 +1,19 @@
 body {
-    background-color: #2E55FF;
+    background-color: black;
     margin: 0;
     padding: 0;
   }
   
-  .Web {
+  .Web-Admin {
     text-align: center;
-    background-color: #2E55FF;
+    background-color: black;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
   }
   
   .Web-header {
-    background-color: #0024BD;
+    background-color: #000000;
     height: 90px;
     display: flex;
     align-items: center;
@@ -31,7 +31,7 @@ body {
   
   .admin-container {
     margin: 100px auto;
-    background-color: #0e2049;
+    background-color: white;
     border-radius: 20px;
     padding: 20px;
     width: 450px;
@@ -42,6 +42,7 @@ body {
     font-size: 40px;
     font-weight: bold;
     margin-bottom: 5px;
+    color: black;
   }
   
   .admin-options {
@@ -52,7 +53,7 @@ body {
   }
   
   .admin-option {
-    background-color: #0024BD;
+    background-color: black;
     color: white;
     border: none;
     border-radius: 10px;
@@ -70,7 +71,7 @@ body {
   }
   
   .admin-option:hover {
-    background-color: #16389F;
+    background-color: #d3d3d3;
   }
   
   .icon {
@@ -79,7 +80,7 @@ body {
   }
   
   .footer-bar {
-    background-color: #D69958;
+    background-color: white;
     height: 5px;
     margin-top: 90px;
     width: 100%;

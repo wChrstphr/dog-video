@@ -26,7 +26,6 @@ Modal.setAppElement('#root');  // Defina o elemento para os modais
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState('');
-  const [isMapVisible, setIsMapVisible] = useState(false);
 
   const handleLogin = (role) => {
     setIsLoggedIn(true);

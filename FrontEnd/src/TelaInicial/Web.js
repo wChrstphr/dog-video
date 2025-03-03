@@ -47,8 +47,8 @@ function Web({ onLogout }) {
   };  
 
   return (
-    <div className="Web">
-      <header className="Web-header">
+    <div className="Web-Inicial">
+      <header className="Web-header-inicial">
         <img src="/logotipo.svg" className="Web-logotipo" alt="Dogvideo Logomarca" />
         <div className="tabbar-title" onClick={handleDadosClienteClick} style={{ cursor: 'pointer' }}>
           <img src="/user.svg" alt="Ícone do Usuário" className="user-icon" />
@@ -81,11 +81,11 @@ function Web({ onLogout }) {
         />
       </header>
 
-      <div className="footer-bar"></div>
+      <div className="footer-bar-inicial"></div>
 
-      <div className="passeador-titulo">
-        <img src="/passeadores.svg" alt="Passeadores título" />
-        <p className="passeador-texto">PASSEADORES</p>
+      <div className="passeador-titulo-inicial">
+        <img src="/Contents.svg" alt="Passeadores título" />
+        <p className="passeador-texto-inicial">PASSEADORES</p>
       </div>
 
       {/* Seção dos Passeadores */}

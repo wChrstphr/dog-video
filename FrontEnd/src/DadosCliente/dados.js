@@ -9,13 +9,16 @@ function Dados({ onLogout }) {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [dadosCliente, setDadosCliente] = useState(null);
 
-  const showModal = () => setIsModalVisible(true);
   const hideModal = () => setIsModalVisible(false);
 
   const handleLogout = () => {
     onLogout();
     hideModal();
     navigate("/");
+  };
+
+  const handleResetPassword = () => {
+    navigate(`/redefinir/${id}`);
   };
 
   useEffect(() => {
@@ -75,7 +78,12 @@ function Dados({ onLogout }) {
           src="/logotipo.svg"
           className="Web-logotipo"
           alt="Dogvideo Logotipo"
-        />       
+        />
+               
+        <button className="reset-password-button" onClick={handleResetPassword}>
+          Redefinir Senha
+        </button>
+
         <div className="footer-bar"></div>
       </header>
 
