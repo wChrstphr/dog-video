@@ -45,4 +45,4 @@ io.on('connection', (socket) => {
   });
 });
 
-server.listen(5000, () => console.log('Servidor rodando na porta 5000'));
+server.listen(3001, () => console.log('Servidor rodando na porta 3001'));

@@ -7,6 +7,10 @@ const port = 3001;
 const webPush = require('web-push');
 const bcrypt = require('bcrypt'); 
 const saltRounds = 10;
+const cron = require('node-cron');
+const dayjs = require('dayjs');
+const customParseFormat = require('dayjs/plugin/customParseFormat');
+dayjs.extend(customParseFormat);
 
 // Configuração do middleware
 app.use(cors());
@@ -39,65 +43,86 @@ webPush.setVapidDetails(
 // Rota para salvar `subscriptions` no banco de dados
 app.post('/subscribe', (req, res) => {
   const { subscription, id_cliente, id_passeador } = req.body;
+  const endpoint = subscription.endpoint;
+  const expiration_time = subscription.expirationTime || null;
+  const p256dh = subscription.keys.p256dh;
+  const auth = subscription.keys.auth;
 
-  const query = `
-    INSERT INTO subscriptions (endpoint, expiration_time, p256dh, auth, id_cliente, id_passeador)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `;
-  const values = [
-    subscription.endpoint,
-    subscription.expirationTime || null,
-    subscription.keys.p256dh,
-    subscription.keys.auth,
-    id_cliente || null,
-    id_passeador || null
-  ];
-
-  connection.query(query, values, (err) => {
+  // Verifica se já existe uma subscription com o mesmo endpoint
+  const checkQuery = 'SELECT * FROM subscriptions WHERE endpoint = ?';
+  connection.query(checkQuery, [endpoint], (err, results) => {
     if (err) {
-      console.error('Erro ao salvar subscription:', err);
-      return res.status(500).json({ success: false, message: 'Erro ao salvar subscription' });
+      console.error('Erro ao buscar subscription:', err);
+      return res.status(500).json({ success: false, message: 'Erro ao buscar subscription' });
     }
-    res.status(201).json({ success: true, message: 'Inscrição salva com sucesso!' });
+
+    if (results.length > 0) {
+      // Se a inscrição já existe, atualiza os dados
+      const updateQuery = `
+        UPDATE subscriptions 
+        SET expiration_time = ?, p256dh = ?, auth = ?, id_cliente = ?, id_passeador = ?
+        WHERE endpoint = ?
+      `;
+      connection.query(
+        updateQuery,
+        [expiration_time, p256dh, auth, id_cliente || null, id_passeador || null, endpoint],
+        (err, updateResult) => {
+          if (err) {
+            console.error('Erro ao atualizar subscription:', err);
+            return res.status(500).json({ success: false, message: 'Erro ao atualizar subscription' });
+          }
+          return res.status(200).json({ success: true, message: 'Subscription atualizada com sucesso!' });
+        }
+      );
+    } else {
+      // Se não existe, insere uma nova inscrição
+      const insertQuery = `
+        INSERT INTO subscriptions (endpoint, expiration_time, p256dh, auth, id_cliente, id_passeador)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `;
+      connection.query(
+        insertQuery,
+        [endpoint, expiration_time, p256dh, auth, id_cliente || null, id_passeador || null],
+        (err, insertResult) => {
+          if (err) {
+            console.error('Erro ao inserir subscription:', err);
+            return res.status(500).json({ success: false, message: 'Erro ao inserir subscription' });
+          }
+          return res.status(201).json({ success: true, message: 'Subscription salva com sucesso!' });
+        }
+      );
+    }
   });
 });
 
 // Rota para criar e armazenar notificações
 app.post('/notificacoes', (req, res) => {
   const { tipo, mensagem, id_cliente, id_passeador } = req.body;
-
   const query = `
     INSERT INTO notificacoes (tipo, mensagem, data_hora, id_cliente, id_passeador)
     VALUES (?, ?, NOW(), ?, ?)
   `;
   const values = [tipo, mensagem, id_cliente || null, id_passeador || null];
-
   connection.query(query, values, (err, result) => {
     if (err) {
       console.error('Erro ao salvar notificação:', err);
       return res.status(500).json({ success: false, message: 'Erro ao salvar notificação' });
     }
-
     res.status(201).json({ success: true, message: 'Notificação criada com sucesso!', id: result.insertId });
   });
 });
 
-// Rota para enviar notificações push
+// Rota para enviar notificações push manualmente (se necessário)
 app.post('/send-notification', (req, res) => {
   const { id_notificacao } = req.body;
-
-  // Recupera a notificação pelo ID
   const queryNotificacao = 'SELECT * FROM notificacoes WHERE id_notificacao = ?';
   connection.query(queryNotificacao, [id_notificacao], (err, notificacaoResult) => {
     if (err || notificacaoResult.length === 0) {
       console.error('Erro ao buscar notificação:', err);
       return res.status(404).json({ success: false, message: 'Notificação não encontrada' });
     }
-
     const notificacao = notificacaoResult[0];
     const payload = JSON.stringify({ title: notificacao.tipo, body: notificacao.mensagem });
-
-    // Determina os usuários-alvo
     const querySubscriptions = `
       SELECT * FROM subscriptions 
       WHERE (id_cliente = ? OR id_passeador = ?) 
@@ -108,8 +133,6 @@ app.post('/send-notification', (req, res) => {
         console.error('Erro ao buscar subscriptions:', err);
         return res.status(500).json({ success: false, message: 'Erro ao buscar subscriptions' });
       }
-
-      // Envia notificações para cada assinatura
       subscriptions.forEach((sub) => {
         const pushSubscription = {
           endpoint: sub.endpoint,
@@ -118,13 +141,52 @@ app.post('/send-notification', (req, res) => {
             auth: sub.auth
           }
         };
-
         webPush.sendNotification(pushSubscription, payload).catch((error) => {
           console.error('Erro ao enviar notificação push:', error);
         });
       });
-
       res.status(200).json({ success: true, message: 'Notificações enviadas com sucesso!' });
+    });
+  });
+});
+
+// Cron job para enviar notificação 5 minutos antes do passeio
+cron.schedule('* * * * *', () => {
+  const query = 'SELECT id_cliente, horario_passeio FROM clientes WHERE tipo = 0';
+  connection.query(query, (err, clientes) => {
+    if (err) {
+      console.error('Erro ao buscar clientes para notificação:', err);
+      return;
+    }
+    const now = dayjs();
+    clientes.forEach((cliente) => {
+      const walkTime = dayjs(cliente.horario_passeio, 'HH:mm:ss');
+      const notificationTime = walkTime.subtract(5, 'minute');
+      if (now.format('HH:mm') === notificationTime.format('HH:mm')) {
+        const subQuery = 'SELECT * FROM subscriptions WHERE id_cliente = ?';
+        connection.query(subQuery, [cliente.id_cliente], (err, subscriptions) => {
+          if (err) {
+            console.error('Erro ao buscar subscriptions para notificação:', err);
+            return;
+          }
+          subscriptions.forEach((sub) => {
+            const pushSubscription = {
+              endpoint: sub.endpoint,
+              keys: {
+                p256dh: sub.p256dh,
+                auth: sub.auth
+              }
+            };
+            const payload = JSON.stringify({
+              title: 'Lembrete de Passeio',
+              body: 'Seu pet começará o passeio em 5 minutos!'
+            });
+            webPush.sendNotification(pushSubscription, payload).catch((error) => {
+              console.error('Erro ao enviar notificação push:', error);
+            });
+          });
+        });
+      }
     });
   });
 });

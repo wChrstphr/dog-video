@@ -101,9 +101,10 @@ if ('Notification' in window && 'serviceWorker' in navigator) {
         .register('/sw.js') // Registrar o service worker para notificações
         .then((registration) => {
           console.log('Service Worker registrado:', registration);
-
-          // Chamar a função para assinar o usuário no Push Manager
-          subscribeUser();
+          // Recupera o id_cliente salvo no localStorage (se existir)
+          const idCliente = localStorage.getItem('id_cliente');
+          // Chama a função para assinar o usuário no Push Manager, passando o id_cliente
+          subscribeUser(idCliente);
         })
         .catch((err) => {
           console.error('Erro ao registrar Service Worker:', err);
@@ -120,7 +121,7 @@ async function subscribeUser(idCliente = null, idPasseador = null) {
     const registration = await navigator.serviceWorker.ready;
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: 'BBH2oyhNjmKPnyR140S375tVHFM1wuSd7GW7ijm90Ja7NB2eX67YQRbDLVyW_QrLqiDpbIy9QecaBDC_K1AWCro' // Substitua pela chave pública gerada
+      applicationServerKey: 'BBH2oyhNjmKPnyR140S375tVHFM1wuSd7GW7ijm90Ja7NB2eX67YQRbDLVyW_QrLqiDpbIy9QecaBDC_K1AWCro' // Substitua pela sua chave pública gerada
     });
 
     // Envia a inscrição para o backend

@@ -1,0 +1,12 @@
+{
+  "name": "dog-video",
+  "version": "1.0.0",
+  "description": "Repositorio com propósito de documentação, acompanhamento e versionamento de código para o projeto Dogvideo (2024), realizado pela equipe de software da Empresa Júnior EletronJun.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
