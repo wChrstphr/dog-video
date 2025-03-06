@@ -6,8 +6,6 @@ import Web from './TelaInicial/Web';
 import Login from './Login/login';
 import DadosCliente from './DadosCliente/dados';
 import Admin from './TelaInicialAdmin/admin';
-import reportWebVitals from './reportWebVitals';
-import Modal from 'react-modal';
 import Clientes from './Clientes/clientes';
 import Passeadores from './Passeadores/passeadores';
 import CriarCliente from './CriarCliente/criarcliente';
@@ -18,31 +16,47 @@ import Cameras from './Cameras/cameras';
 import VisualizarPasseador from './VisualizarPasseador/visualizarpasseador';
 import EditarPasseador from './EditarPasseador/editarpasseador';
 import RedefinirSenha from './RedefinirSenha/redefinir';
+import reportWebVitals from './reportWebVitals';
+import Modal from 'react-modal';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-
-Modal.setAppElement('#root');  // Defina o elemento para os modais
+Modal.setAppElement('#root');
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState('');
 
-  const handleLogin = (role) => {
+  // Verifica se há dados de autenticação válidos no localStorage (dentro de 1 hora)
+  useEffect(() => {
+    const storedData = localStorage.getItem('authData');
+    if (storedData) {
+      const authData = JSON.parse(storedData);
+      const currentTime = Date.now();
+      if (currentTime - authData.timestamp < 3600000) { // 1 hora = 3600000 ms
+        setIsLoggedIn(true);
+        setUserRole(authData.userType);
+      } else {
+        localStorage.removeItem('authData');
+      }
+    }
+  }, []);
+
+  // Função chamada após login bem-sucedido
+  const handleLogin = (role, id_cliente) => {
     setIsLoggedIn(true);
     setUserRole(role);
+    const authData = { id_cliente, userType: role, timestamp: Date.now() };
+    localStorage.setItem('authData', JSON.stringify(authData));
   };
 
   const handleLogout = () => {
     setIsLoggedIn(false);
     setUserRole('');
+    localStorage.removeItem('authData');
   };
 
   useEffect(() => {
-    const constraints = {
-      video: true,
-      audio: false,
-    };
-
+    const constraints = { video: true, audio: false };
     navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
       const video1 = document.getElementById('camera1');
       const video2 = document.getElementById('camera2');
@@ -81,7 +95,7 @@ function App() {
           <Route path="/Web" element={<Web onLogout={handleLogout} />} />
           <Route path="/visualizarpasseador/:id" element={<VisualizarPasseador />} />
           <Route path="/editarpasseador/:id" element={<EditarPasseador />} />
-          <Route path="/redefinir/:id" element={<RedefinirSenha />} /> {/* Rota dinâmica para redefinir senha */}
+          <Route path="/redefinir/:id" element={<RedefinirSenha />} />
         </Routes>
       </Router>
     </React.StrictMode>
@@ -89,21 +103,40 @@ function App() {
 }
 
 root.render(<App />);
-
 reportWebVitals();
 
-// Solicitar permissão para notificações e registrar o service worker
+async function subscribeUser(idCliente = null, idPasseador = null) {
+  if ('serviceWorker' in navigator) {
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey:
+        'BBH2oyhNjmKPnyR140S375tVHFM1wuSd7GW7ijm90Ja7NB2eX67YQRbDLVyW_QrLqiDpbIy9QecaBDC_K1AWCro',
+    });
+
+    await fetch('http://localhost:3001/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        subscription,
+        id_cliente: idCliente,
+        id_passeador: idPasseador,
+      }),
+    });
+  }
+}
+
+// Solicitar permissão para notificações e registrar o Service Worker
 if ('Notification' in window && 'serviceWorker' in navigator) {
   Notification.requestPermission().then((permission) => {
     if (permission === 'granted') {
       console.log('Permissão para notificações concedida.');
       navigator.serviceWorker
-        .register('/sw.js') // Registrar o service worker para notificações
+        .register('/sw.js')
         .then((registration) => {
           console.log('Service Worker registrado:', registration);
-          // Recupera o id_cliente salvo no localStorage (se existir)
-          const idCliente = localStorage.getItem('id_cliente');
-          // Chama a função para assinar o usuário no Push Manager, passando o id_cliente
+          const authData = localStorage.getItem('authData');
+          const idCliente = authData ? JSON.parse(authData).id_cliente : null;
           subscribeUser(idCliente);
         })
         .catch((err) => {
@@ -113,26 +146,4 @@ if ('Notification' in window && 'serviceWorker' in navigator) {
       console.log('Permissão para notificações negada.');
     }
   });
-}
-
-// Função para assinar o usuário no Push Manager
-async function subscribeUser(idCliente = null, idPasseador = null) {
-  if ('serviceWorker' in navigator) {
-    const registration = await navigator.serviceWorker.ready;
-    const subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: 'BBH2oyhNjmKPnyR140S375tVHFM1wuSd7GW7ijm90Ja7NB2eX67YQRbDLVyW_QrLqiDpbIy9QecaBDC_K1AWCro' // Substitua pela sua chave pública gerada
-    });
-
-    // Envia a inscrição para o backend
-    await fetch('http://localhost:3001/subscribe', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        subscription,
-        id_cliente: idCliente,
-        id_passeador: idPasseador
-      })
-    });
-  }
 }
