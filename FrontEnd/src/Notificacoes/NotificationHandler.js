@@ -22,7 +22,7 @@ function NotificationHandler() {
     }
   }, []);
 
-  return null; // Não renderiza nada visualmente
+  return null;
 }
 
 export default NotificationHandler;

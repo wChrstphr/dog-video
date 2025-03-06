@@ -12,20 +12,15 @@ function Cameras({ onLogout }) {
   const [isMapVisible, setIsMapVisible] = useState(false);
   const [isChatVisible, setIsChatVisible] = useState(false);
   const [isCameraVisible, setIsCameraVisible] = useState(false);
-
-  // Defina os horários desejados para abrir e fechar as câmeras (24h)
-  // TÚLIO FAÇA COM QUE PUXE DO BANCO DE DADOS ESSES HORÁRIOS E IMPLEMENTE AQUI
-  const openHour = 0;
-  const openMinute = 6;
-  const closeHour = 20;
-  const closeMinute = 7;
+  
+  // Estados para armazenar horário de abertura e fechamento
+  const [openTime, setOpenTime] = useState({ hour: 0, minute: 0 });
+  const [closeTime, setCloseTime] = useState({ hour: 0, minute: 0 });
 
   const showModal = () => setIsModalVisible(true);
   const hideModal = () => setIsModalVisible(false);
-
   const showMap = () => setIsMapVisible(true);
   const hideMap = () => setIsMapVisible(false);
-
   const showChat = () => setIsChatVisible(true);
   const hideChat = () => setIsChatVisible(false);
 
@@ -36,48 +31,84 @@ function Cameras({ onLogout }) {
   };
 
   const handleDadosClienteClick = () => {
-    const idCliente = localStorage.getItem('id_cliente');
+    const idCliente = localStorage.getItem('id_cliente'); // Recupera o ID do cliente logado
     if (idCliente) {
-      navigate(`/dados-cliente/${idCliente}`);
+      navigate(`/dados-cliente/${idCliente}`); // Redireciona para a página do cliente logado
     } else {
       console.error('ID do cliente não encontrado no localStorage.');
     }
-  };  
+  };
 
+  // Buscar o horário de passeio do cliente no backend usando o id_cliente armazenado no localStorage
+  useEffect(() => {
+    const id_cliente = localStorage.getItem('id_cliente');
+    if (!id_cliente) return;
+
+    const fetchHorario = async () => {
+      try {
+        const response = await fetch(`http://localhost:3001/clientes/${id_cliente}`);
+        const data = await response.json();
+        if (data.success && data.cliente && data.cliente.horario_passeio) {
+          // Considerando que o horário está no formato "HH:MM:SS" e queremos "HH:MM"
+          const horarioStr = data.cliente.horario_passeio.substring(0, 5); // "HH:MM"
+          const [openHourStr, openMinuteStr] = horarioStr.split(':');
+          const openHourNum = parseInt(openHourStr, 10);
+          const openMinuteNum = parseInt(openMinuteStr, 10);
+          setOpenTime({ hour: openHourNum, minute: openMinuteNum });
+          
+          // Calcula o horário de fechamento adicionando 1 hora e 30 minutos
+          let closeHourNum = openHourNum;
+          let closeMinuteNum = openMinuteNum + 30;
+          if (closeMinuteNum >= 60) {
+            closeMinuteNum -= 60;
+            closeHourNum += 1;
+          }
+          closeHourNum += 1; // Adiciona a hora extra
+          // Caso ultrapasse 24 horas, ajusta para o formato 24h
+          if (closeHourNum >= 24) {
+            closeHourNum = closeHourNum % 24;
+          }
+          setCloseTime({ hour: closeHourNum, minute: closeMinuteNum });
+        } else {
+          console.error('Horário de passeio não encontrado ou formato inválido.');
+        }
+      } catch (error) {
+        console.error('Erro ao buscar horário do cliente:', error);
+      }
+    };
+
+    fetchHorario();
+  }, []);
+
+  // Verifica a visibilidade das câmeras com base no horário atual
   useEffect(() => {
     const checkCameraVisibility = () => {
       const now = new Date();
       const currentHour = now.getHours();
       const currentMinute = now.getMinutes();
 
-      const isWithinTimeRange =
-        (currentHour > openHour || (currentHour === openHour && currentMinute >= openMinute)) &&
-        (currentHour < closeHour || (currentHour === closeHour && currentMinute < closeMinute));
+      const isAfterOpen =
+        currentHour > openTime.hour ||
+        (currentHour === openTime.hour && currentMinute >= openTime.minute);
+      const isBeforeClose =
+        currentHour < closeTime.hour ||
+        (currentHour === closeTime.hour && currentMinute < closeTime.minute);
 
-      setIsCameraVisible(isWithinTimeRange);
+      setIsCameraVisible(isAfterOpen && isBeforeClose);
     };
 
     const intervalId = setInterval(checkCameraVisibility, 1000);
     return () => clearInterval(intervalId);
-  }, []);
+  }, [openTime, closeTime]);
 
   return (
     <div className="Web">
       <header className="Web-header">
         <img src="/logotipo.svg" className="Web-logotipo" alt="Dogvideo Logomarca" />
-
         <div className="tabbar-title" onClick={handleDadosClienteClick} style={{ cursor: 'pointer' }}>
           <img src="/user.svg" alt="Ícone do Usuário" className="user-icon" />
           Dados do Cliente
         </div>
-
-        <img
-        src="/Back.svg"
-        alt="Ícone de voltar"
-        className="back-icon"
-        onClick={() => navigate("/")}
-      />
-
         <Modal
           isOpen={isModalVisible}
           onRequestClose={hideModal}
@@ -97,7 +128,6 @@ function Cameras({ onLogout }) {
             </div>
           </div>
         </Modal>
-
         <img
           src="/logout.svg"
           alt="Ícone de logout"
@@ -117,11 +147,9 @@ function Cameras({ onLogout }) {
               <video id="camera2" autoPlay playsInline></video>
               <p style={{ fontWeight: 'bold', color: 'white' }}>CAMERA 02</p>
             </div>
-
             <button className="location-button" onClick={showMap}>
               <FaLocationArrow size={20} />
             </button>
-
             <button className="chat-button" onClick={showChat}>
               <FaRegCommentAlt size={20} />
             </button>
