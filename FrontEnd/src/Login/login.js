@@ -12,6 +12,32 @@ function Login({ onLogin }) {
   const passwordInputRef = useRef(null);
   const navigate = useNavigate();
 
+  // Função para assinar o usuário no Push Manager
+  async function subscribeUser(idCliente) {
+    if ('serviceWorker' in navigator) {
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: 'BBH2oyhNjmKPnyR140S375tVHFM1wuSd7GW7ijm90Ja7NB2eX67YQRbDLVyW_QrLqiDpbIy9QecaBDC_K1AWCro'
+        });
+
+        // Envia a inscrição para o backend
+        await fetch('http://localhost:3001/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            subscription,
+            id_cliente: idCliente,
+            id_passeador: null
+          })
+        });
+      } catch (err) {
+        console.error('Erro ao realizar subscribe:', err);
+      }
+    }
+  }
+
   const handleLogin = async () => {
     if (!username || !password) {
       setError('Todos os campos são obrigatórios.');
@@ -26,20 +52,28 @@ function Login({ onLogin }) {
     try {
       const response = await fetch('http://localhost:3001/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: username, senha: password }), // Mantém o envio normal
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: username, senha: password }),
       });
 
       const data = await response.json();
 
       if (data.success) {
         setError('');
-        onLogin(data.userType);
+        // Chama a função onLogin e passa userType e id_cliente
+        onLogin(data.userType, data.id_cliente);
 
-        localStorage.setItem('id_cliente', data.id_cliente);
+        // Salva o id_cliente no localStorage (para não admin)
+        if (data.userType !== 'admin') {
+          localStorage.setItem('id_cliente', data.id_cliente);
+        }
 
+        // Se o usuário não for admin, realiza a inscrição para notificações imediatamente
+        if (data.userType !== 'admin') {
+          await subscribeUser(data.id_cliente);
+        }
+
+        // Se a senha precisar ser alterada, redireciona para a tela de redefinição
         if (data.alterar_senha === 1) {
           navigate(`/redefinir/${data.id_cliente}`);
         } else {
@@ -48,8 +82,8 @@ function Login({ onLogin }) {
       } else {
         setError('Email ou senha incorretos.');
       }
-    } catch (error) {
-      console.error('Erro ao fazer login:', error);
+    } catch (err) {
+      console.error('Erro ao fazer login:', err);
       setError('Erro ao conectar ao servidor. Tente novamente mais tarde.');
     }
   };
