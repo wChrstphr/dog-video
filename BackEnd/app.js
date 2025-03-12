@@ -44,47 +44,31 @@ webPush.setVapidDetails(
 
 // Rota para salvar `subscriptions` no banco de dados
 app.post('/subscribe', (req, res) => {
-  const { subscription, id_cliente, id_passeador } = req.body;
+  const { subscription, id_cliente } = req.body; // id_passeador não será usado aqui
   const endpoint = subscription.endpoint;
-  const expiration_time = subscription.expirationTime || null;
   const p256dh = subscription.keys.p256dh;
   const auth = subscription.keys.auth;
 
-  // Verifica se já existe uma subscription com o mesmo endpoint
-  const checkQuery = 'SELECT * FROM subscriptions WHERE endpoint = ?';
-  connection.query(checkQuery, [endpoint], (err, results) => {
+  // Verifica se já existe uma subscription para esse endpoint e para esse cliente
+  const checkQuery = 'SELECT * FROM subscriptions WHERE endpoint = ? AND id_cliente = ?';
+  connection.query(checkQuery, [endpoint, id_cliente], (err, results) => {
     if (err) {
       console.error('Erro ao buscar subscription:', err);
       return res.status(500).json({ success: false, message: 'Erro ao buscar subscription' });
     }
 
     if (results.length > 0) {
-      // Se a inscrição já existe, atualiza os dados
-      const updateQuery = `
-        UPDATE subscriptions 
-        SET expiration_time = ?, p256dh = ?, auth = ?, id_cliente = ?, id_passeador = ?
-        WHERE endpoint = ?
-      `;
-      connection.query(
-        updateQuery,
-        [expiration_time, p256dh, auth, id_cliente || null, id_passeador || null, endpoint],
-        (err, updateResult) => {
-          if (err) {
-            console.error('Erro ao atualizar subscription:', err);
-            return res.status(500).json({ success: false, message: 'Erro ao atualizar subscription' });
-          }
-          return res.status(200).json({ success: true, message: 'Subscription atualizada com sucesso!' });
-        }
-      );
+      // Já existe uma inscrição para esse cliente e esse dispositivo: não altera
+      return res.status(200).json({ success: true, message: 'Subscription já existe para esse cliente.' });
     } else {
       // Se não existe, insere uma nova inscrição
       const insertQuery = `
-        INSERT INTO subscriptions (endpoint, expiration_time, p256dh, auth, id_cliente, id_passeador)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO subscriptions (endpoint, p256dh, auth, id_cliente)
+        VALUES (?, ?, ?, ?)
       `;
       connection.query(
         insertQuery,
-        [endpoint, expiration_time, p256dh, auth, id_cliente || null, id_passeador || null],
+        [endpoint, p256dh, auth, id_cliente || null],
         (err, insertResult) => {
           if (err) {
             console.error('Erro ao inserir subscription:', err);
