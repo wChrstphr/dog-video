@@ -1,8 +1,8 @@
 ## Descrição
-<!--- insira uma descrição geral do que foi alterado neste PR -->
+<!--- Insira uma descrição geral do que foi alterado neste PR -->
 
 ## Principais Implementações
-<!--- se for de código, descreva alterações relevantes -->
+<!--- Se for de código, descreva alterações relevantes -->
 
 ## Tipos de Mudanças
  - [ ] Bug fix (alteração que corrige uma issue e não altera funcionalidades já existentes);
@@ -11,4 +11,7 @@
  - [ ] Documentação
  - [ ] Experiência do usuário (UX)
  - [ ] Melhoria de desempenho
+
+ ## Que issue esse PR corrige?
+ #numero_da_issue
 

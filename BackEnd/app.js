@@ -10,6 +10,8 @@ const saltRounds = 10;
 const cron = require('node-cron');
 const dayjs = require('dayjs');
 const customParseFormat = require('dayjs/plugin/customParseFormat');
+const authenticateToken = require('../BackEnd/middleware/auth');
+const jwt = require('jsonwebtoken');
 dayjs.extend(customParseFormat);
 
 // Configuração do middleware
@@ -236,6 +238,9 @@ app.post('/login', (req, res) => {
     loginAttempts[email] = { attempts: 0, lastAttempt: Date.now() };
 
     const userType = cliente.tipo === 1 ? 'admin' : 'user';
+
+    // Gera um token JWT para ser possível fazer a verificação de login nas rotas /admin, /clientes, /passeadores ....
+    const token = jwt.sign({ id: cliente.id_cliente, email: cliente.email, userType: userType }, 'your_secret_key', { expiresIn: '1h' });
 
     // Retorna resposta de sucesso e dados do usuário
     res.json({
@@ -669,7 +674,12 @@ app.delete('/passeadores/:id', (req, res) => {
   });
 });
 
-// Iniciar o servidor
-app.listen(port, () => {
-  console.log(`Servidor rodando em http://localhost:${port}`);
-});
+// Inicia o servidor apenas se o arquivo for executado diretamente
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`Servidor rodando em http://localhost:${port}`);
+  });
+}
+
+// Exporta o app e a connection
+module.exports = { app, connection };

@@ -18,6 +18,7 @@ import EditarPasseador from './EditarPasseador/editarpasseador';
 import RedefinirSenha from './RedefinirSenha/redefinir';
 import reportWebVitals from './reportWebVitals';
 import Modal from 'react-modal';
+import ProtectedRoute from './ProtectedRoute';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 Modal.setAppElement('#root');
@@ -69,33 +70,28 @@ function App() {
     <React.StrictMode>
       <Router>
         <Routes>
-          <Route
-            path="/"
-            element={
-              isLoggedIn ? (
-                userRole === 'admin' ? (
-                  <Admin onLogout={handleLogout} />
-                ) : (
-                  <Web onLogout={handleLogout} />
-                )
-              ) : (
-                <Login onLogin={handleLogin} />
-              )
-            }
+          {/* Página inicial - Decide se exibe Web ou Admin dependendo do usuário */}
+          <Route 
+            path="/" 
+            element={isLoggedIn ? (userRole === 'admin' ? <Admin onLogout={handleLogout} /> : <Web onLogout={handleLogout} />) : <Login onLogin={handleLogin} />}
           />
-          <Route path="/dados-cliente/:id" element={<DadosCliente />} />
-          <Route path="/admin" element={<Admin onLogout={handleLogout} />} />
-          <Route path="/clientes" element={<Clientes />} />
-          <Route path="/passeadores" element={<Passeadores />} />
-          <Route path="/criarcliente" element={<CriarCliente />} />
-          <Route path="/visualizarcliente/:id" element={<VisualizarCliente />} />
-          <Route path="/editarcliente/:id" element={<EditarCliente />} />
-          <Route path="/criarpasseador" element={<CriarPasseador />} />
-          <Route path="/cameras" element={<Cameras onLogout={handleLogout} />} />
-          <Route path="/Web" element={<Web onLogout={handleLogout} />} />
-          <Route path="/visualizarpasseador/:id" element={<VisualizarPasseador />} />
-          <Route path="/editarpasseador/:id" element={<EditarPasseador />} />
-          <Route path="/redefinir/:id" element={<RedefinirSenha />} />
+
+          {/* Áreas acessíveis APENAS para clientes */}
+          <Route path="/Web" element={<ProtectedRoute element={<Web onLogout={handleLogout} />} allowedRoles={['user']} />} />
+          <Route path="/dados-cliente/:id" element={<ProtectedRoute element={<DadosCliente />} allowedRoles={['user']} />} />
+          <Route path="/cameras" element={<ProtectedRoute element={<Cameras onLogout={handleLogout} />} allowedRoles={['user']} />} />
+          <Route path="/redefinir/:id" element={<ProtectedRoute element={<RedefinirSenha />} allowedRoles={['user']} />} />
+
+          {/* Áreas acessíveis APENAS para admins */}
+          <Route path="/admin" element={<ProtectedRoute element={<Admin onLogout={handleLogout} />} allowedRoles={['admin']} />} />
+          <Route path="/clientes" element={<ProtectedRoute element={<Clientes />} allowedRoles={['admin']} />} />
+          <Route path="/passeadores" element={<ProtectedRoute element={<Passeadores />} allowedRoles={['admin']} />} />
+          <Route path="/criarcliente" element={<ProtectedRoute element={<CriarCliente />} allowedRoles={['admin']} />} />
+          <Route path="/visualizarcliente/:id" element={<ProtectedRoute element={<VisualizarCliente />} allowedRoles={['admin']} />} />
+          <Route path="/editarcliente/:id" element={<ProtectedRoute element={<EditarCliente />} allowedRoles={['admin']} />} />
+          <Route path="/criarpasseador" element={<ProtectedRoute element={<CriarPasseador />} allowedRoles={['admin']} />} />
+          <Route path="/visualizarpasseador/:id" element={<ProtectedRoute element={<VisualizarPasseador />} allowedRoles={['admin']} />} />
+          <Route path="/editarpasseador/:id" element={<ProtectedRoute element={<EditarPasseador />} allowedRoles={['admin']} />} />
         </Routes>
       </Router>
     </React.StrictMode>
