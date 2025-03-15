@@ -73,6 +73,14 @@ function Redefinir() {
 
   return (
     <div className="Redefinir">
+      <header className="redefinir-header">
+        <img
+          src="/Back.svg"
+          alt="Ícone de voltar"
+          className="back-icon"
+          onClick={() => navigate(-1)}
+        />
+      </header>
       <div className="warning-text">
         <FaExclamationCircle className="icon" />
         <p style={{ fontWeight: 'bold' }}>

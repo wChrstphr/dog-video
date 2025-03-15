@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
 
 body {
-    background-color: #2E55FF;
+    background-color: #010518;
     margin: 0;
     padding: 0;
     font-family: 'Manrope', sans-serif;
@@ -143,3 +143,20 @@ body {
     text-align: left; 
   }
   
+  .r-password-button {
+    background-color: #000000;
+    color: rgb(255, 255, 255);
+    border: 2px solid #ffffff;
+    padding: 5px 20px;
+    border-radius: 35px;
+    font-size: 16px;
+    font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-bottom: 20px;
+  }
+  
+  .r-password-button:hover {
+    background-color: #747070;
+  }
