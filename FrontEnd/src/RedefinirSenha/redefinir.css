@@ -1,11 +1,12 @@
 .Redefinir {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 85vh;
-    padding: 0 20px;
-  }
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 85vh;
+  padding: 0 20px 40px;
+}
+
   
   .warning-text {
     display: flex;
@@ -95,6 +96,15 @@
     color: #ffffff;
   }
   
+  .redefinir-header {
+    background-color: black;
+    height: 90px;
+    display: flex;
+    justify-content: space-between;
+    align-items: space-between;
+    padding: 0 10px;
+  }
+
   @media (max-width: 768px) {
     input {
       width: 100%;

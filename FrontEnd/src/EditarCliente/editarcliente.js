@@ -98,6 +98,10 @@ function EditarCliente() {
     return horario;
   };
 
+  const handleResetPassword = () => {
+    navigate(`/`);
+  };
+
   useEffect(() => {
     const fetchCliente = async () => {
       try {
@@ -235,6 +239,9 @@ try {
     <div className="Web-Editar-Cliente">
       <header className="Web-header">
         <img src="/logotipo.svg" className="Web-logotipo" alt="Dogvideo Logomarca" />
+        <button className="r-password-button" onClick={handleResetPassword}>
+          Resetar Senha
+        </button>
         <div className="footer-bar"></div>
       </header>
 
