@@ -17,7 +17,7 @@ function Map({ onClose }) {
   const [error, setError] = useState(null);
 
   const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: 'AIzaSyAEWXP9jg9z6GX0faDVu9hnWRpwH0oBbe8',
+    googleMapsApiKey: '',
   });
 
   useEffect(() => {
