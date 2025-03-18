@@ -39,7 +39,7 @@
 
 /* Estilo do título */
 .login-container h2 {
-  font-family: 'Manrope', sans-serif;
+  font-family: 'Glacial Indifference', sans-serif;
   font-size: 36px;
   color: #ffffff;
 }
@@ -55,7 +55,7 @@
   background-color: #000000;
   outline: none;
   text-align: left;
-  font-family: 'Manrope', sans-serif;
+  font-family: 'Glacial Indifference', sans-serif;
   color: #ffffff;
   border: 3px solid #ffffff;
 }
@@ -88,7 +88,7 @@
   width: 450px;
   margin-top: 5px;
   text-align: left;
-  font-family: 'Manrope', sans-serif;
+  font-family: 'Glacial Indifference', sans-serif;
   font-weight: normal;
   font-size: 25px;
   color: #fff;
@@ -96,7 +96,7 @@
 
 .error {
   margin-top: 10px;
-  font-family: 'Manrope', sans-serif;
+  font-family: 'Glacial Indifference', sans-serif;
   font-size: 18px;
   color: red;
   font-weight: bold;

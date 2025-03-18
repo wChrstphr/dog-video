@@ -11,46 +11,29 @@ function Passeadores() {
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [busca, setBusca] = useState('');
   const [sortDirection, setSortDirection] = useState('asc');
-  const [isFilterMenuVisible, setIsFilterMenuVisible] = useState(false);
   const searchInputRef = useRef(null);
-  const [clientes, setClientes] = useState([]);
-  const [filtroCliente, setFiltroCliente] = useState('');
 
-
+  // Fetch dos dados de passeadores
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [passeadoresResponse, clientesResponse] = await Promise.all([
-          fetch('http://localhost:3001/passeadores'),
-          fetch('http://localhost:3001/clientes')
-        ]);
-  
-        const passeadoresData = await passeadoresResponse.json();
-        const clientesData = await clientesResponse.json();
-  
+        const response = await fetch('http://localhost:3001/passeadores');
+        const passeadoresData = await response.json();
+
         if (passeadoresData.success && Array.isArray(passeadoresData.passeadores)) {
           setPasseadores(passeadoresData.passeadores);
         } else {
           console.error('Erro ao buscar passeadores: Resposta inesperada', passeadoresData);
           setPasseadores([]);
         }
-  
-        if (clientesData.success && Array.isArray(clientesData.clientes)) {
-          setClientes(clientesData.clientes);
-        } else {
-          console.error('Erro ao buscar clientes: Resposta inesperada', clientesData);
-          setClientes([]);
-        }
       } catch (error) {
         console.error('Erro ao buscar dados:', error);
         setPasseadores([]);
-        setClientes([]);
       }
     };
-  
+
     fetchData();
   }, []);
-  
 
   const showModal = (passeador) => {
     setSelectedPasseador(passeador);
@@ -64,12 +47,12 @@ function Passeadores() {
 
   const handleDelete = async () => {
     if (!selectedPasseador) return;
-  
+
     try {
       const response = await fetch(`http://localhost:3001/passeadores/${selectedPasseador.id}`, {
         method: 'DELETE',
       });
-  
+
       if (response.ok) {
         setPasseadores(passeadores.filter(p => p.id !== selectedPasseador.id));
         hideModal();
@@ -80,7 +63,6 @@ function Passeadores() {
       console.error('Erro ao excluir passeador:', error);
     }
   };
-  
 
   const toggleSearch = () => {
     setIsSearchVisible(!isSearchVisible);
@@ -91,13 +73,8 @@ function Passeadores() {
     }, 0);
   };
 
-  const toggleFilterMenu = () => {
-    setIsFilterMenuVisible(!isFilterMenuVisible);
-  };
-
   const handleSort = (direction) => {
     setSortDirection(direction);
-    setIsFilterMenuVisible(false);
   };
 
   const handlePasseadorClick = (id) => {
@@ -110,15 +87,9 @@ function Passeadores() {
 
   const passeadoresFiltrados = useMemo(() => {
     const normalizedBusca = normalizeText(busca);
+
     return passeadores
-      .filter((passeador) => {
-        const passaFiltroNome = normalizeText(passeador.nome).includes(normalizedBusca);
-        const passaFiltroCliente =
-          filtroCliente === '' ||
-          clientes.some((cliente) => cliente.id_passeador === passeador.id && cliente.id_cliente.toString() === filtroCliente);
-  
-        return passaFiltroNome && passaFiltroCliente;
-      })
+      .filter((passeador) => normalizeText(passeador.nome).includes(normalizedBusca))
       .sort((a, b) => {
         if (sortDirection === 'asc') {
           return a.nome.localeCompare(b.nome);
@@ -126,7 +97,7 @@ function Passeadores() {
           return b.nome.localeCompare(a.nome);
         }
       });
-  }, [busca, sortDirection, passeadores, filtroCliente, clientes]);  
+  }, [busca, sortDirection, passeadores]);
 
   return (
     <div className="Web-Passeador">
@@ -142,8 +113,8 @@ function Passeadores() {
         <div className="icon-container" onClick={() => navigate('/criarpasseador')}>
           <img src="/add.svg" alt="Ícone de adicionar" className="icon" />
         </div>
-        <div className="icon-container" onClick={toggleFilterMenu}>
-          <img src="/filter.svg" alt="Ícone de filtro" className="icon" />
+        <div className="icon-container">
+          <img src="/filter.svg" alt="Ícone de filtro" className="icon" onClick={() => handleSort(sortDirection === 'asc' ? 'desc' : 'asc')} />
         </div>
       </div>
 
@@ -157,31 +128,6 @@ function Passeadores() {
             placeholder="Pesquisar passeador"
             className="search-input"
           />
-        </div>
-      )}
-
-      {isFilterMenuVisible && (
-        <div className="filter-menu">
-          <button onClick={() => handleSort('asc')} className="filter-button">
-            Ordenar A-Z
-          </button>
-          <div className="filter-divider"></div>
-          <button onClick={() => handleSort('desc')} className="filter-button">
-            Ordenar Z-A
-          </button>
-          <div className="filter-divider"></div>
-          <select
-            value={filtroCliente}
-            onChange={(e) => setFiltroCliente(e.target.value)}
-            className="filter-select"
-          >
-            <option value="">Clientes</option>
-            {clientes.map((cliente) => (
-              <option key={cliente.id_cliente} value={cliente.id_cliente}>
-                {cliente.nome}
-              </option>
-            ))}
-          </select>
         </div>
       )}
 

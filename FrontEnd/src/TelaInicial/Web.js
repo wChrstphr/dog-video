@@ -86,7 +86,7 @@ function Web({ onLogout }) {
       <div className="footer-bar-inicial"></div>
 
       <div className="passeador-titulo-inicial">
-        <img src="/Contents.svg" alt="Passeadores título" />
+        <img src="/Content.svg" alt="Passeadores título" />
         <p className="passeador-texto-inicial">PASSEADORES</p>
       </div>
 
