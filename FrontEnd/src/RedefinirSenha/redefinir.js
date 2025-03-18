@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaEye, FaEyeSlash, FaExclamationCircle } from 'react-icons/fa';
 import './redefinir.css';
@@ -8,9 +8,41 @@ function Redefinir() {
   const navigate = useNavigate();
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [alterarSenha, setAlterarSenha] = useState(null);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState({ newPassword: false, confirmPassword: false });
   const passwordInputRef = useRef(null);
+
+  useEffect(() => {
+    const id_cliente = localStorage.getItem('id_cliente');
+    if (!id_cliente) {
+      // Redirecionar ou tratar caso não haja ID
+      navigate('/login');
+      return;
+    }
+
+    const fetchPasswordType = async () => {
+      try {
+        const response = await fetch(`http://localhost:3001/clientes/${id_cliente}`);
+        if (!response.ok) throw new Error('Erro na resposta da API');
+        
+        const data = await response.json();
+        
+        // Verificação mais robusta dos dados
+        if (data?.cliente?.alterar_senha !== undefined) {
+          setAlterarSenha(data.cliente.alterar_senha);
+        } else {
+          console.error('Dados incompletos da API:', data);
+          setError('Erro ao carregar configurações de senha');
+        }
+      } catch (error) {
+        console.error('Erro ao buscar cliente:', error);
+        setError('Falha na conexão com o servidor');
+      }
+    };
+    
+    fetchPasswordType();
+  }, [navigate]);
 
   const handlePasswordChange = async () => {
     if (!newPassword || !confirmPassword) {
@@ -73,6 +105,7 @@ function Redefinir() {
 
   return (
     <div className="Redefinir">
+      {alterarSenha === 0 && (
       <header className="redefinir-header">
         <img
           src="/Back.svg"
@@ -81,6 +114,7 @@ function Redefinir() {
           onClick={() => navigate(-1)}
         />
       </header>
+      )}
       <div className="warning-text">
         <FaExclamationCircle className="icon" />
         <p style={{ fontWeight: 'bold' }}>
