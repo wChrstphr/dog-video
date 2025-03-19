@@ -4,7 +4,7 @@ body {
     background-color: #000000;
     margin: 0;
     padding: 0;
-    font-family: 'Manrope', sans-serif;
+    font-family: 'Glacial Indifference', sans-serif;
 }
 
 .Web-Clientes {
@@ -26,8 +26,8 @@ body {
 }
 
 .Web-logotipo {
-    height: 200px;
-    margin-left: 20px;
+    height: 160px;
+    margin-left: 0;
   }
 
 .back-button {
@@ -142,7 +142,7 @@ body {
   }
   
   .modal-container {
-    background: #0024bd;
+    background: #000000;
     border-radius: 10px;
     padding: 20px;
     width: 300px;
@@ -190,7 +190,7 @@ body {
     padding: 10px;
     font-size: 18px;
     border-radius: 5px;
-    border: 1px solid #d3d3d3;
+    border: 1px solid #000000;
   }
   
   .filter-menu {

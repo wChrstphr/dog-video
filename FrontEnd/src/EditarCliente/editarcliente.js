@@ -330,7 +330,7 @@ try {
               onChange={(e) => setCliente({ ...cliente, pacote: e.target.value })}
             >
               <option value="">Selecione o Pacote</option>
-              <option value="Semestral">Semestral</option>
+              <option value="Trimestral">Trimestral</option>
               <option value="Mensal">Mensal</option>
             </select>
           </div>

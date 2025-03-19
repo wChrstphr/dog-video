@@ -173,7 +173,7 @@ function Clientes() {
             className="filter-select"
           >
             <option value="">Pacotes</option>
-            <option value="Semestral">Semestral</option>
+            <option value="Trimestral">Trimestral</option>
             <option value="Mensal">Mensal</option>
           </select>
         </div>
