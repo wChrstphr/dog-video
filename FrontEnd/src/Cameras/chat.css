@@ -8,7 +8,7 @@
 }
 
 .chat-header {
-  background-color: #B5B5B5;
+  background-color: #ffffff;
   border-radius: 30px;
   height: 30px;
   color: black;
@@ -65,7 +65,7 @@
   background-color: rgba(0, 0, 0, 0.5);
   position: fixed;
   top: 0;
-  left: 0;
+  left: 600px;
   right: 0;
   bottom: 0;
   display: flex;
@@ -77,12 +77,12 @@
   padding: 10px;
   width: 80px;
   height: 50px;
-  margin-top: 40px;
+  margin-top: 15px;
   border: none;
   border-radius: 15px;
   background-color: #ffffff;
   text-align: center;
-  font-family: 'Manrope', sans-serif;
+  font-family: 'Glacial Indifference', sans-serif;
   font-weight: initial;
   font-size: 15px;
   color: #000000;
@@ -105,7 +105,7 @@
   background-color: #000000;
   outline: none;
   text-align: left;
-  font-family: 'Manrope', sans-serif;
+  font-family: 'Glacial Indifference', sans-serif;
   font-weight: normal;
   font-size: 20px;
   color: white;
