@@ -462,6 +462,42 @@ app.put('/clientes/:id', (req, res) => {
   );
 });
 
+// Endpoint para redefinir a senha do cliente
+app.put('/clientes/:id/reset-senha', async (req, res) => {
+  const clienteId = req.params.id;
+  console.log(`Resetando senha para o cliente ID: ${clienteId}`); // <-- Adiciona um log para depuração
+
+  if (!clienteId) {
+    return res.status(400).json({ success: false, message: 'ID do cliente não fornecido' });
+  }
+
+  try {
+    const novaSenha = 'dog123';
+    const senhaHash = await bcrypt.hash(novaSenha, 10); // Gera um hash seguro
+
+    const updatePasswordQuery = `
+      UPDATE clientes 
+      SET senha = ?, alterar_senha = 1 
+      WHERE id_cliente = ?`;
+
+    connection.query(updatePasswordQuery, [senhaHash, clienteId], (err, result) => {
+      if (err) {
+        console.error('Erro ao redefinir senha:', err);
+        return res.status(500).json({ success: false, message: 'Erro ao redefinir senha' });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ success: false, message: 'Cliente não encontrado' });
+      }
+
+      res.json({ success: true, message: 'Senha redefinida com sucesso!' });
+    });
+  } catch (error) {
+    console.error('Erro ao processar senha:', error);
+    res.status(500).json({ success: false, message: 'Erro interno ao processar senha' });
+  }
+});
+
 // Endpoint para criar um cliente
 app.post('/criarcliente', async (req, res) => {
   const { nome, email, cpf, telefone, endereco, pacote, horario, anotacao, caes, id_passeador } = req.body;

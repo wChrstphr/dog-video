@@ -98,9 +98,30 @@ function EditarCliente() {
     return horario;
   };
 
-  const handleResetPassword = () => {
-    navigate(`/`);
-  };
+  const handleResetPassword = async (e) => {
+    e.preventDefault(); 
+  
+    try {
+      const response = await fetch(`http://localhost:3001/clientes/${id}/reset-senha`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      const data = await response.json();
+  
+      if (data.success) {
+        alert('Senha redefinida com sucesso!'); // Exibe um alerta
+      } else {
+        console.error('Erro ao resetar senha:', data.message);
+        alert('Erro ao resetar senha.');
+      }
+    } catch (error) {
+      console.error('Erro ao processar reset de senha:', error);
+      alert('Erro ao processar reset de senha.');
+    }
+  };  
 
   useEffect(() => {
     const fetchCliente = async () => {
@@ -239,8 +260,8 @@ try {
     <div className="Web-Editar-Cliente">
       <header className="Web-header">
         <img src="/logotipo.svg" className="Web-logotipo" alt="Dogvideo Logomarca" />
-        <button className="r-password-button" onClick={handleResetPassword}>
-          Resetar Senha
+        <button type="button" className="r-password-button" onClick={handleResetPassword}>
+        Resetar Senha
         </button>
         <div className="footer-bar"></div>
       </header>
@@ -330,8 +351,8 @@ try {
               onChange={(e) => setCliente({ ...cliente, pacote: e.target.value })}
             >
               <option value="">Selecione o Pacote</option>
-              <option value="Trimestral">Trimestral</option>
               <option value="Mensal">Mensal</option>
+              <option value="Trimestral">Trimestral</option>
             </select>
           </div>
           <div className="input-container">
