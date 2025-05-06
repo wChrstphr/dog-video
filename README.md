@@ -11,7 +11,7 @@ Repositorio com propósito de documentação, acompanhamento e versionamento de 
 
 |Gerente|Assessor(a) Front-End|Assessor Back-End|
 |:----:|:-----:|:-----:|
-|[Christopher](https://github.com/wChrstphr/)|--|[Tulio](https://github.com/Tullianno)|
+|[Christopher](https://github.com/wChrstphr/)|[Gabriel](https://github.com/GabrielSMonteiro)|[Tulio](https://github.com/Tullianno)|
 |--|--|[Caio](https://github.com/CaioBezerra07)|
 |--|--|[Bruno Dornelas](https://github.com/brunnf)|
 
