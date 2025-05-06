@@ -1,7 +1,7 @@
 ---
 name: Template Geral
 about: Use este template para reportar bugs, sugerir melhorias ou novas funcionalidades
-title: '[Issue]: '
+title: '[Issue] '
 labels: ''
 assignees: ''
 
@@ -9,7 +9,9 @@ assignees: ''
 
 ### 📝 Descrição  
 Descreva com detalhes o que deve ser feito. Seja claro e específico.
-Crie a branch a partir da branch ``Development``
+Crie a branch a partir da branch:
+- [ ] Main
+- [ ] Development
 
 ---
 
@@ -24,9 +26,9 @@ Crie a branch a partir da branch ``Development``
 
 ### ✅ Critérios de Aceitação  
 Liste os critérios mínimos que definem quando essa issue pode ser considerada concluída.
-- [ ]  
-- [ ]  
-- [ ]  
+- [ ] 
+- [ ] 
+- [ ] 
 
 ---
 
