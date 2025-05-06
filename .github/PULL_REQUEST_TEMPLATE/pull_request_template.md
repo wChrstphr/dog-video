@@ -1,55 +1,16 @@
----
-name: Template Geral
-about: Use este template para reportar bugs, sugerir melhorias ou novas funcionalidades
-title: '[Issue]: '
-labels: ''
-assignees: ''
+## 📝 Descrição
+Insira uma descrição do que foi alterado neste PR (alterações relevantes, adições, mudanças, refatorações)
 
----
 
-### 📝 Descrição  
-Descreva com detalhes o que deve ser feito. Seja claro e específico.
-Crie a branch a partir da branch ``Development``
+## 📂 Tipos de Mudanças
+ - [ ] Bug fix <!--- Alteração que corrige uma issue e não altera funcionalidades já existentes -->
+ - [ ] Nova funcionalidade <!--- Alteração que adiciona uma funcionalidade e não altera funcionalidades já existentes -->
+ - [ ] Alteração disruptiva <!--- Correção ou funcionalidade que causa alteração nas funcionalidades existentes -->
+ - [ ] Documentação <!--- Alterações na documentação do projeto, como manuais, comentários ou guias -->
+ - [ ] Experiência do usuário (UX) <!--- Modificações na interface ou fluxos para melhorar usabilidade e experiência -->
+ - [ ] Melhoria de desempenho <!--- Otimizações que aumentam velocidade, eficiência ou reduzem consumo de recursos -->
+ - [ ] Refatoração de código <!--- Reestruturação do código sem alterar comportamento externo, focada em legibilidade -->
+ - [ ] Outro: ___ <!--- Qualquer alteração não listada acima (especificar detalhes) -->
 
----
-
-### 📂 Tipo da Issue  
-- [ ] Bug  
-- [ ] Nova funcionalidade  
-- [ ] Melhoria  
-- [ ] Documentação  
-- [ ] Outro: ___
-
----
-
-### ✅ Critérios de Aceitação  
-Liste os critérios mínimos que definem quando essa issue pode ser considerada concluída.
-- [ ]  
-- [ ]  
-- [ ]  
-
----
-
-### 📎 Passos para Reproduzir (se aplicável — bugs)  
-1.  
-2.  
-3.  
-
----
-
-### 🖼️ Evidências (print, erro, vídeo, etc.)  
-Adicione imagens, logs ou outros arquivos que ajudem a entender melhor a situação.
-
----
-
-### 💻 Ambiente  
-- Sistema operacional:  
-- Navegador (se web):  
-- Versão do sistema/projeto:  
-
----
-
-### 🔗 Relacionamentos  
-Esta issue está relacionada a:  
-- [ ] Pull Request: #  
-- [ ] Outra Issue: #
+ ## 🔗 Que issue esse PR corrige?
+ #numero_da_issue
