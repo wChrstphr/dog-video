@@ -14,4 +14,3 @@ Insira uma descrição do que foi alterado neste PR (alterações relevantes, ad
 
  ## 🔗 Que issue esse PR corrige?
  #numero_da_issue
-
