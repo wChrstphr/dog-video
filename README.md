@@ -4,10 +4,10 @@ Repositorio com propósito de documentação, acompanhamento e versionamento de 
 ## Tecnologias utilizadas
 [![My Skills](https://skillicons.dev/icons?i=html,css,js,nodejs,react,mysql,php,docker&perline=8)](https://skillicons.dev)
 
-    
-#
+## Como Contribuir
+#### [Diretrizes e Política de Contribuição](https://github.com/wChrstphr/dog-video/blob/a2263781d4e4bfe6c3dcadd85ea403fe0c5acee3/CONTRIBUTING.md)
 
-### Contribuintes do Projeto
+## Colaboradores do Projeto
 
 |Gerente|Assessor(a) Front-End|Assessor Back-End|
 |:----:|:-----:|:-----:|
