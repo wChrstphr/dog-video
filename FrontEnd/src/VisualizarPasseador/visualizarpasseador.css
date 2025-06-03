@@ -143,13 +143,16 @@ body {
 }
 
 .image-container {
-    margin-bottom: 20px;
+    width: 120px;    /* mesmo valor da imagem */
+    height: 120px;   /* mesmo valor da imagem */
     display: flex;
     justify-content: center;
     align-items: center;
-  }
+    margin: 0 auto 20px auto; /* centraliza e dá espaçamento inferior */
+    overflow: hidden;         /* garante que nada vaze */
+}
   
-  .image-upload-label {
+.image-upload-label {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -159,32 +162,33 @@ body {
     border-radius: 10px;
     cursor: pointer;
     overflow: hidden;
-  }
+}
   
-  .placeholder-container {
+.placeholder-container {
     display: flex;
     justify-content: center;
     align-items: center;
     width: 100%;
     height: 100%;
-  }
+}
   
-  .camera-icon {
+.camera-icon {
     font-size: 50px;
     color: #808080;
-  }
+}
   
-  .image-preview {
-    width: 100%;
-    height: 100%;
+.image-preview {
+    width: 120px !important;
+    height: 120px !important;
     object-fit: cover;
-  }
+    display: block;
+}
   
-  .image-input {
+.image-input {
     display: none;
-  }
+}
   
-  .button-group {
+.button-group {
     display: flex;
     justify-content: center;
     margin-top: 20px;

@@ -21,10 +21,10 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 
 // Configuração do banco de dados
 const connection = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: '',
-  database: 'dogvideo'
+  host: 'sql10.freesqldatabase.com',
+  user: 'sql10777168',
+  password: '1x76gZTUcw',
+  database: 'sql10777168'
 });
 
 connection.connect((err) => {
