@@ -15,7 +15,7 @@ RUN cd frontend && npm install
 
 # Copiar o restante do código (backend e frontend)
 COPY backend ./backend
-COPY backend/.env ./backend/
+# Removed the line that copies the .env file into the Docker image
 COPY frontend ./frontend
 
 # Expõe as portas
