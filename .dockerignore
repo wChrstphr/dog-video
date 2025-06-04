@@ -1,0 +1,7 @@
+# Ignorar arquivos e pastas desnecessárias
+node_modules      # Evita copiar dependências locais (serão instaladas no build)
+npm-debug.log     # Arquivo de log desnecessário
+.git              # Não precisa do repositório Git na imagem
+.vscode           # Configurações do VS Code, só para desenvolvimento
+dist              # Build antigo, se for gerado fora do container
+build             # Build antigo, se for gerado fora do container

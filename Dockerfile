@@ -1,30 +1,27 @@
 FROM node:18
 
+# Cria usuário não-root antes de copiar arquivos
+RUN useradd -m appuser
+
 WORKDIR /app
 
-# Copiar arquivos de dependências do backend
-COPY backend/package*.json ./backend/
-# Copiar arquivos de dependências do frontend
-COPY frontend/package*.json ./frontend/
+# Copia arquivos de dependências do backend e frontend com permissão correta
+COPY --chown=appuser:appuser backend/package*.json ./backend/
+COPY --chown=appuser:appuser frontend/package*.json ./frontend/
 
-# Instalar dependências do backend
+# Copia o restante do código (backend e frontend) com permissão correta
+COPY --chown=appuser:appuser backend ./backend
+COPY --chown=appuser:appuser frontend ./frontend
+
+USER appuser
+
+# Instala dependências
 RUN cd backend && npm install
-
-# Instalar dependências do frontend
 RUN cd frontend && npm install
 
-# Copiar o restante do código (backend e frontend)
-COPY backend ./backend
-# Removed the line that copies the .env file into the Docker image
-COPY frontend ./frontend
 
-# Expõe as portas
+
 EXPOSE 3000
 EXPOSE 3001
 
-# Usar usuário não-root para maior segurança
-RUN useradd -m appuser && chown -R appuser /app
-USER appuser
-
-# Rodar ambos os serviços com npx 
 CMD ["npx", "concurrently", "npm --prefix backend start", "npm --prefix frontend start"]
