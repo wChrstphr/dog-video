@@ -10,29 +10,27 @@ const saltRounds = 10;
 const cron = require('node-cron');
 const dayjs = require('dayjs');
 const customParseFormat = require('dayjs/plugin/customParseFormat');
-const authenticateToken = require('../BackEnd/middleware/auth');
+const authenticateToken = require('./middleware/auth');
 const jwt = require('jsonwebtoken');
 dayjs.extend(customParseFormat);
+const dotenv = require('dotenv');
+dotenv.config();
 
 // Configuração do middleware
 app.use(cors());
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 
+//conexao
 // Configuração do banco de dados
-const connection = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: '',
-  database: 'dogvideo'
-});
-
-connection.connect((err) => {
-  if (err) {
-    console.error('Erro ao conectar ao banco de dados:', err);
-  } else {
-    console.log('Conexão com o banco de dados estabelecida!');
-  }
+const connection = mysql.createPool({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
 
 // Configuração das chaves VAPID
