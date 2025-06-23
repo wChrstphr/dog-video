@@ -1,30 +1,31 @@
+# Usa a imagem oficial do Node.js versão 18 como base
 FROM node:18
 
+# Cria um usuário não-root chamado 'appuser' para rodar a aplicação com mais segurança
+RUN useradd -m appuser
+
+# Define o diretório de trabalho dentro do container
 WORKDIR /app
 
-# Copiar arquivos de dependências do backend
-COPY backend/package*.json ./backend/
-# Copiar arquivos de dependências do frontend
-COPY frontend/package*.json ./frontend/
+# Copia os arquivos de dependências do backend e frontend, garantindo as permissões corretas
+COPY --chown=appuser:appuser backend/package*.json ./backend/
+COPY --chown=appuser:appuser frontend/package*.json ./frontend/
 
-# Instalar dependências do backend
+# Copia o restante dos arquivos do backend e frontend para o container, com as permissões corretas
+COPY --chown=appuser:appuser backend ./backend
+COPY --chown=appuser:appuser frontend ./frontend
+
+# Troca para o usuário 'appuser' para executar os próximos comandos e a aplicação
+USER appuser
+
+# Instala as dependências do backend
 RUN cd backend && npm install
-
-# Instalar dependências do frontend
+# Instala as dependências do frontend
 RUN cd frontend && npm install
 
-# Copiar o restante do código (backend e frontend)
-COPY backend ./backend
-# Removed the line that copies the .env file into the Docker image
-COPY frontend ./frontend
-
-# Expõe as portas
+# Expõe as portas 3000 (frontend) e 3001 (backend) para acesso externo
 EXPOSE 3000
 EXPOSE 3001
 
-# Usar usuário não-root para maior segurança
-RUN useradd -m appuser && chown -R appuser /app
-USER appuser
-
-# Rodar ambos os serviços com npx 
+# Comando padrão: inicia backend e frontend em paralelo usando concurrently
 CMD ["npx", "concurrently", "npm --prefix backend start", "npm --prefix frontend start"]

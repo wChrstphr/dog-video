@@ -124,7 +124,7 @@ function EditarPasseador() {
       };
 
       try {
-        const response = await fetch(`http://localhost:3001/passeador/${id}`, {
+        const response = await fetch(`http://localhost:3001/passeadores/${id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
