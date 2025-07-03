@@ -1,7 +1,7 @@
 import './editarpasseador.css';
 import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate, useParams } from "react-router-dom";
-import { FaUser, FaEnvelope, FaAddressCard, FaPhone, FaHome, FaCamera, FaKey } from "react-icons/fa";
+import { FaUser, FaEnvelope, FaAddressCard, FaPhone, FaHome, FaCamera, FaSignal} from "react-icons/fa";
 
 function EditarPasseador() {
   const { id } = useParams();
@@ -14,7 +14,7 @@ function EditarPasseador() {
   const cpfRef = useRef(null);
   const telefoneRef = useRef(null);
   const enderecoRef = useRef(null);
-  const keyRef = useRef(null);
+  const moduloRef = useRef(null); 
 
   const [nomeError, setNomeError] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -122,7 +122,7 @@ function EditarPasseador() {
         telefone: telefoneRef.current.value.replace(/\D/g, ''),
         endereco: enderecoRef.current.value,
         imagem: selectedImage,
-        chave: keyRef.current.value,
+        modulo: moduloRef.current.value, 
       };
 
       try {
@@ -237,12 +237,12 @@ function EditarPasseador() {
           </div>
 
           <div className="input-container">
-            <FaKey className="input-icon" />
+            <FaSignal className="input-icon" />
             <input 
-              ref={keyRef} 
+              ref={moduloRef} 
               type="text" 
-              placeholder="Chave de Transmissão" 
-              defaultValue={passeador.chave} 
+              placeholder="Módulo" 
+              defaultValue={passeador.modulo} 
               className="form-input"
             />
           </div>

@@ -1,7 +1,7 @@
 import './criarpasseador.css';
 import React, { useRef, useState } from 'react';
 import { useNavigate } from "react-router-dom";
-import { FaUser, FaEnvelope, FaAddressCard, FaPhone, FaHome, FaCamera, FaKey} from "react-icons/fa";
+import { FaUser, FaEnvelope, FaAddressCard, FaPhone, FaHome, FaCamera, FaSignal} from "react-icons/fa";
 
 function CriarPasseador() {
   const navigate = useNavigate();
@@ -12,8 +12,7 @@ function CriarPasseador() {
   const cpfRef = useRef(null);
   const telefoneRef = useRef(null);
   const enderecoRef = useRef(null);
-  // Adicione a referência para a chave
-  const chaveRef = useRef(null);
+  const moduloRef = useRef(null); 
 
   // Estado para armazenar a imagem em base64
   const [selectedImage, setSelectedImage] = useState(null);
@@ -23,8 +22,6 @@ function CriarPasseador() {
   const [emailError, setEmailError] = useState('');
   const [cpfError, setCpfError] = useState('');
   const [telefoneError, setTelefoneError] = useState('');
-  // Adicione estado para erro da chave
-  const [chaveError, setChaveError] = useState('');
 
   // Funções de validação
   const validateNome = (nome) => {
@@ -62,16 +59,6 @@ function CriarPasseador() {
       return false;
     }
     setTelefoneError('');
-    return true;
-  };
-
-  // Função de validação para a chave (exemplo: obrigatório e pelo menos 6 caracteres)
-  const validateChave = (chave) => {
-    if (!chave || chave.length < 6) {
-      setChaveError('A chave deve ter pelo menos 6 caracteres');
-      return false;
-    }
-    setChaveError('');
     return true;
   };
 
@@ -114,9 +101,8 @@ function CriarPasseador() {
     const isEmailValid = validateEmail(emailRef.current.value);
     const isCPFValid = validateCPF(cpfRef.current.value);
     const isTelefoneValid = validateTelefone(telefoneRef.current.value);
-    const isChaveValid = validateChave(chaveRef.current.value);
 
-    if (isNomeValid && isEmailValid && isCPFValid && isTelefoneValid && isChaveValid) {
+    if (isNomeValid && isEmailValid && isCPFValid && isTelefoneValid) {
       const newPasseador = {
         nome: nomeRef.current.value,
         email: emailRef.current.value,
@@ -124,7 +110,7 @@ function CriarPasseador() {
         telefone: telefoneRef.current.value.replace(/\D/g, ''),
         endereco: enderecoRef.current.value,
         imagem: selectedImage,
-        chave: chaveRef.current.value, // Adicione aqui
+        modulo: moduloRef.current.value, 
       };
 
       try {
@@ -234,16 +220,14 @@ function CriarPasseador() {
             <input ref={enderecoRef} type="text" placeholder="Endereço" className="form-input" />
           </div>
           <div className="input-container">
-            <FaKey className="input-icon" />
+            <FaSignal className="input-icon" />
             <input 
-              ref={chaveRef} 
+              ref={moduloRef} 
               type="text" 
-              placeholder="Key de Transmissão" 
+              placeholder="Módulo" 
               className="form-input"
-              onChange={(e) => validateChave(e.target.value)}
             />
           </div>
-          {chaveError && <div className="error-message">{chaveError}</div>}
 
           <div className="button-group">
             <button

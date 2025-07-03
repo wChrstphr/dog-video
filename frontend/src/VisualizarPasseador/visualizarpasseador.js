@@ -1,7 +1,7 @@
 import './visualizarpasseador.css';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from "react-router-dom";
-import { FaUser, FaEnvelope, FaAddressCard, FaPhone, FaHome, FaCamera, FaUserAlt, FaKey } from "react-icons/fa";
+import { FaUser, FaEnvelope, FaAddressCard, FaPhone, FaHome, FaCamera, FaUserAlt, FaSignal } from "react-icons/fa";
 
 function VisualizarPasseador() {
   const { id } = useParams();
@@ -93,8 +93,8 @@ function VisualizarPasseador() {
             <span className="form-input">{clientes || 'Sem clientes associados'}</span> {/* Exibe todos os clientes associados */}
           </div>
           <div className="input-container">
-            <FaKey className="input-icon" />
-            <span className="form-input">{passeador.chave || 'Chave não disponível'}</span> {/* Exibe a chave de transmissão */}
+            <FaSignal className="input-icon" />
+            <span className="form-input">{passeador.modulo || 'Módulo não disponível'}</span> {/* Exibe o módulo */}
           </div>
 
           <div className="button-group">

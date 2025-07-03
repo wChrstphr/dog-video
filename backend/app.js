@@ -576,7 +576,7 @@ app.get('/passeadores/:id?', (req, res) => {
   if (passeadorId) {
     // Caso o ID seja fornecido, busca detalhes do passeador e seus clientes associados
     const queryPasseador = `
-      SELECT nome, email, imagem, cpf, telefone, endereco, chave 
+      SELECT nome, email, imagem, cpf, telefone, endereco, modulo 
       FROM passeadores 
       WHERE id_passeador = ?`;
 
@@ -642,18 +642,18 @@ app.get('/passeadores/:id?', (req, res) => {
 // Endpoint para atualizar os dados de um passeador
 app.put('/passeadores/:id', (req, res) => {
   const passeadorId = req.params.id;
-  const { nome, email, cpf, telefone, endereco, imagem, chave } = req.body;
+  const { nome, email, cpf, telefone, endereco, imagem, modulo } = req.body;
 
   // Conversão de base64 para Blob (Binário)
   const imagemBlob = imagem ? Buffer.from(imagem.replace(/^data:image\/\w+;base64,/, ""), 'base64') : null;
 
   const query = `
     UPDATE passeadores
-    SET nome = ?, email = ?, cpf = ?, telefone = ?, endereco = ?, imagem = ?, chave = ?
+    SET nome = ?, email = ?, cpf = ?, telefone = ?, endereco = ?, imagem = ?, modulo = ?
     WHERE id_passeador = ?
   `;
   
-  connection.query(query, [nome, email, cpf, telefone, endereco, imagemBlob, chave, passeadorId], (err) => {
+  connection.query(query, [nome, email, cpf, telefone, endereco, imagemBlob, modulo, passeadorId], (err) => {
     if (err) {
       console.error('Erro ao atualizar passeador:', err);
       return res.status(500).json({ success: false, message: 'Erro ao atualizar passeador' });
@@ -664,17 +664,17 @@ app.put('/passeadores/:id', (req, res) => {
 
 // Endpoint para criar um novo passeador
 app.post('/criarpasseador', (req, res) => {
-  const { nome, email, cpf, telefone, endereco, imagem, chave } = req.body; // inclua chave
+  const { nome, email, cpf, telefone, endereco, imagem, modulo } = req.body; // inclua modulo
 
   // Converte a imagem base64 em Blob para salvar no banco de dados
   const imagemBlob = imagem ? Buffer.from(imagem.replace(/^data:image\/\w+;base64,/, ""), 'base64') : null;
 
   const query = `
-    INSERT INTO passeadores (nome, email, cpf, telefone, endereco, imagem, chave)
+    INSERT INTO passeadores (nome, email, cpf, telefone, endereco, imagem, modulo)
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
 
-  connection.query(query, [nome, email, cpf, telefone, endereco, imagemBlob, chave], (err) => {
+  connection.query(query, [nome, email, cpf, telefone, endereco, imagemBlob, modulo], (err) => {
     if (err) {
       console.error('Erro ao criar passeador:', err);
       return res.status(500).json({ success: false, message: 'Erro ao criar passeador' });
