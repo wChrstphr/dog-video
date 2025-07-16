@@ -10,29 +10,27 @@ const saltRounds = 10;
 const cron = require('node-cron');
 const dayjs = require('dayjs');
 const customParseFormat = require('dayjs/plugin/customParseFormat');
-const authenticateToken = require('../BackEnd/middleware/auth');
+const authenticateToken = require('./middleware/auth');
 const jwt = require('jsonwebtoken');
 dayjs.extend(customParseFormat);
+const dotenv = require('dotenv');
+dotenv.config();
 
 // Configuração do middleware
 app.use(cors());
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 
+//conexao
 // Configuração do banco de dados
-const connection = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: '',
-  database: 'dogvideo'
-});
-
-connection.connect((err) => {
-  if (err) {
-    console.error('Erro ao conectar ao banco de dados:', err);
-  } else {
-    console.log('Conexão com o banco de dados estabelecida!');
-  }
+const connection = mysql.createPool({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
 
 // Configuração das chaves VAPID
@@ -578,7 +576,7 @@ app.get('/passeadores/:id?', (req, res) => {
   if (passeadorId) {
     // Caso o ID seja fornecido, busca detalhes do passeador e seus clientes associados
     const queryPasseador = `
-      SELECT nome, email, imagem, cpf, telefone, endereco 
+      SELECT nome, email, imagem, cpf, telefone, endereco, modulo 
       FROM passeadores 
       WHERE id_passeador = ?`;
 
@@ -644,18 +642,18 @@ app.get('/passeadores/:id?', (req, res) => {
 // Endpoint para atualizar os dados de um passeador
 app.put('/passeadores/:id', (req, res) => {
   const passeadorId = req.params.id;
-  const { nome, email, cpf, telefone, endereco, imagem } = req.body;
+  const { nome, email, cpf, telefone, endereco, imagem, modulo } = req.body;
 
   // Conversão de base64 para Blob (Binário)
   const imagemBlob = imagem ? Buffer.from(imagem.replace(/^data:image\/\w+;base64,/, ""), 'base64') : null;
 
   const query = `
     UPDATE passeadores
-    SET nome = ?, email = ?, cpf = ?, telefone = ?, endereco = ?, imagem = ?
+    SET nome = ?, email = ?, cpf = ?, telefone = ?, endereco = ?, imagem = ?, modulo = ?
     WHERE id_passeador = ?
   `;
   
-  connection.query(query, [nome, email, cpf, telefone, endereco, imagemBlob, passeadorId], (err) => {
+  connection.query(query, [nome, email, cpf, telefone, endereco, imagemBlob, modulo, passeadorId], (err) => {
     if (err) {
       console.error('Erro ao atualizar passeador:', err);
       return res.status(500).json({ success: false, message: 'Erro ao atualizar passeador' });
@@ -666,17 +664,17 @@ app.put('/passeadores/:id', (req, res) => {
 
 // Endpoint para criar um novo passeador
 app.post('/criarpasseador', (req, res) => {
-  const { nome, email, cpf, telefone, endereco, imagem } = req.body;
+  const { nome, email, cpf, telefone, endereco, imagem, modulo } = req.body; // inclua modulo
 
   // Converte a imagem base64 em Blob para salvar no banco de dados
   const imagemBlob = imagem ? Buffer.from(imagem.replace(/^data:image\/\w+;base64,/, ""), 'base64') : null;
 
   const query = `
-    INSERT INTO passeadores (nome, email, cpf, telefone, endereco, imagem)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO passeadores (nome, email, cpf, telefone, endereco, imagem, modulo)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
 
-  connection.query(query, [nome, email, cpf, telefone, endereco, imagemBlob], (err) => {
+  connection.query(query, [nome, email, cpf, telefone, endereco, imagemBlob, modulo], (err) => {
     if (err) {
       console.error('Erro ao criar passeador:', err);
       return res.status(500).json({ success: false, message: 'Erro ao criar passeador' });

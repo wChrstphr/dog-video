@@ -50,7 +50,7 @@ function CriarCliente() {
         
       // Funções de validação
   const validateNome = (nome) => {
-    if (!/^[A-Z][a-z]{1,}/.test(nome)) {
+    if (!/^[A-ZÀ-Ÿ][a-zà-ÿ]{1,}/.test(nome)) {
       setNomeError('O nome deve começar com letra maiúscula e ter pelo menos 2 caracteres');
       return false;
     }

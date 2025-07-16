@@ -1,30 +1,42 @@
-import './criarpasseador.css';
-import React, { useRef, useState } from 'react';
-import { useNavigate } from "react-router-dom";
-import { FaUser, FaEnvelope, FaAddressCard, FaPhone, FaHome, FaCamera } from "react-icons/fa";
+import './editarpasseador.css';
+import React, { useRef, useState, useEffect } from 'react';
+import { useNavigate, useParams } from "react-router-dom";
+import { FaUser, FaEnvelope, FaAddressCard, FaPhone, FaHome, FaCamera, FaSignal} from "react-icons/fa";
 
-function CriarPasseador() {
+function EditarPasseador() {
+  const { id } = useParams();
   const navigate = useNavigate();
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [passeador, setPasseador] = useState({ cpf: '' });
 
-  // Referências para os inputs
   const nomeRef = useRef(null);
   const emailRef = useRef(null);
   const cpfRef = useRef(null);
   const telefoneRef = useRef(null);
   const enderecoRef = useRef(null);
+  const moduloRef = useRef(null); 
 
-  // Estado para armazenar a imagem em base64
-  const [selectedImage, setSelectedImage] = useState(null);
-
-  // Estados para armazenar mensagens de erro
   const [nomeError, setNomeError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [cpfError, setCpfError] = useState('');
   const [telefoneError, setTelefoneError] = useState('');
 
-  // Funções de validação
+  useEffect(() => {
+    const fetchPasseador = async () => {
+      try {
+        const response = await fetch(`http://localhost:3001/passeadores/${id}`);
+        const data = await response.json();
+        setPasseador(data.passeador);
+        setSelectedImage(data.passeador.imagem);
+      } catch (error) {
+        console.error('Erro ao carregar passeador:', error);
+      }
+    };
+    fetchPasseador();
+  }, [id]);
+
   const validateNome = (nome) => {
-    if (!/^[A-Z][a-z]{1,}/.test(nome)) {
+    if (!/^[A-ZÀ-Ÿ][a-zà-ÿ]{1,}/.test(nome)) {
       setNomeError('O nome deve começar com letra maiúscula e ter pelo menos 2 caracteres');
       return false;
     }
@@ -61,8 +73,8 @@ function CriarPasseador() {
     return true;
   };
 
-  // Funções de formatação
   const formatCPF = (cpf) => {
+    if (!cpf) return '';
     const cleaned = cpf.replace(/\D/g, '');
     const match = cleaned.match(/^(\d{3})(\d{3})(\d{3})(\d{2})$/);
     if (match) {
@@ -70,8 +82,10 @@ function CriarPasseador() {
     }
     return cpf;
   };
+  
 
   const formatTelefone = (telefone) => {
+    if (!telefone) return '';
     const cleaned = telefone.replace(/\D/g, '');
     const match = cleaned.match(/^(\d{2})(\d{5})(\d{4})$/);
     if (match) {
@@ -79,8 +93,8 @@ function CriarPasseador() {
     }
     return telefone;
   };
+  
 
-  // Função para lidar com a seleção de imagem
   const handleImageChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -92,8 +106,7 @@ function CriarPasseador() {
     }
   };
 
-  // Função para enviar os dados para criação do passeador
-  const handleSubmit = async (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
 
     const isNomeValid = validateNome(nomeRef.current.value);
@@ -102,31 +115,32 @@ function CriarPasseador() {
     const isTelefoneValid = validateTelefone(telefoneRef.current.value);
 
     if (isNomeValid && isEmailValid && isCPFValid && isTelefoneValid) {
-      const newPasseador = {
+      const updatedPasseador = {
         nome: nomeRef.current.value,
         email: emailRef.current.value,
         cpf: cpfRef.current.value.replace(/\D/g, ''),
         telefone: telefoneRef.current.value.replace(/\D/g, ''),
         endereco: enderecoRef.current.value,
         imagem: selectedImage,
+        modulo: moduloRef.current.value, 
       };
 
       try {
-        const response = await fetch(`http://localhost:3001/criarpasseador`, {
-          method: 'POST',
+        const response = await fetch(`http://localhost:3001/passeadores/${id}`, {
+          method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(newPasseador),
+          body: JSON.stringify(updatedPasseador),
         });
 
         if (response.ok) {
-          navigate("/passeadores");
+          navigate(`/visualizarpasseador/${id}`);
         } else {
-          console.error('Erro ao criar passeador');
+          console.error('Erro ao atualizar passeador');
         }
       } catch (error) {
-        console.error('Erro ao enviar dados:', error);
+        console.error('Erro ao salvar passeador:', error);
       }
     } else {
       console.error('Formulário contém erros');
@@ -134,14 +148,14 @@ function CriarPasseador() {
   };
 
   return (
-    <div className="Web-Criar-Passeador">
+    <div className="WebPasseador">
       <header className="Web-header">
         <img src="/logotipo.svg" className="Web-logotipo" alt="Dogvideo Logomarca" />
         <div className="footer-bar"></div>
       </header>
 
       <div className="form-container">
-        <form className="passeador-form" onSubmit={handleSubmit}>
+        <form className="passeador-form" onSubmit={handleSave}>
           <div className="image-container">
             <label htmlFor="image-upload" className="image-upload-label">
               {selectedImage ? (
@@ -167,6 +181,7 @@ function CriarPasseador() {
               ref={nomeRef} 
               type="text" 
               placeholder="Nome do passeador" 
+              defaultValue={passeador.nome} 
               className="form-input"
               onChange={(e) => validateNome(e.target.value)}
             />
@@ -178,6 +193,7 @@ function CriarPasseador() {
               ref={emailRef} 
               type="email" 
               placeholder="Email" 
+              defaultValue={passeador.email} 
               className="form-input"
               onChange={(e) => validateEmail(e.target.value)}
             />
@@ -189,6 +205,7 @@ function CriarPasseador() {
               ref={cpfRef} 
               type="text" 
               placeholder="CPF" 
+              defaultValue={formatCPF(passeador.cpf)} 
               className="form-input"
               onChange={(e) => {
                 const formatted = formatCPF(e.target.value);
@@ -204,6 +221,7 @@ function CriarPasseador() {
               ref={telefoneRef} 
               type="tel" 
               placeholder="Telefone" 
+              defaultValue={passeador.telefone ? formatTelefone(passeador.telefone) : ''} 
               className="form-input"
               onChange={(e) => {
                 const formatted = formatTelefone(e.target.value);
@@ -215,19 +233,26 @@ function CriarPasseador() {
             {telefoneError && <div className="error-message">{telefoneError}</div>}
           <div className="input-container">
             <FaHome className="input-icon" />
-            <input ref={enderecoRef} type="text" placeholder="Endereço" className="form-input" />
+            <input ref={enderecoRef} type="text" placeholder="Endereço" defaultValue={passeador.endereco} className="form-input" />
+          </div>
+
+          <div className="input-container">
+            <FaSignal className="input-icon" />
+            <input 
+              ref={moduloRef} 
+              type="text" 
+              placeholder="Módulo" 
+              defaultValue={passeador.modulo} 
+              className="form-input"
+            />
           </div>
 
           <div className="button-group">
-            <button
-              type="button"
-              className="cancel-button"
-              onClick={() => navigate("/passeadores")}
-            >
+            <button type="button" className="cancel-button" onClick={() => navigate(`/visualizarpasseador/${id}`)}>
               Cancelar
             </button>
             <button type="submit" className="create-button">
-              Criar
+              Salvar
             </button>
           </div>
         </form>
@@ -236,4 +261,4 @@ function CriarPasseador() {
   );
 }
 
-export default CriarPasseador;
+export default EditarPasseador;

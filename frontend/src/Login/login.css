@@ -14,7 +14,7 @@
 
 .login-background {
   background-color: #ffffff;
-  background-image: ('/FrontEnd/public/loginDog.svg');
+  background-image: ('/frontend/public/loginDog.svg');
   background-repeat: repeat-x;
   background-size: contain;
   background-position: center top;
