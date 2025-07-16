@@ -1,4 +1,7 @@
 {
     "search.useParentIgnoreFiles": false,
-    "search.useGlobalIgnoreFiles": false
+    "search.useGlobalIgnoreFiles": false,
+    "conventionalCommits.scopes": [
+        "build"
+    ]
 }
