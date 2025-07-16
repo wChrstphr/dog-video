@@ -1,7 +1,7 @@
 import './editarpasseador.css';
 import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate, useParams } from "react-router-dom";
-import { FaUser, FaEnvelope, FaAddressCard, FaPhone, FaHome, FaCamera } from "react-icons/fa";
+import { FaUser, FaEnvelope, FaAddressCard, FaPhone, FaHome, FaCamera, FaSignal} from "react-icons/fa";
 
 function EditarPasseador() {
   const { id } = useParams();
@@ -14,6 +14,7 @@ function EditarPasseador() {
   const cpfRef = useRef(null);
   const telefoneRef = useRef(null);
   const enderecoRef = useRef(null);
+  const moduloRef = useRef(null); 
 
   const [nomeError, setNomeError] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -35,7 +36,7 @@ function EditarPasseador() {
   }, [id]);
 
   const validateNome = (nome) => {
-    if (!/^[A-Z][a-z]{1,}/.test(nome)) {
+    if (!/^[A-ZÀ-Ÿ][a-zà-ÿ]{1,}/.test(nome)) {
       setNomeError('O nome deve começar com letra maiúscula e ter pelo menos 2 caracteres');
       return false;
     }
@@ -121,6 +122,7 @@ function EditarPasseador() {
         telefone: telefoneRef.current.value.replace(/\D/g, ''),
         endereco: enderecoRef.current.value,
         imagem: selectedImage,
+        modulo: moduloRef.current.value, 
       };
 
       try {
@@ -133,7 +135,7 @@ function EditarPasseador() {
         });
 
         if (response.ok) {
-          navigate("/passeadores");
+          navigate(`/visualizarpasseador/${id}`);
         } else {
           console.error('Erro ao atualizar passeador');
         }
@@ -232,6 +234,17 @@ function EditarPasseador() {
           <div className="input-container">
             <FaHome className="input-icon" />
             <input ref={enderecoRef} type="text" placeholder="Endereço" defaultValue={passeador.endereco} className="form-input" />
+          </div>
+
+          <div className="input-container">
+            <FaSignal className="input-icon" />
+            <input 
+              ref={moduloRef} 
+              type="text" 
+              placeholder="Módulo" 
+              defaultValue={passeador.modulo} 
+              className="form-input"
+            />
           </div>
 
           <div className="button-group">
