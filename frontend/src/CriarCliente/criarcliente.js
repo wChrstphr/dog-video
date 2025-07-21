@@ -175,6 +175,12 @@ function CriarCliente() {
     const isTelefoneValid = validateTelefone(telefone);
     const isHorarioValid = validateHorario(horario);
 
+    // Validação adicional: se houver cães, um passeador deve ser selecionado
+    if (caes.length > 0 && caes[0] !== "" && !id_passeador) {
+      alert('Por favor, selecione um passeador.');
+      return;
+    }
+
     if (!isNomeValid || !isEmailValid || !isCPFValid || !isTelefoneValid || !isHorarioValid) {
       alert('Por favor, corrija os erros destacados antes de enviar.');
       return;

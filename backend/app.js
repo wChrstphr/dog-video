@@ -12,7 +12,11 @@ const dayjs = require('dayjs');
 const customParseFormat = require('dayjs/plugin/customParseFormat');
 const authenticateToken = require('./middleware/auth');
 const jwt = require('jsonwebtoken');
+const timezone = require('dayjs/plugin/timezone');
+const utc = require('dayjs/plugin/utc');
 dayjs.extend(customParseFormat);
+dayjs.extend(utc);
+dayjs.extend(timezone);
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -45,43 +49,72 @@ webPush.setVapidDetails(
   'Km-siZ1s_FTdpW594744qMlXuDgan3ve77AAAAWGTcU' //chave privada gerada
 );
 
-// Rota para salvar `subscriptions` no banco de dados
-app.post('/subscribe', (req, res) => {
-  const { subscription, id_cliente } = req.body; // id_passeador não será usado aqui
-  const endpoint = subscription.endpoint;
-  const p256dh = subscription.keys.p256dh;
-  const auth = subscription.keys.auth;
+// Middleware para autenticar e extrair o ID do usuário logado
+const authenticateAndExtractUser = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
 
-  // Verifica se já existe uma subscription para esse endpoint e para esse cliente
-  const checkQuery = 'SELECT * FROM subscriptions WHERE endpoint = $1 AND id_cliente = $2';
-  pool.query(checkQuery, [endpoint, id_cliente], (err, results) => {
+  if (!token) {
+    return res.status(401).json({ success: false, message: 'Token não fornecido' });
+  }
+
+  jwt.verify(token, 'your_secret_key', (err, user) => {
     if (err) {
-      console.error('Erro ao buscar subscription:', err);
-      return res.status(500).json({ success: false, message: 'Erro ao buscar subscription' });
+      return res.status(403).json({ success: false, message: 'Token inválido' });
     }
+    req.user = user; // Adiciona os dados do usuário logado à requisição
+    next();
+  });
+};
 
-    if (results.rows.length > 0) {
-      // Já existe uma inscrição para esse cliente e esse dispositivo: não altera
-      return res.status(200).json({ success: true, message: 'Subscription já existe para esse cliente.' });
-    } else {
-      // Se não existe, insere uma nova inscrição
-      const insertQuery = `
-        INSERT INTO subscriptions (endpoint, p256dh, auth, id_cliente)
-        VALUES ($1, $2, $3, $4)
-      `;
-      pool.query(
-        insertQuery,
-        [endpoint, p256dh, auth, id_cliente || null],
-        (err) => {
+// Função reutilizável para verificar e salvar subscriptions
+const saveSubscription = (subscription, id_cliente) => {
+  return new Promise((resolve, reject) => {
+    const { endpoint, keys } = subscription;
+    const { p256dh, auth } = keys;
+
+    // Verifica se já existe uma linha com o mesmo endpoint e id_cliente
+    const checkQuery = 'SELECT * FROM subscriptions WHERE endpoint = $1 AND id_cliente = $2';
+    pool.query(checkQuery, [endpoint, id_cliente], (err, results) => {
+      if (err) {
+        console.error('Erro ao buscar subscription:', err);
+        return reject('Erro ao buscar subscription');
+      }
+
+      if (results.rows.length > 0) {
+        console.log('Subscription já existe para este navegador/computador e cliente.');
+        return resolve('Subscription já existe');
+      } else {
+        // Insere uma nova linha na tabela subscriptions
+        const insertQuery = `
+          INSERT INTO subscriptions (endpoint, expiration_time, p256dh, auth, id_cliente)
+          VALUES ($1, NULL, $2, $3, $4)
+        `;
+        pool.query(insertQuery, [endpoint, p256dh, auth, id_cliente], (err) => {
           if (err) {
             console.error('Erro ao inserir subscription:', err);
-            return res.status(500).json({ success: false, message: 'Erro ao inserir subscription' });
+            return reject('Erro ao inserir subscription');
           }
-          return res.status(201).json({ success: true, message: 'Subscription salva com sucesso!' });
-        }
-      );
-    }
+          console.log('Subscription salva com sucesso!');
+          return resolve('Subscription salva com sucesso');
+        });
+      }
+    });
   });
+};
+
+// Rota para salvar `subscriptions` no banco de dados
+app.post('/subscribe', authenticateAndExtractUser, (req, res) => {
+  const { subscription } = req.body;
+  const id_cliente = req.user.userType === 'user' ? req.user.id : null;
+
+  if (!id_cliente) {
+    return res.status(400).json({ success: false, message: 'ID do cliente não fornecido' });
+  }
+
+  saveSubscription(subscription, id_cliente)
+    .then((message) => res.status(201).json({ success: true, message }))
+    .catch((error) => res.status(500).json({ success: false, message: error }));
 });
 
 // Rota para criar e armazenar notificações
@@ -142,15 +175,22 @@ app.post('/send-notification', (req, res) => {
 // Cron job para enviar notificação 5 minutos antes do passeio
 cron.schedule('* * * * *', () => {
   const query = 'SELECT id_cliente, horario_passeio FROM clientes WHERE tipo = 0';
+
   pool.query(query, (err, clientes) => {
     if (err) {
       console.error('Erro ao buscar clientes para notificação:', err);
       return;
     }
-    const now = dayjs();
+
+    const now = dayjs().tz('America/Sao_Paulo'); // Ajuste para o timezone correto
+    console.log(`Hora atual: ${now.format('HH:mm:ss')}`); // Log para depuração
+
     clientes.rows.forEach((cliente) => {
       const walkTime = dayjs(cliente.horario_passeio, 'HH:mm:ss');
       const notificationTime = walkTime.subtract(5, 'minute');
+
+      console.log(`Cliente ${cliente.id_cliente}: Horário do passeio: ${walkTime.format('HH:mm:ss')}, Horário da notificação: ${notificationTime.format('HH:mm:ss')}`);
+
       if (now.format('HH:mm') === notificationTime.format('HH:mm')) {
         const subQuery = 'SELECT * FROM subscriptions WHERE id_cliente = $1';
         pool.query(subQuery, [cliente.id_cliente], (err, subscriptions) => {
@@ -158,6 +198,12 @@ cron.schedule('* * * * *', () => {
             console.error('Erro ao buscar subscriptions para notificação:', err);
             return;
           }
+
+          if (subscriptions.rows.length === 0) {
+            console.warn(`Nenhuma subscription encontrada para o cliente ${cliente.id_cliente}`);
+            return;
+          }
+
           subscriptions.rows.forEach((sub) => {
             const pushSubscription = {
               endpoint: sub.endpoint,
@@ -170,9 +216,16 @@ cron.schedule('* * * * *', () => {
               title: 'Lembrete de Passeio',
               body: 'Seu pet começará o passeio em 5 minutos!'
             });
-            webPush.sendNotification(pushSubscription, payload).catch((error) => {
-              console.error('Erro ao enviar notificação push:', error);
-            });
+
+            console.log(`Enviando notificação para o cliente ${cliente.id_cliente} no endpoint ${sub.endpoint}`);
+
+            webPush.sendNotification(pushSubscription, payload)
+              .then(() => {
+                console.log(`Notificação enviada com sucesso para o cliente ${cliente.id_cliente}`);
+              })
+              .catch((error) => {
+                console.error(`Erro ao enviar notificação para o cliente ${cliente.id_cliente}:`, error);
+              });
           });
         });
       }
@@ -187,7 +240,7 @@ const LOCKOUT_TIME = 10 * 60 * 1000; // 10 minutos em milissegundos
 
 // Endpoint para login com proteção contra ataques de força bruta
 app.post('/login', (req, res) => {
-  const { email, senha } = req.body;
+  const { email, senha, subscription } = req.body; // Adicione subscription ao corpo da requisição
 
   // Verifica se o usuário está temporariamente bloqueado
   if (loginAttempts[email] && loginAttempts[email].attempts >= MAX_ATTEMPTS) {
@@ -244,6 +297,13 @@ app.post('/login', (req, res) => {
 
     // Gera um token JWT para ser possível fazer a verificação de login nas rotas /admin, /clientes, /passeadores ....
     const token = jwt.sign({ id: cliente.id_cliente, email: cliente.email, userType: userType }, 'your_secret_key', { expiresIn: '1h' });
+
+    // Salva a subscription no banco de dados, se fornecida e o cliente for do tipo 0
+    if (subscription && cliente.tipo === 0) {
+      saveSubscription(subscription, cliente.id_cliente)
+        .then((message) => console.log(message))
+        .catch((error) => console.error(error));
+    }
 
     // Retorna resposta de sucesso e dados do usuário
     res.json({
@@ -467,7 +527,6 @@ app.put('/clientes/:id', (req, res) => {
 // Endpoint para redefinir a senha do cliente
 app.put('/clientes/:id/reset-senha', async (req, res) => {
   const clienteId = req.params.id;
-  console.log(`Resetando senha para o cliente ID: ${clienteId}`); // <-- Adiciona um log para depuração
 
   if (!clienteId) {
     return res.status(400).json({ success: false, message: 'ID do cliente não fornecido' });
@@ -475,7 +534,7 @@ app.put('/clientes/:id/reset-senha', async (req, res) => {
 
   try {
     const novaSenha = 'dog123';
-    const senhaHash = await bcrypt.hash(novaSenha, 10); // Gera um hash seguro
+    const senhaHash = await bcrypt.hash(novaSenha, 10);
 
     const updatePasswordQuery = `
       UPDATE clientes 
@@ -508,39 +567,34 @@ app.post('/criarcliente', async (req, res) => {
     // Gera o hash da senha padrão "dog123"
     const hashedPassword = await bcrypt.hash('dog123', saltRounds);
 
-    // Query para inserir um novo cliente com a senha encriptada
+    // Query para inserir um novo cliente com a senha encriptada e retornar o id_cliente
     const insertClientQuery = `
       INSERT INTO clientes (nome, email, cpf, telefone, endereco, pacote, horario_passeio, anotacoes, tipo, senha)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0, $9)
+      RETURNING id_cliente
     `;
 
-    pool.query(insertClientQuery, [nome, email, cpf, telefone, endereco, pacote, horario, anotacao, hashedPassword], (err, result) => {
-      if (err) {
-        console.error('Erro ao inserir cliente:', err);
-        return res.status(500).send('Erro ao inserir cliente');
-      }
+    const clientResult = await pool.query(insertClientQuery, [nome, email, cpf, telefone, endereco, pacote, horario, anotacao, hashedPassword]);
 
-      const clienteId = result.rows[0].id_cliente;
+    // Certifique-se de que o id_cliente foi retornado
+    if (!clientResult.rows || clientResult.rows.length === 0) {
+      return res.status(500).json({ success: false, message: 'Erro ao criar cliente: ID não retornado.' });
+    }
 
-      // Verifica se há cães para adicionar
-      if (caes && caes.length > 0) {
-        const insertDogQuery = 'INSERT INTO cachorros (nome, id_cliente, id_passeador) VALUES ($1, $2, $3)';
-        caes.forEach(cao => {
-          pool.query(insertDogQuery, [cao, clienteId, id_passeador], (err) => {
-            if (err) {
-              console.error('Erro ao inserir cães:', err);
-              return res.status(500).send('Erro ao inserir cães');
-            }
-          });
-        });
-        res.json({ success: true, message: 'Cliente e cães adicionados com sucesso!' });
-      } else {
-        res.json({ success: true, message: 'Cliente adicionado com sucesso!' });
+    const clienteId = clientResult.rows[0].id_cliente;
+
+    // Verifica se há cães para adicionar
+    if (caes && caes.length > 0) {
+      const insertDogQuery = 'INSERT INTO cachorros (nome, id_cliente, id_passeador) VALUES ($1, $2, $3)';
+      for (const cao of caes) {
+        await pool.query(insertDogQuery, [cao, clienteId, id_passeador || null]);
       }
-    });
+    }
+
+    res.json({ success: true, message: 'Cliente e cães adicionados com sucesso!' });
   } catch (error) {
-    console.error('Erro ao criar hash da senha:', error);
-    res.status(500).send('Erro ao processar senha');
+    console.error('Erro ao criar cliente:', error);
+    res.status(500).json({ success: false, message: 'Erro ao criar cliente.' });
   }
 });
 
@@ -548,26 +602,36 @@ app.post('/criarcliente', async (req, res) => {
 app.delete('/clientes/:id', (req, res) => {
   const clienteId = req.params.id;
 
+  // Query para deletar as subscriptions associadas ao cliente
+  const deleteSubscriptionsQuery = 'DELETE FROM subscriptions WHERE id_cliente = $1';
   // Query para deletar os cachorros associados ao cliente
   const deleteCachorrosQuery = 'DELETE FROM cachorros WHERE id_cliente = $1';
   // Query para deletar o cliente
   const deleteClienteQuery = 'DELETE FROM clientes WHERE id_cliente = $1';
 
-  // Deletar os cachorros associados ao cliente
-  pool.query(deleteCachorrosQuery, [clienteId], (err) => {
+  // Deletar as subscriptions associadas ao cliente
+  pool.query(deleteSubscriptionsQuery, [clienteId], (err) => {
     if (err) {
-      console.error('Erro ao deletar cachorros:', err);
-      return res.status(500).send('Erro ao deletar cachorros');
+      console.error('Erro ao deletar subscriptions:', err);
+      return res.status(500).send('Erro ao deletar subscriptions');
     }
 
-    // Deletar o cliente após deletar os cachorros
-    pool.query(deleteClienteQuery, [clienteId], (err) => {
+    // Deletar os cachorros associados ao cliente
+    pool.query(deleteCachorrosQuery, [clienteId], (err) => {
       if (err) {
-        console.error('Erro ao deletar cliente:', err);
-        return res.status(500).send('Erro ao deletar cliente');
+        console.error('Erro ao deletar cachorros:', err);
+        return res.status(500).send('Erro ao deletar cachorros');
       }
 
-      res.json({ success: true, message: 'Cliente e seus cachorros deletados com sucesso!' });
+      // Deletar o cliente após deletar os cachorros e subscriptions
+      pool.query(deleteClienteQuery, [clienteId], (err) => {
+        if (err) {
+          console.error('Erro ao deletar cliente:', err);
+          return res.status(500).send('Erro ao deletar cliente');
+        }
+
+        res.json({ success: true, message: 'Cliente e seus dados associados deletados com sucesso!' });
+      });
     });
   });
 });
