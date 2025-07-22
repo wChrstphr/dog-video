@@ -1,18 +1,22 @@
 const express = require('express');
-const mysql = require('mysql2');
+const { Pool } = require('pg'); 
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const app = express();
 const port = 3001;
 const webPush = require('web-push');
-const bcrypt = require('bcrypt'); 
+const bcrypt = require('bcryptjs'); 
 const saltRounds = 10;
 const cron = require('node-cron');
 const dayjs = require('dayjs');
 const customParseFormat = require('dayjs/plugin/customParseFormat');
 const authenticateToken = require('./middleware/auth');
 const jwt = require('jsonwebtoken');
+const timezone = require('dayjs/plugin/timezone');
+const utc = require('dayjs/plugin/utc');
 dayjs.extend(customParseFormat);
+dayjs.extend(utc);
+dayjs.extend(timezone);
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -21,16 +25,21 @@ app.use(cors());
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 
-//conexao
-// Configuração do banco de dados
-const connection = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_DATABASE,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+// Conexão com o PostgreSQL (Neon)
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false 
+  }
+});
+
+// Teste de conexão (opcional)
+pool.query('SELECT NOW()', (err, res) => {
+  if (err) {
+    console.error('Erro ao conectar ao banco de dados:', err);
+  } else {
+    console.log('Conexão bem-sucedida com PostgreSQL. Hora atual:', res.rows[0].now);
+  }
 });
 
 // Configuração das chaves VAPID
@@ -40,43 +49,72 @@ webPush.setVapidDetails(
   'Km-siZ1s_FTdpW594744qMlXuDgan3ve77AAAAWGTcU' //chave privada gerada
 );
 
-// Rota para salvar `subscriptions` no banco de dados
-app.post('/subscribe', (req, res) => {
-  const { subscription, id_cliente } = req.body; // id_passeador não será usado aqui
-  const endpoint = subscription.endpoint;
-  const p256dh = subscription.keys.p256dh;
-  const auth = subscription.keys.auth;
+// Middleware para autenticar e extrair o ID do usuário logado
+const authenticateAndExtractUser = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
 
-  // Verifica se já existe uma subscription para esse endpoint e para esse cliente
-  const checkQuery = 'SELECT * FROM subscriptions WHERE endpoint = ? AND id_cliente = ?';
-  connection.query(checkQuery, [endpoint, id_cliente], (err, results) => {
+  if (!token) {
+    return res.status(401).json({ success: false, message: 'Token não fornecido' });
+  }
+
+  jwt.verify(token, 'your_secret_key', (err, user) => {
     if (err) {
-      console.error('Erro ao buscar subscription:', err);
-      return res.status(500).json({ success: false, message: 'Erro ao buscar subscription' });
+      return res.status(403).json({ success: false, message: 'Token inválido' });
     }
+    req.user = user; // Adiciona os dados do usuário logado à requisição
+    next();
+  });
+};
 
-    if (results.length > 0) {
-      // Já existe uma inscrição para esse cliente e esse dispositivo: não altera
-      return res.status(200).json({ success: true, message: 'Subscription já existe para esse cliente.' });
-    } else {
-      // Se não existe, insere uma nova inscrição
-      const insertQuery = `
-        INSERT INTO subscriptions (endpoint, p256dh, auth, id_cliente)
-        VALUES (?, ?, ?, ?)
-      `;
-      connection.query(
-        insertQuery,
-        [endpoint, p256dh, auth, id_cliente || null],
-        (err, insertResult) => {
+// Função reutilizável para verificar e salvar subscriptions
+const saveSubscription = (subscription, id_cliente) => {
+  return new Promise((resolve, reject) => {
+    const { endpoint, keys } = subscription;
+    const { p256dh, auth } = keys;
+
+    // Verifica se já existe uma linha com o mesmo endpoint e id_cliente
+    const checkQuery = 'SELECT * FROM subscriptions WHERE endpoint = $1 AND id_cliente = $2';
+    pool.query(checkQuery, [endpoint, id_cliente], (err, results) => {
+      if (err) {
+        console.error('Erro ao buscar subscription:', err);
+        return reject('Erro ao buscar subscription');
+      }
+
+      if (results.rows.length > 0) {
+        console.log('Subscription já existe para este navegador/computador e cliente.');
+        return resolve('Subscription já existe');
+      } else {
+        // Insere uma nova linha na tabela subscriptions
+        const insertQuery = `
+          INSERT INTO subscriptions (endpoint, expiration_time, p256dh, auth, id_cliente)
+          VALUES ($1, NULL, $2, $3, $4)
+        `;
+        pool.query(insertQuery, [endpoint, p256dh, auth, id_cliente], (err) => {
           if (err) {
             console.error('Erro ao inserir subscription:', err);
-            return res.status(500).json({ success: false, message: 'Erro ao inserir subscription' });
+            return reject('Erro ao inserir subscription');
           }
-          return res.status(201).json({ success: true, message: 'Subscription salva com sucesso!' });
-        }
-      );
-    }
+          console.log('Subscription salva com sucesso!');
+          return resolve('Subscription salva com sucesso');
+        });
+      }
+    });
   });
+};
+
+// Rota para salvar `subscriptions` no banco de dados
+app.post('/subscribe', authenticateAndExtractUser, (req, res) => {
+  const { subscription } = req.body;
+  const id_cliente = req.user.userType === 'user' ? req.user.id : null;
+
+  if (!id_cliente) {
+    return res.status(400).json({ success: false, message: 'ID do cliente não fornecido' });
+  }
+
+  saveSubscription(subscription, id_cliente)
+    .then((message) => res.status(201).json({ success: true, message }))
+    .catch((error) => res.status(500).json({ success: false, message: error }));
 });
 
 // Rota para criar e armazenar notificações
@@ -84,40 +122,40 @@ app.post('/notificacoes', (req, res) => {
   const { tipo, mensagem, id_cliente, id_passeador } = req.body;
   const query = `
     INSERT INTO notificacoes (tipo, mensagem, data_hora, id_cliente, id_passeador)
-    VALUES (?, ?, NOW(), ?, ?)
+    VALUES ($1, $2, NOW(), $3, $4)
   `;
   const values = [tipo, mensagem, id_cliente || null, id_passeador || null];
-  connection.query(query, values, (err, result) => {
+  pool.query(query, values, (err, result) => {
     if (err) {
       console.error('Erro ao salvar notificação:', err);
       return res.status(500).json({ success: false, message: 'Erro ao salvar notificação' });
     }
-    res.status(201).json({ success: true, message: 'Notificação criada com sucesso!', id: result.insertId });
+    res.status(201).json({ success: true, message: 'Notificação criada com sucesso!' });
   });
 });
 
 // Rota para enviar notificações push manualmente (se necessário)
 app.post('/send-notification', (req, res) => {
   const { id_notificacao } = req.body;
-  const queryNotificacao = 'SELECT * FROM notificacoes WHERE id_notificacao = ?';
-  connection.query(queryNotificacao, [id_notificacao], (err, notificacaoResult) => {
-    if (err || notificacaoResult.length === 0) {
+  const queryNotificacao = 'SELECT * FROM notificacoes WHERE id_notificacao = $1';
+  pool.query(queryNotificacao, [id_notificacao], (err, notificacaoResult) => {
+    if (err || notificacaoResult.rows.length === 0) {
       console.error('Erro ao buscar notificação:', err);
       return res.status(404).json({ success: false, message: 'Notificação não encontrada' });
     }
-    const notificacao = notificacaoResult[0];
+    const notificacao = notificacaoResult.rows[0];
     const payload = JSON.stringify({ title: notificacao.tipo, body: notificacao.mensagem });
     const querySubscriptions = `
       SELECT * FROM subscriptions 
-      WHERE (id_cliente = ? OR id_passeador = ?) 
+      WHERE (id_cliente = $1 OR id_passeador = $2) 
       OR (id_cliente IS NULL AND id_passeador IS NULL)
     `;
-    connection.query(querySubscriptions, [notificacao.id_cliente, notificacao.id_passeador], (err, subscriptions) => {
+    pool.query(querySubscriptions, [notificacao.id_cliente, notificacao.id_passeador], (err, subscriptions) => {
       if (err) {
         console.error('Erro ao buscar subscriptions:', err);
         return res.status(500).json({ success: false, message: 'Erro ao buscar subscriptions' });
       }
-      subscriptions.forEach((sub) => {
+      subscriptions.rows.forEach((sub) => {
         const pushSubscription = {
           endpoint: sub.endpoint,
           keys: {
@@ -137,23 +175,36 @@ app.post('/send-notification', (req, res) => {
 // Cron job para enviar notificação 5 minutos antes do passeio
 cron.schedule('* * * * *', () => {
   const query = 'SELECT id_cliente, horario_passeio FROM clientes WHERE tipo = 0';
-  connection.query(query, (err, clientes) => {
+
+  pool.query(query, (err, clientes) => {
     if (err) {
       console.error('Erro ao buscar clientes para notificação:', err);
       return;
     }
-    const now = dayjs();
-    clientes.forEach((cliente) => {
+
+    const now = dayjs().tz('America/Sao_Paulo'); // Ajuste para o timezone correto
+    console.log(`Hora atual: ${now.format('HH:mm:ss')}`); // Log para depuração
+
+    clientes.rows.forEach((cliente) => {
       const walkTime = dayjs(cliente.horario_passeio, 'HH:mm:ss');
       const notificationTime = walkTime.subtract(5, 'minute');
+
+      console.log(`Cliente ${cliente.id_cliente}: Horário do passeio: ${walkTime.format('HH:mm:ss')}, Horário da notificação: ${notificationTime.format('HH:mm:ss')}`);
+
       if (now.format('HH:mm') === notificationTime.format('HH:mm')) {
-        const subQuery = 'SELECT * FROM subscriptions WHERE id_cliente = ?';
-        connection.query(subQuery, [cliente.id_cliente], (err, subscriptions) => {
+        const subQuery = 'SELECT * FROM subscriptions WHERE id_cliente = $1';
+        pool.query(subQuery, [cliente.id_cliente], (err, subscriptions) => {
           if (err) {
             console.error('Erro ao buscar subscriptions para notificação:', err);
             return;
           }
-          subscriptions.forEach((sub) => {
+
+          if (subscriptions.rows.length === 0) {
+            console.warn(`Nenhuma subscription encontrada para o cliente ${cliente.id_cliente}`);
+            return;
+          }
+
+          subscriptions.rows.forEach((sub) => {
             const pushSubscription = {
               endpoint: sub.endpoint,
               keys: {
@@ -165,9 +216,16 @@ cron.schedule('* * * * *', () => {
               title: 'Lembrete de Passeio',
               body: 'Seu pet começará o passeio em 5 minutos!'
             });
-            webPush.sendNotification(pushSubscription, payload).catch((error) => {
-              console.error('Erro ao enviar notificação push:', error);
-            });
+
+            console.log(`Enviando notificação para o cliente ${cliente.id_cliente} no endpoint ${sub.endpoint}`);
+
+            webPush.sendNotification(pushSubscription, payload)
+              .then(() => {
+                console.log(`Notificação enviada com sucesso para o cliente ${cliente.id_cliente}`);
+              })
+              .catch((error) => {
+                console.error(`Erro ao enviar notificação para o cliente ${cliente.id_cliente}:`, error);
+              });
           });
         });
       }
@@ -182,7 +240,7 @@ const LOCKOUT_TIME = 10 * 60 * 1000; // 10 minutos em milissegundos
 
 // Endpoint para login com proteção contra ataques de força bruta
 app.post('/login', (req, res) => {
-  const { email, senha } = req.body;
+  const { email, senha, subscription } = req.body; // Adicione subscription ao corpo da requisição
 
   // Verifica se o usuário está temporariamente bloqueado
   if (loginAttempts[email] && loginAttempts[email].attempts >= MAX_ATTEMPTS) {
@@ -196,14 +254,14 @@ app.post('/login', (req, res) => {
   }
 
   // Consulta para buscar o cliente pelo email
-  const query = 'SELECT * FROM clientes WHERE email = ?';
-  connection.query(query, [email], async (err, results) => {
+  const query = 'SELECT * FROM clientes WHERE email = $1';
+  pool.query(query, [email], async (err, results) => {
     if (err) {
       console.error('Erro ao consultar o banco de dados:', err);
       return res.status(500).json({ success: false, message: 'Erro ao consultar o banco de dados' });
     }
 
-    if (results.length === 0) {
+    if (results.rows.length === 0) {
       // Incrementa o contador de tentativas de login falhas
       if (!loginAttempts[email]) {
         loginAttempts[email] = { attempts: 1, lastAttempt: Date.now() };
@@ -215,7 +273,7 @@ app.post('/login', (req, res) => {
       return res.status(401).json({ success: false, message: 'Email ou senha incorretos' });
     }
 
-    const cliente = results[0];
+    const cliente = results.rows[0];
 
     // Compara a senha digitada com o hash armazenado no banco
     const match = await bcrypt.compare(senha, cliente.senha);
@@ -240,6 +298,13 @@ app.post('/login', (req, res) => {
     // Gera um token JWT para ser possível fazer a verificação de login nas rotas /admin, /clientes, /passeadores ....
     const token = jwt.sign({ id: cliente.id_cliente, email: cliente.email, userType: userType }, 'your_secret_key', { expiresIn: '1h' });
 
+    // Salva a subscription no banco de dados, se fornecida e o cliente for do tipo 0
+    if (subscription && cliente.tipo === 0) {
+      saveSubscription(subscription, cliente.id_cliente)
+        .then((message) => console.log(message))
+        .catch((error) => console.error(error));
+    }
+
     // Retorna resposta de sucesso e dados do usuário
     res.json({
       success: true,
@@ -263,16 +328,16 @@ app.post('/alterar-senha', async (req, res) => {
     const hashedPassword = await bcrypt.hash(novaSenha, saltRounds);
 
     // Atualiza a senha do cliente no banco de dados
-    const query = 'UPDATE clientes SET senha = ?, alterar_senha = 0 WHERE id_cliente = ?';
+    const query = 'UPDATE clientes SET senha = $1, alterar_senha = 0 WHERE id_cliente = $2';
 
-    connection.query(query, [hashedPassword, id_cliente], (err, result) => {
+    pool.query(query, [hashedPassword, id_cliente], (err, result) => {
       if (err) {
         console.error('Erro ao atualizar senha:', err);
         return res.status(500).json({ success: false, message: 'Erro ao atualizar senha' });
       }
 
       // Verifica se o ID do cliente existe no banco de dados
-      if (result.affectedRows === 0) {
+      if (result.rowCount === 0) {
         return res.status(404).json({ success: false, message: 'Cliente não encontrado' });
       }
 
@@ -289,12 +354,12 @@ app.post('/alterar-senha', async (req, res) => {
 app.get('/clientes', (req, res) => {
   const query = 'SELECT * FROM clientes WHERE tipo = 0';
 
-  connection.query(query, (err, results) => {
+  pool.query(query, (err, results) => {
     if (err) {
       console.error('Erro ao consultar o banco de dados:', err);
       return res.status(500).send('Erro ao consultar o banco de dados');
     }
-    res.json(results);
+    res.json(results.rows);
   });
 });
 
@@ -306,34 +371,34 @@ app.get('/clientes/:id', (req, res) => {
   const queryCliente = `
     SELECT * 
     FROM clientes 
-    WHERE id_cliente = ?`;
+    WHERE id_cliente = $1`;
 
   // Consulta para buscar os cachorros do cliente
   const queryCachorros = `
     SELECT nome 
     FROM cachorros 
-    WHERE id_cliente = ?`;
+    WHERE id_cliente = $1`;
 
   // Consulta para buscar o passeador do cliente via cachorros
   const queryPasseador = `
     SELECT p.nome AS passeador_nome
     FROM passeadores p
     JOIN cachorros c ON c.id_passeador = p.id_passeador
-    WHERE c.id_cliente = ?
+    WHERE c.id_cliente = $1
     LIMIT 1`;
 
   // Consultar os dados do cliente
-  connection.query(queryCliente, [clienteId], (err, clienteResults) => {
+  pool.query(queryCliente, [clienteId], (err, clienteResults) => {
     if (err) {
       console.error('Erro ao consultar cliente:', err);
       return res.status(500).json({ success: false, message: 'Erro ao consultar cliente' });
     }
 
-    if (clienteResults.length === 0) {
+    if (clienteResults.rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Cliente não encontrado' });
     }
 
-    const cliente = clienteResults[0];
+    const cliente = clienteResults.rows[0];
 
     // Formatar horário para mostrar apenas HH:MM, se disponível
     if (cliente.horario_passeio) {
@@ -341,23 +406,23 @@ app.get('/clientes/:id', (req, res) => {
     }
 
     // Consultar os cachorros associados ao cliente
-    connection.query(queryCachorros, [clienteId], (err, cachorroResults) => {
+    pool.query(queryCachorros, [clienteId], (err, cachorroResults) => {
       if (err) {
         console.error('Erro ao consultar cachorros:', err);
         return res.status(500).json({ success: false, message: 'Erro ao consultar cachorros' });
       }
 
-      const caes = cachorroResults.map(cachorro => cachorro.nome);
+      const caes = cachorroResults.rows.map(cachorro => cachorro.nome);
       cliente.caes = caes; // Adiciona os cães ao objeto cliente
 
       // Consultar o passeador associado aos cachorros do cliente
-      connection.query(queryPasseador, [clienteId], (err, passeadorResults) => {
+      pool.query(queryPasseador, [clienteId], (err, passeadorResults) => {
         if (err) {
           console.error('Erro ao consultar passeador:', err);
           return res.status(500).json({ success: false, message: 'Erro ao consultar passeador' });
         }
 
-        const passeadorNome = passeadorResults.length > 0 ? passeadorResults[0].passeador_nome : null;
+        const passeadorNome = passeadorResults.rows.length > 0 ? passeadorResults.rows[0].passeador_nome : null;
         cliente.passeador = passeadorNome; // Adiciona o nome do passeador ao cliente
 
         // Retorna os dados consolidados
@@ -382,10 +447,10 @@ app.put('/clientes/:id', (req, res) => {
   // Atualiza os dados do cliente
   const updateClienteQuery = `
     UPDATE clientes
-    SET nome = ?, email = ?, cpf = ?, telefone = ?, endereco = ?, pacote = ?, horario_passeio = ?, anotacoes = ?
-    WHERE id_cliente = ?`;
+    SET nome = $1, email = $2, cpf = $3, telefone = $4, endereco = $5, pacote = $6, horario_passeio = $7, anotacoes = $8
+    WHERE id_cliente = $9`;
 
-  connection.query(
+  pool.query(
     updateClienteQuery,
     [nome, email, cpf, telefone, endereco, pacote, horario_passeio, anotacoes, clienteId],
     (err) => {
@@ -398,10 +463,10 @@ app.put('/clientes/:id', (req, res) => {
       if (id_passeador && !isNaN(id_passeador)) {
         const updatePasseadorQuery = `
           UPDATE cachorros 
-          SET id_passeador = ? 
-          WHERE id_cliente = ?`;
+          SET id_passeador = $1 
+          WHERE id_cliente = $2`;
       
-        connection.query(updatePasseadorQuery, [id_passeador, clienteId], (err) => {
+        pool.query(updatePasseadorQuery, [id_passeador, clienteId], (err) => {
           if (err) {
             console.error('Erro ao atualizar passeador dos cachorros:', err);
             return res.status(500).json({ success: false, message: 'Erro ao atualizar passeador dos cachorros' });
@@ -414,21 +479,21 @@ app.put('/clientes/:id', (req, res) => {
       // Verifica se há novos cães para adicionar
       if (caes && caes.length > 0) {
         // Consulta para buscar os nomes dos cachorros existentes
-        const selectCachorrosQuery = 'SELECT nome FROM cachorros WHERE id_cliente = ?';
-        connection.query(selectCachorrosQuery, [clienteId], (err, existingDogs) => {
+        const selectCachorrosQuery = 'SELECT nome FROM cachorros WHERE id_cliente = $1';
+        pool.query(selectCachorrosQuery, [clienteId], (err, existingDogs) => {
           if (err) {
             console.error('Erro ao consultar cachorros existentes:', err);
             return res.status(500).send('Erro ao consultar cachorros existentes');
           }
       
-          const existingDogNames = existingDogs.map(dog => dog.nome); // Nomes dos cachorros existentes no banco
+          const existingDogNames = existingDogs.rows.map(dog => dog.nome); // Nomes dos cachorros existentes no banco
           const newDogs = caes.filter(cao => !existingDogNames.includes(cao)); // Cachorros novos
           const dogsToDelete = existingDogNames.filter(existingDog => !caes.includes(existingDog)); // Cachorros a excluir
       
           // Exclui cachorros que não estão mais na lista
           if (dogsToDelete.length > 0) {
-            const deleteDogsQuery = 'DELETE FROM cachorros WHERE id_cliente = ? AND nome IN (?)';
-            connection.query(deleteDogsQuery, [clienteId, dogsToDelete], (err) => {
+            const deleteDogsQuery = 'DELETE FROM cachorros WHERE id_cliente = $1 AND nome = ANY($2)';
+            pool.query(deleteDogsQuery, [clienteId, dogsToDelete], (err) => {
               if (err) {
                 console.error('Erro ao deletar cachorros:', err);
                 return res.status(500).send('Erro ao deletar cachorros');
@@ -438,17 +503,16 @@ app.put('/clientes/:id', (req, res) => {
       
           // Insere cachorros novos
           if (newDogs.length > 0) {
-            const insertDogQuery = 'INSERT INTO cachorros (nome, id_cliente, id_passeador) VALUES ?';
-            const dogValues = newDogs.map(cao => [cao, clienteId, id_passeador || null]);
-      
-            connection.query(insertDogQuery, [dogValues], (err) => {
-              if (err) {
-                console.error('Erro ao inserir novos cães:', err);
-                return res.status(500).send('Erro ao inserir novos cães');
-              }
-      
-              res.json({ success: true, message: 'Cliente e cachorros atualizados com sucesso!' });
+            const insertDogQuery = 'INSERT INTO cachorros (nome, id_cliente, id_passeador) VALUES ($1, $2, $3)';
+            newDogs.forEach(cao => {
+              pool.query(insertDogQuery, [cao, clienteId, id_passeador || null], (err) => {
+                if (err) {
+                  console.error('Erro ao inserir novos cães:', err);
+                  return res.status(500).send('Erro ao inserir novos cães');
+                }
+              });
             });
+            res.json({ success: true, message: 'Cliente e cachorros atualizados com sucesso!' });
           } else {
             res.json({ success: true, message: 'Cliente atualizado com sucesso!' });
           }
@@ -461,9 +525,8 @@ app.put('/clientes/:id', (req, res) => {
 });
 
 // Endpoint para redefinir a senha do cliente
-app.put('/clientes/:id/reset-senha', async (req, res) => {
+app.put('/clientes/:id/reset-senha', authenticateToken, async (req, res) => {
   const clienteId = req.params.id;
-  console.log(`Resetando senha para o cliente ID: ${clienteId}`); // <-- Adiciona um log para depuração
 
   if (!clienteId) {
     return res.status(400).json({ success: false, message: 'ID do cliente não fornecido' });
@@ -471,20 +534,20 @@ app.put('/clientes/:id/reset-senha', async (req, res) => {
 
   try {
     const novaSenha = 'dog123';
-    const senhaHash = await bcrypt.hash(novaSenha, 10); // Gera um hash seguro
+    const senhaHash = await bcrypt.hash(novaSenha, 10);
 
     const updatePasswordQuery = `
       UPDATE clientes 
-      SET senha = ?, alterar_senha = 1 
-      WHERE id_cliente = ?`;
+      SET senha = $1, alterar_senha = 1 
+      WHERE id_cliente = $2`;
 
-    connection.query(updatePasswordQuery, [senhaHash, clienteId], (err, result) => {
+    pool.query(updatePasswordQuery, [senhaHash, clienteId], (err, result) => {
       if (err) {
         console.error('Erro ao redefinir senha:', err);
         return res.status(500).json({ success: false, message: 'Erro ao redefinir senha' });
       }
 
-      if (result.affectedRows === 0) {
+      if (result.rowCount === 0) {
         return res.status(404).json({ success: false, message: 'Cliente não encontrado' });
       }
 
@@ -504,40 +567,39 @@ app.post('/criarcliente', async (req, res) => {
     // Gera o hash da senha padrão "dog123"
     const hashedPassword = await bcrypt.hash('dog123', saltRounds);
 
-    // Query para inserir um novo cliente com a senha encriptada
+    // Query para inserir um novo cliente com a senha encriptada e retornar o id_cliente
     const insertClientQuery = `
       INSERT INTO clientes (nome, email, cpf, telefone, endereco, pacote, horario_passeio, anotacoes, tipo, senha)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0, $9)
+      RETURNING id_cliente
     `;
 
-    connection.query(insertClientQuery, [nome, email, cpf, telefone, endereco, pacote, horario, anotacao, hashedPassword], (err, result) => {
-      if (err) {
-        console.error('Erro ao inserir cliente:', err);
-        return res.status(500).send('Erro ao inserir cliente');
+    const clientResult = await pool.query(insertClientQuery, [nome, email, cpf, telefone, endereco, pacote, horario, anotacao, hashedPassword]);
+
+    // Certifique-se de que o id_cliente foi retornado
+    if (!clientResult.rows || clientResult.rows.length === 0) {
+      return res.status(500).json({ success: false, message: 'Erro ao criar cliente: ID não retornado.' });
+    }
+
+    const clienteId = clientResult.rows[0].id_cliente;
+
+    // Verifica se há cães para adicionar
+    if (caes && caes.length > 0) {
+      // Verifica se id_passeador foi fornecido
+      if (!id_passeador) {
+        return res.status(400).json({ success: false, message: 'ID do passeador é obrigatório quando há cães.' });
       }
 
-      const clienteId = result.insertId;
-
-      // Verifica se há cães para adicionar
-      if (caes && caes.length > 0) {
-        const insertDogQuery = 'INSERT INTO cachorros (nome, id_cliente, id_passeador) VALUES ?';
-        const dogValues = caes.map((cao) => [cao, clienteId, id_passeador]);
-
-        connection.query(insertDogQuery, [dogValues], (err) => {
-          if (err) {
-            console.error('Erro ao inserir cães:', err);
-            return res.status(500).send('Erro ao inserir cães');
-          }
-
-          res.json({ success: true, message: 'Cliente e cães adicionados com sucesso!' });
-        });
-      } else {
-        res.json({ success: true, message: 'Cliente adicionado com sucesso!' });
+      const insertDogQuery = 'INSERT INTO cachorros (nome, id_cliente, id_passeador) VALUES ($1, $2, $3)';
+      for (const cao of caes) {
+        await pool.query(insertDogQuery, [cao, clienteId, id_passeador]);
       }
-    });
+    }
+
+    res.json({ success: true, message: 'Cliente e cães adicionados com sucesso!' });
   } catch (error) {
-    console.error('Erro ao criar hash da senha:', error);
-    res.status(500).send('Erro ao processar senha');
+    console.error('Erro ao criar cliente:', error);
+    res.status(500).json({ success: false, message: 'Erro ao criar cliente.' });
   }
 });
 
@@ -545,26 +607,36 @@ app.post('/criarcliente', async (req, res) => {
 app.delete('/clientes/:id', (req, res) => {
   const clienteId = req.params.id;
 
+  // Query para deletar as subscriptions associadas ao cliente
+  const deleteSubscriptionsQuery = 'DELETE FROM subscriptions WHERE id_cliente = $1';
   // Query para deletar os cachorros associados ao cliente
-  const deleteCachorrosQuery = 'DELETE FROM cachorros WHERE id_cliente = ?';
+  const deleteCachorrosQuery = 'DELETE FROM cachorros WHERE id_cliente = $1';
   // Query para deletar o cliente
-  const deleteClienteQuery = 'DELETE FROM clientes WHERE id_cliente = ?';
+  const deleteClienteQuery = 'DELETE FROM clientes WHERE id_cliente = $1';
 
-  // Deletar os cachorros associados ao cliente
-  connection.query(deleteCachorrosQuery, [clienteId], (err) => {
+  // Deletar as subscriptions associadas ao cliente
+  pool.query(deleteSubscriptionsQuery, [clienteId], (err) => {
     if (err) {
-      console.error('Erro ao deletar cachorros:', err);
-      return res.status(500).send('Erro ao deletar cachorros');
+      console.error('Erro ao deletar subscriptions:', err);
+      return res.status(500).send('Erro ao deletar subscriptions');
     }
 
-    // Deletar o cliente após deletar os cachorros
-    connection.query(deleteClienteQuery, [clienteId], (err) => {
+    // Deletar os cachorros associados ao cliente
+    pool.query(deleteCachorrosQuery, [clienteId], (err) => {
       if (err) {
-        console.error('Erro ao deletar cliente:', err);
-        return res.status(500).send('Erro ao deletar cliente');
+        console.error('Erro ao deletar cachorros:', err);
+        return res.status(500).send('Erro ao deletar cachorros');
       }
 
-      res.json({ success: true, message: 'Cliente e seus cachorros deletados com sucesso!' });
+      // Deletar o cliente após deletar os cachorros e subscriptions
+      pool.query(deleteClienteQuery, [clienteId], (err) => {
+        if (err) {
+          console.error('Erro ao deletar cliente:', err);
+          return res.status(500).send('Erro ao deletar cliente');
+        }
+
+        res.json({ success: true, message: 'Cliente e seus dados associados deletados com sucesso!' });
+      });
     });
   });
 });
@@ -576,41 +648,41 @@ app.get('/passeadores/:id?', (req, res) => {
   if (passeadorId) {
     // Caso o ID seja fornecido, busca detalhes do passeador e seus clientes associados
     const queryPasseador = `
-      SELECT nome, email, imagem, cpf, telefone, endereco 
+      SELECT nome, email, imagem, cpf, telefone, endereco, modulo 
       FROM passeadores 
-      WHERE id_passeador = ?`;
+      WHERE id_passeador = $1`;
 
     const queryClientes = `
       SELECT DISTINCT clientes.nome 
       FROM clientes
       JOIN cachorros ON cachorros.id_cliente = clientes.id_cliente
-      WHERE cachorros.id_passeador = ?`;
+      WHERE cachorros.id_passeador = $1`;
 
-    connection.query(queryPasseador, [passeadorId], (err, passeadorResults) => {
+    pool.query(queryPasseador, [passeadorId], (err, passeadorResults) => {
       if (err) {
         console.error('Erro ao consultar passeador:', err);
         return res.status(500).send('Erro ao consultar passeador');
       }
 
-      if (passeadorResults.length === 0) {
+      if (passeadorResults.rows.length === 0) {
         return res.status(404).send('Passeador não encontrado');
       }
 
-      const passeador = passeadorResults[0];
+      const passeador = passeadorResults.rows[0];
 
       if (passeador.imagem) {
         passeador.imagem = `data:image/jpeg;base64,${passeador.imagem.toString('base64')}`;
       }
 
       // Consultar todos os clientes associados ao passeador
-      connection.query(queryClientes, [passeadorId], (err, clienteResults) => {
+      pool.query(queryClientes, [passeadorId], (err, clienteResults) => {
         if (err) {
           console.error('Erro ao consultar clientes:', err);
           return res.status(500).send('Erro ao consultar clientes');
         }
 
         // Combina os nomes dos clientes em uma única string separada por vírgulas
-        const clientes = clienteResults.map(cliente => cliente.nome).join(', ');
+        const clientes = clienteResults.rows.map(cliente => cliente.nome).join(', ');
 
         res.json({ success: true, passeador, clientes });
       });
@@ -621,14 +693,14 @@ app.get('/passeadores/:id?', (req, res) => {
       SELECT id_passeador, nome, imagem
       FROM passeadores`;
 
-    connection.query(queryTodosPasseadores, (err, results) => {
+    pool.query(queryTodosPasseadores, (err, results) => {
       if (err) {
         console.error('Erro ao consultar passeadores:', err);
         return res.status(500).json({ success: false, message: 'Erro ao consultar passeadores' });
       }
 
       // Formata os resultados
-      const passeadores = results.map(passeador => ({
+      const passeadores = results.rows.map(passeador => ({
         id: passeador.id_passeador,
         nome: passeador.nome,
         imagem: passeador.imagem ? `data:image/jpeg;base64,${passeador.imagem.toString('base64')}` : null
@@ -642,18 +714,18 @@ app.get('/passeadores/:id?', (req, res) => {
 // Endpoint para atualizar os dados de um passeador
 app.put('/passeadores/:id', (req, res) => {
   const passeadorId = req.params.id;
-  const { nome, email, cpf, telefone, endereco, imagem } = req.body;
+  const { nome, email, cpf, telefone, endereco, imagem, modulo } = req.body;
 
   // Conversão de base64 para Blob (Binário)
   const imagemBlob = imagem ? Buffer.from(imagem.replace(/^data:image\/\w+;base64,/, ""), 'base64') : null;
 
   const query = `
     UPDATE passeadores
-    SET nome = ?, email = ?, cpf = ?, telefone = ?, endereco = ?, imagem = ?
-    WHERE id_passeador = ?
+    SET nome = $1, email = $2, cpf = $3, telefone = $4, endereco = $5, imagem = $6, modulo = $7
+    WHERE id_passeador = $8
   `;
   
-  connection.query(query, [nome, email, cpf, telefone, endereco, imagemBlob, passeadorId], (err) => {
+  pool.query(query, [nome, email, cpf, telefone, endereco, imagemBlob, modulo, passeadorId], (err) => {
     if (err) {
       console.error('Erro ao atualizar passeador:', err);
       return res.status(500).json({ success: false, message: 'Erro ao atualizar passeador' });
@@ -664,17 +736,17 @@ app.put('/passeadores/:id', (req, res) => {
 
 // Endpoint para criar um novo passeador
 app.post('/criarpasseador', (req, res) => {
-  const { nome, email, cpf, telefone, endereco, imagem } = req.body;
+  const { nome, email, cpf, telefone, endereco, imagem, modulo } = req.body; // inclua modulo
 
   // Converte a imagem base64 em Blob para salvar no banco de dados
   const imagemBlob = imagem ? Buffer.from(imagem.replace(/^data:image\/\w+;base64,/, ""), 'base64') : null;
 
   const query = `
-    INSERT INTO passeadores (nome, email, cpf, telefone, endereco, imagem)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO passeadores (nome, email, cpf, telefone, endereco, imagem, modulo)
+    VALUES ($1, $2, $3, $4, $5, $6, $7)
   `;
 
-  connection.query(query, [nome, email, cpf, telefone, endereco, imagemBlob], (err) => {
+  pool.query(query, [nome, email, cpf, telefone, endereco, imagemBlob, modulo], (err) => {
     if (err) {
       console.error('Erro ao criar passeador:', err);
       return res.status(500).json({ success: false, message: 'Erro ao criar passeador' });
@@ -686,21 +758,21 @@ app.post('/criarpasseador', (req, res) => {
 // Endpoint para excluir um passeador pelo ID
 app.delete('/passeadores/:id', (req, res) => {
   const passeadorId = req.params.id; // ID recebido da URL
-  const deleteQuery = 'DELETE FROM passeadores WHERE id_passeador = ?';
+  const deleteQuery = 'DELETE FROM passeadores WHERE id_passeador = $1';
 
   // Confirma se o ID não está vazio
   if (!passeadorId) {
     return res.status(400).json({ success: false, message: 'ID do passeador não fornecido' });
   }
 
-  connection.query(deleteQuery, [passeadorId], (err, result) => {
+  pool.query(deleteQuery, [passeadorId], (err, result) => {
     if (err) {
       console.error('Erro ao excluir passeador:', err);
       return res.status(500).json({ success: false, message: 'Erro ao excluir passeador' });
     }
 
     // Verifica se alguma linha foi afetada (confirmação de exclusão)
-    if (result.affectedRows === 0) {
+    if (result.rowCount === 0) {
       return res.status(404).json({ success: false, message: 'Passeador não encontrado' });
     }
 
@@ -715,5 +787,5 @@ if (require.main === module) {
   });
 }
 
-// Exporta o app e a connection
-module.exports = { app, connection };
+// Exporta o app e o pool de conexões
+module.exports = { app, pool };
