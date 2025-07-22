@@ -1,7 +1,7 @@
 import './criarpasseador.css';
 import React, { useRef, useState } from 'react';
 import { useNavigate } from "react-router-dom";
-import { FaUser, FaEnvelope, FaAddressCard, FaPhone, FaHome, FaCamera } from "react-icons/fa";
+import { FaUser, FaEnvelope, FaAddressCard, FaPhone, FaHome, FaCamera, FaSignal} from "react-icons/fa";
 
 function CriarPasseador() {
   const navigate = useNavigate();
@@ -12,6 +12,7 @@ function CriarPasseador() {
   const cpfRef = useRef(null);
   const telefoneRef = useRef(null);
   const enderecoRef = useRef(null);
+  const moduloRef = useRef(null); 
 
   // Estado para armazenar a imagem em base64
   const [selectedImage, setSelectedImage] = useState(null);
@@ -24,7 +25,7 @@ function CriarPasseador() {
 
   // Funções de validação
   const validateNome = (nome) => {
-    if (!/^[A-Z][a-z]{1,}/.test(nome)) {
+    if (!/^[A-ZÀ-Ÿ][a-zà-ÿ]{1,}/.test(nome)) {
       setNomeError('O nome deve começar com letra maiúscula e ter pelo menos 2 caracteres');
       return false;
     }
@@ -109,6 +110,7 @@ function CriarPasseador() {
         telefone: telefoneRef.current.value.replace(/\D/g, ''),
         endereco: enderecoRef.current.value,
         imagem: selectedImage,
+        modulo: moduloRef.current.value, 
       };
 
       try {
@@ -216,6 +218,15 @@ function CriarPasseador() {
           <div className="input-container">
             <FaHome className="input-icon" />
             <input ref={enderecoRef} type="text" placeholder="Endereço" className="form-input" />
+          </div>
+          <div className="input-container">
+            <FaSignal className="input-icon" />
+            <input 
+              ref={moduloRef} 
+              type="text" 
+              placeholder="Módulo" 
+              className="form-input"
+            />
           </div>
 
           <div className="button-group">

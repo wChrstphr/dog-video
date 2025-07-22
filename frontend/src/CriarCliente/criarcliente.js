@@ -50,7 +50,7 @@ function CriarCliente() {
         
       // Funções de validação
   const validateNome = (nome) => {
-    if (!/^[A-Z][a-z]{1,}/.test(nome)) {
+    if (!/^[A-ZÀ-Ÿ][a-zà-ÿ]{1,}/.test(nome)) {
       setNomeError('O nome deve começar com letra maiúscula e ter pelo menos 2 caracteres');
       return false;
     }
@@ -175,7 +175,17 @@ function CriarCliente() {
     const isTelefoneValid = validateTelefone(telefone);
     const isHorarioValid = validateHorario(horario);
 
-    if (!isNomeValid || !isEmailValid || !isCPFValid || !isTelefoneValid || !isHorarioValid) {
+    // Validação: pelo menos um cão deve ser informado
+    if (caes.length === 0 || caes[0] === "") {
+      alert('Por favor, digite o nome de pelo menos um cachorrinho.');
+      return;
+    }
+
+    // Validação: um passeador deve ser selecionado quando há cães
+    if (!id_passeador) {
+      alert('Por favor, selecione um passeador.');
+      return;
+    }    if (!isNomeValid || !isEmailValid || !isCPFValid || !isTelefoneValid || !isHorarioValid) {
       alert('Por favor, corrija os erros destacados antes de enviar.');
       return;
     }
