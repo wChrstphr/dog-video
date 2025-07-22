@@ -525,7 +525,7 @@ app.put('/clientes/:id', (req, res) => {
 });
 
 // Endpoint para redefinir a senha do cliente
-app.put('/clientes/:id/reset-senha', async (req, res) => {
+app.put('/clientes/:id/reset-senha', authenticateToken, async (req, res) => {
   const clienteId = req.params.id;
 
   if (!clienteId) {
@@ -585,9 +585,14 @@ app.post('/criarcliente', async (req, res) => {
 
     // Verifica se há cães para adicionar
     if (caes && caes.length > 0) {
+      // Verifica se id_passeador foi fornecido
+      if (!id_passeador) {
+        return res.status(400).json({ success: false, message: 'ID do passeador é obrigatório quando há cães.' });
+      }
+
       const insertDogQuery = 'INSERT INTO cachorros (nome, id_cliente, id_passeador) VALUES ($1, $2, $3)';
       for (const cao of caes) {
-        await pool.query(insertDogQuery, [cao, clienteId, id_passeador || null]);
+        await pool.query(insertDogQuery, [cao, clienteId, id_passeador]);
       }
     }
 

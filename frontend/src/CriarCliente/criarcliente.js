@@ -175,13 +175,17 @@ function CriarCliente() {
     const isTelefoneValid = validateTelefone(telefone);
     const isHorarioValid = validateHorario(horario);
 
-    // Validação adicional: se houver cães, um passeador deve ser selecionado
-    if (caes.length > 0 && caes[0] !== "" && !id_passeador) {
-      alert('Por favor, selecione um passeador.');
+    // Validação: pelo menos um cão deve ser informado
+    if (caes.length === 0 || caes[0] === "") {
+      alert('Por favor, digite o nome de pelo menos um cachorrinho.');
       return;
     }
 
-    if (!isNomeValid || !isEmailValid || !isCPFValid || !isTelefoneValid || !isHorarioValid) {
+    // Validação: um passeador deve ser selecionado quando há cães
+    if (!id_passeador) {
+      alert('Por favor, selecione um passeador.');
+      return;
+    }    if (!isNomeValid || !isEmailValid || !isCPFValid || !isTelefoneValid || !isHorarioValid) {
       alert('Por favor, corrija os erros destacados antes de enviar.');
       return;
     }
