@@ -183,13 +183,10 @@ cron.schedule('* * * * *', () => {
     }
 
     const now = dayjs().tz('America/Sao_Paulo'); // Ajuste para o timezone correto
-    console.log(`Hora atual: ${now.format('HH:mm:ss')}`); // Log para depuração
 
     clientes.rows.forEach((cliente) => {
       const walkTime = dayjs(cliente.horario_passeio, 'HH:mm:ss');
       const notificationTime = walkTime.subtract(5, 'minute');
-
-      console.log(`Cliente ${cliente.id_cliente}: Horário do passeio: ${walkTime.format('HH:mm:ss')}, Horário da notificação: ${notificationTime.format('HH:mm:ss')}`);
 
       if (now.format('HH:mm') === notificationTime.format('HH:mm')) {
         const subQuery = 'SELECT * FROM subscriptions WHERE id_cliente = $1';
@@ -200,7 +197,6 @@ cron.schedule('* * * * *', () => {
           }
 
           if (subscriptions.rows.length === 0) {
-            console.warn(`Nenhuma subscription encontrada para o cliente ${cliente.id_cliente}`);
             return;
           }
 
@@ -217,12 +213,7 @@ cron.schedule('* * * * *', () => {
               body: 'Seu pet começará o passeio em 5 minutos!'
             });
 
-            console.log(`Enviando notificação para o cliente ${cliente.id_cliente} no endpoint ${sub.endpoint}`);
-
             webPush.sendNotification(pushSubscription, payload)
-              .then(() => {
-                console.log(`Notificação enviada com sucesso para o cliente ${cliente.id_cliente}`);
-              })
               .catch((error) => {
                 console.error(`Erro ao enviar notificação para o cliente ${cliente.id_cliente}:`, error);
               });
@@ -301,8 +292,8 @@ app.post('/login', (req, res) => {
     // Salva a subscription no banco de dados, se fornecida e o cliente for do tipo 0
     if (subscription && cliente.tipo === 0) {
       saveSubscription(subscription, cliente.id_cliente)
-        .then((message) => console.log(message))
-        .catch((error) => console.error(error));
+        .then((message) => console.log('Subscription salva com sucesso:', message))
+        .catch((error) => console.error('Erro ao salvar subscription:', error));
     }
 
     // Retorna resposta de sucesso e dados do usuário
