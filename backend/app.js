@@ -224,6 +224,24 @@ cron.schedule('* * * * *', () => {
   });
 });
 
+// Cron job para excluir clientes temporários com mais de 30 dias
+cron.schedule('0 2 * * *', async () => {
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] Iniciando verificação de clientes temporários...`);
+
+  try {
+    const deleteQuery = `
+      DELETE FROM clientes
+      WHERE temporario = 1 AND criado_em < NOW() - INTERVAL '30 days'
+    `;
+    const result = await pool.query(deleteQuery);
+
+    console.log(`[${timestamp}] ${result.rowCount} clientes temporários excluídos.`);
+  } catch (err) {
+    console.error(`[${timestamp}] Erro ao excluir clientes temporários:`, err);
+  }
+});
+
 // Variáveis para controle de tentativas de login
 const loginAttempts = {}; // Armazena tentativas de login { "email@example.com": { attempts: 0, lastAttempt: Date.now() } }
 const MAX_ATTEMPTS = 5;

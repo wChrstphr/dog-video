@@ -190,6 +190,9 @@ function CriarCliente() {
       return;
     }
 
+    // define flag temporário: 1 se pacote for "Temporario", senão 0
+    const temporario = pacote === 'Temporario' ? 1 : 0;
+
     try {
       const response = await axios.post('http://localhost:3001/criarcliente', {
         nome,
@@ -198,6 +201,7 @@ function CriarCliente() {
         telefone,
         endereco,
         pacote: pacoteSelecionado, // Mantemos a nomenclatura da main
+        temporario,
         horario,
         anotacao,
         caes,
@@ -321,6 +325,7 @@ function CriarCliente() {
               <option value="">Selecione o Pacote</option>
               <option value="Trimestral">Trimestral</option>
               <option value="Mensal">Mensal</option>
+              <option value="Temporario">Temporário</option>
             </select>
           </div>
           <div className="input-container">
