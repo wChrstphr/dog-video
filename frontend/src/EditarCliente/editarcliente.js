@@ -169,7 +169,7 @@ function EditarCliente() {
       caesRef.current.value = cliente.caes ? cliente.caes.join(', ') : '';
       telefoneRef.current.value = formatTelefone(cliente.telefone) || '';
       enderecoRef.current.value = cliente.endereco || '';
-      horarioRef.current.value = formatHorario(cliente.horario_passeio) || '';
+      horarioRef.current.value = cliente.horario_passeio ? formatHorario(cliente.horario_passeio) : '';
       anotacaoRef.current.value = cliente.anotacoes || '';
       setSelectedPasseadorId(cliente.id_passeador || ""); // Atualiza o passeador selecionado ao carregar o cliente
     }
@@ -205,6 +205,7 @@ if (!isNomeValid || !isEmailValid || !isCPFValid || !isTelefoneValid || !isHorar
 }
 
 try {
+  const temporario = cliente.pacote === 'Temporario' ? 1 : 0;
   const updatedCliente = {
     nome: nomeRef.current.value || cliente.nome,
     email: emailRef.current.value || cliente.email,
@@ -215,6 +216,7 @@ try {
     telefone: (telefoneRef.current.value || cliente.telefone).replace(/\D/g, ''),
     endereco: enderecoRef.current.value || cliente.endereco,
     pacote: cliente.pacote ?? "", // Retorna o seu operando do lado direito quando o seu operador do lado esquerdo é null ou undefined
+    temporario,
     horario_passeio: horarioRef.current.value || cliente.horario_passeio,
     anotacoes: anotacaoRef.current.value || cliente.anotacoes,
     id_passeador: selectedPasseadorId || localPasseadorId || cliente.id_passeador,
@@ -353,6 +355,7 @@ try {
               <option value="">Selecione o Pacote</option>
               <option value="Mensal">Mensal</option>
               <option value="Trimestral">Trimestral</option>
+              <option value="Temporario">Temporário</option>
             </select>
           </div>
           <div className="input-container">
