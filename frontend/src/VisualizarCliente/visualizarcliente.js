@@ -1,24 +1,39 @@
 import './visualizarcliente.css';
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from "react-router-dom";
-import { FaUser, FaEnvelope, FaAddressCard, FaDog, FaPhone, FaHome, FaCalendarAlt, FaClock, FaBook, FaUserAlt } from "react-icons/fa";
+import { FaUser, FaEnvelope, FaAddressCard, FaDog, FaPhone, FaHome, FaCalendarAlt, FaClock, FaBook, FaUserAlt, FaCalendarDay } from "react-icons/fa";
 
 function VisualizarCliente() {
   const navigate = useNavigate();
-  const { id } = useParams(); // Obter o ID do cliente da URL
-  const [cliente, setCliente] = useState(null); // Estado para armazenar os dados do cliente
-  const [loading, setLoading] = useState(true); // Estado de carregamento
+  const { id } = useParams();
+  const [cliente, setCliente] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [diasRestantes, setDiasRestantes] = useState(null);
+  const [dataTermino, setDataTermino] = useState(null);
 
   useEffect(() => {
     const fetchCliente = async () => {
       try {
-        const response = await fetch(`http://localhost:3001/clientes/${id}`); // Faz a requisição para o backend
+        const response = await fetch(`http://localhost:3001/clientes/${id}`);
         const data = await response.json();
   
         if (data.success) {
-          setCliente(data.cliente); // Armazena os dados do cliente
-  
-          // Salva o ID do passeador no localStorage
+          setCliente(data.cliente);
+          
+          if (data.cliente.pacote === 'Temporario' && data.cliente.dias_teste) {
+            // Usa criado_em como data de início do teste
+            const dataInicio = new Date(data.cliente.criado_em);
+            const dataTermino = new Date(dataInicio);
+            dataTermino.setDate(dataInicio.getDate() + data.cliente.dias_teste);
+            
+            const hoje = new Date();
+            const diffTime = dataTermino - hoje;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            setDiasRestantes(diffDays > 0 ? diffDays : 0);
+            setDataTermino(dataTermino.toLocaleDateString('pt-BR')); // Formato brasileiro
+          }
+
           if (data.cliente.id_passeador) {
             localStorage.setItem('passeadorId', data.cliente.id_passeador);
           }
@@ -28,7 +43,7 @@ function VisualizarCliente() {
       } catch (error) {
         console.error('Erro ao buscar cliente:', error);
       } finally {
-        setLoading(false); // Remove o estado de carregamento
+        setLoading(false);
       }
     };
   
@@ -91,6 +106,20 @@ function VisualizarCliente() {
             <FaCalendarAlt className="input-icon" />
             <span className="form-input">{cliente.pacote}</span> {/* Pacote do cliente */}
           </div>
+          {cliente.pacote === 'Temporario' && cliente.dias_teste && (
+            <div className="input-container">
+              <FaCalendarDay className="input-icon" />
+              <span className="form-input">
+                {diasRestantes !== null && diasRestantes > 0 ? (
+                  `Faltam ${diasRestantes} dias (termina em ${dataTermino})`
+                ) : diasRestantes === 0 ? (
+                  `Termina hoje (${dataTermino})`
+                ) : (
+                  `Teste expirado (terminou em ${dataTermino})`
+                )}
+              </span>
+            </div>
+          )}
           <div className="input-container">
             <FaClock className="input-icon" />
             <span className="form-input">{cliente.horario_passeio}</span> {/* Horário de passeio */}
