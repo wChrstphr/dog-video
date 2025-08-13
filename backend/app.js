@@ -224,21 +224,49 @@ cron.schedule('* * * * *', () => {
   });
 });
 
-// Cron job para excluir clientes temporários com mais de 30 dias
+// Cron job para excluir clientes temporários com base no dias_teste
 cron.schedule('0 2 * * *', async () => {
   const timestamp = new Date().toISOString();
-  console.log(`[${timestamp}] Iniciando verificação de clientes temporários...`);
+  console.log(`[${timestamp}] Processando exclusão de clientes temporários...`);
 
+  const client = await pool.connect();
+  
   try {
-    const deleteQuery = `
-      DELETE FROM clientes
-      WHERE temporario = 1 AND criado_em < NOW() - INTERVAL '30 days'
-    `;
-    const result = await pool.query(deleteQuery);
+    await client.query('BEGIN'); // Inicia transação
 
-    console.log(`[${timestamp}] ${result.rowCount} clientes temporários excluídos.`);
+    // 1. Obter IDs dos clientes a serem excluídos
+    const { rows } = await client.query(`
+      SELECT id_cliente FROM clientes
+      WHERE temporario = 1
+      AND dias_teste IS NOT NULL
+      AND NOW() >= criado_em + (dias_teste * INTERVAL '1 day')
+    `);
+
+    // 2. Para cada cliente, excluir registros dependentes
+    for (const { id_cliente } of rows) {
+      // Excluir de subscriptions
+      await client.query('DELETE FROM subscriptions WHERE id_cliente = $1', [id_cliente]);
+      
+      // Excluir de cachorros
+      await client.query('DELETE FROM cachorros WHERE id_cliente = $1', [id_cliente]);
+      
+      // Excluir de outras tabelas relacionadas...
+    }
+
+    // 3. Finalmente excluir os clientes
+    const deleteResult = await client.query(`
+      DELETE FROM clientes
+      WHERE id_cliente = ANY($1)
+    `, [rows.map(r => r.id_cliente)]);
+
+    await client.query('COMMIT'); // Confirma transação
+    console.log(`[${timestamp}] ${deleteResult.rowCount} clientes excluídos com sucesso.`);
+
   } catch (err) {
-    console.error(`[${timestamp}] Erro ao excluir clientes temporários:`, err);
+    await client.query('ROLLBACK'); // Reverte em caso de erro
+    console.error(`[${timestamp}] Erro na exclusão:`, err);
+  } finally {
+    client.release(); // Libera o cliente de conexão
   }
 });
 
@@ -451,17 +479,26 @@ app.get('/clientes/:id', (req, res) => {
 // Endpoint para atualizar um cliente
 app.put('/clientes/:id', (req, res) => {
   const clienteId = req.params.id;
-  const { nome, email, cpf, telefone, endereco, pacote, horario_passeio, anotacoes, caes, id_passeador } = req.body;
+  const { nome, email, cpf, telefone, endereco, pacote, horario_passeio, anotacoes, caes, id_passeador, temporario, dias_teste } = req.body;
+  
+  // Define os valores para temporario e dias_teste
+  const temporarioValido = pacote === 'Temporario' ? 1 : 0;
+  const diasTesteValido = pacote === 'Temporario' && Number(dias_teste) > 0 
+    ? Math.floor(Number(dias_teste)) 
+    : null;
 
-  // Atualiza os dados do cliente
+  // Atualiza os dados do cliente incluindo temporario e dias_teste
   const updateClienteQuery = `
     UPDATE clientes
-    SET nome = $1, email = $2, cpf = $3, telefone = $4, endereco = $5, pacote = $6, horario_passeio = $7, anotacoes = $8
-    WHERE id_cliente = $9`;
+    SET nome = $1, email = $2, cpf = $3, telefone = $4, endereco = $5, 
+        pacote = $6, horario_passeio = $7, anotacoes = $8, 
+        temporario = $9, dias_teste = $10
+    WHERE id_cliente = $11`;
 
   pool.query(
     updateClienteQuery,
-    [nome, email, cpf, telefone, endereco, pacote, horario_passeio, anotacoes, clienteId],
+    [nome, email, cpf, telefone, endereco, pacote, horario_passeio, 
+     anotacoes, temporarioValido, diasTesteValido, clienteId],
     (err) => {
       if (err) {
         console.error('Erro ao atualizar cliente:', err);
@@ -570,20 +607,32 @@ app.put('/clientes/:id/reset-senha', authenticateToken, async (req, res) => {
 
 // Endpoint para criar um cliente
 app.post('/criarcliente', async (req, res) => {
-  const { nome, email, cpf, telefone, endereco, pacote, horario, anotacao, caes, id_passeador } = req.body;
+  const { nome, email, cpf, telefone, endereco, pacote, horario, anotacao, caes, id_passeador, temporario, dias_teste } = req.body;
 
   try {
     // Gera o hash da senha padrão "dog123"
     const hashedPassword = await bcrypt.hash('dog123', saltRounds);
 
-    // Query para inserir um novo cliente com a senha encriptada e retornar o id_cliente
+    // Query atualizada para incluir temporario e dias_teste
     const insertClientQuery = `
-      INSERT INTO clientes (nome, email, cpf, telefone, endereco, pacote, horario_passeio, anotacoes, tipo, senha)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0, $9)
+      INSERT INTO clientes (nome, email, cpf, telefone, endereco, pacote, horario_passeio, anotacoes, tipo, senha, temporario, dias_teste)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0, $9, $10, $11)
       RETURNING id_cliente
     `;
 
-    const clientResult = await pool.query(insertClientQuery, [nome, email, cpf, telefone, endereco, pacote, horario, anotacao, hashedPassword]);
+    const clientResult = await pool.query(insertClientQuery, [
+      nome, 
+      email, 
+      cpf, 
+      telefone, 
+      endereco, 
+      pacote, 
+      horario, 
+      anotacao, 
+      hashedPassword,
+      temporario,
+      dias_teste
+    ]);
 
     // Certifique-se de que o id_cliente foi retornado
     if (!clientResult.rows || clientResult.rows.length === 0) {

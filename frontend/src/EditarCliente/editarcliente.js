@@ -23,6 +23,8 @@ function EditarCliente() {
   const [cpfError, setCpfError] = useState('');
   const [telefoneError, setTelefoneError] = useState('');
   const [horarioError, setHorarioError] = useState('');
+  const [pacote, setPacote] = useState("");
+  const [diasTeste, setDiasTeste] = useState("");
 
   const validateNome = (nome) => {
     if (!/^[A-ZÀ-Ÿ][a-zà-ÿ]{1,}/.test(nome)) {
@@ -172,6 +174,7 @@ function EditarCliente() {
       horarioRef.current.value = cliente.horario_passeio ? formatHorario(cliente.horario_passeio) : '';
       anotacaoRef.current.value = cliente.anotacoes || '';
       setSelectedPasseadorId(cliente.id_passeador || ""); // Atualiza o passeador selecionado ao carregar o cliente
+      setPacote(cliente.pacote || "");
     }
   }, [cliente]);
 
@@ -205,7 +208,7 @@ if (!isNomeValid || !isEmailValid || !isCPFValid || !isTelefoneValid || !isHorar
 }
 
 try {
-  const temporario = cliente.pacote === 'Temporario' ? 1 : 0;
+  const temporario = pacote === 'Temporario' ? 1 : 0;
   const updatedCliente = {
     nome: nomeRef.current.value || cliente.nome,
     email: emailRef.current.value || cliente.email,
@@ -215,7 +218,8 @@ try {
       : cliente.caes,
     telefone: (telefoneRef.current.value || cliente.telefone).replace(/\D/g, ''),
     endereco: enderecoRef.current.value || cliente.endereco,
-    pacote: cliente.pacote ?? "", // Retorna o seu operando do lado direito quando o seu operador do lado esquerdo é null ou undefined
+    pacote,
+    dias_teste: pacote === "Temporario" ? parseInt(diasTeste) || null : null,
     temporario,
     horario_passeio: horarioRef.current.value || cliente.horario_passeio,
     anotacoes: anotacaoRef.current.value || cliente.anotacoes,
@@ -349,14 +353,29 @@ try {
             <FaCalendarAlt className="input-icon" />
             <select
               className="form-input"
-              value={cliente.pacote || ""}
-              onChange={(e) => setCliente({ ...cliente, pacote: e.target.value })}
+              value={pacote}
+              onChange={(e) => setPacote(e.target.value)}
             >
               <option value="">Selecione o Pacote</option>
               <option value="Mensal">Mensal</option>
               <option value="Trimestral">Trimestral</option>
               <option value="Temporario">Temporário</option>
             </select>
+            {pacote === "Temporario" && (
+              <div className="input-container">
+                <input
+                  type="number"
+                  placeholder="Dias de teste"
+                  className="form-input"
+                  min="1"
+                  value={diasTeste}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value, 10);
+                    setDiasTeste(value > 0 ? value : '');
+                  }}
+                />
+              </div>
+            )}
           </div>
           <div className="input-container">
             <FaClock className="input-icon" />

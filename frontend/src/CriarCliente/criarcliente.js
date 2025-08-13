@@ -28,6 +28,7 @@ function CriarCliente() {
   const [passeadores, setPasseadores] = useState([]);
   const [selectedPasseadorId, setSelectedPasseadorId] = useState("");
   const [pacote, setPacote] = useState(""); // Estado para o pacote selecionado
+  const [diasTeste, setDiasTeste] = useState("");
 
   // Função para buscar passeadores do backend
   useEffect(() => {
@@ -185,28 +186,36 @@ function CriarCliente() {
     if (!id_passeador) {
       alert('Por favor, selecione um passeador.');
       return;
-    }    if (!isNomeValid || !isEmailValid || !isCPFValid || !isTelefoneValid || !isHorarioValid) {
+    }    
+    if (pacote === "Temporario" && (!diasTeste || diasTeste <= 0)) {
+      alert('Para pacote temporário, informe um número válido de dias de teste (maior que 0)');
+      return;
+    }
+  
+    if (!isNomeValid || !isEmailValid || !isCPFValid || !isTelefoneValid || !isHorarioValid) {
       alert('Por favor, corrija os erros destacados antes de enviar.');
       return;
     }
 
     // define flag temporário: 1 se pacote for "Temporario", senão 0
-    const temporario = pacote === 'Temporario' ? 1 : 0;
+  const temporario = pacote === 'Temporario' ? 1 : 0;
 
-    try {
-      const response = await axios.post('http://localhost:3001/criarcliente', {
-        nome,
-        email,
-        cpf,
-        telefone,
-        endereco,
-        pacote: pacoteSelecionado, // Mantemos a nomenclatura da main
-        temporario,
-        horario,
-        anotacao,
-        caes,
-        id_passeador,
-      });
+  try {
+    const response = await axios.post('http://localhost:3001/criarcliente', {
+      nome,
+      email,
+      cpf,
+      telefone,
+      endereco,
+      pacote: pacoteSelecionado,
+      temporario,
+      // GARANTIR QUE DIAS_TESTE SEJA UM NÚMERO INTEIRO
+      dias_teste: temporario ? parseInt(diasTeste) : null,
+      horario,
+      anotacao,
+      caes,
+      id_passeador,
+    });
 
       if (response.data.success) {
         alert('Cliente criado com sucesso!');
@@ -327,6 +336,18 @@ function CriarCliente() {
               <option value="Mensal">Mensal</option>
               <option value="Temporario">Temporário</option>
             </select>
+            {pacote === "Temporario" && (
+              <div className="input-container">
+                <input
+                  type="number"
+                  placeholder="Dias de teste"
+                  className="form-input"
+                  min="1"
+                  value={diasTeste}
+                  onChange={(e) => setDiasTeste(e.target.value)}
+                />
+              </div>
+            )}
           </div>
           <div className="input-container">
             <FaClock className="input-icon" />
