@@ -20,6 +20,7 @@ function EditarPasseador() {
   const [emailError, setEmailError] = useState('');
   const [cpfError, setCpfError] = useState('');
   const [telefoneError, setTelefoneError] = useState('');
+  const [moduloError, setModuloError] = useState('');
 
   useEffect(() => {
     const fetchPasseador = async () => {
@@ -73,6 +74,15 @@ function EditarPasseador() {
     return true;
   };
 
+  const validateModulo = (modulo) => {
+    if (!/^\d+$/.test(modulo)) {
+      setModuloError('O módulo deve conter apenas números');
+      return false;
+    }
+    setModuloError('');
+    return true;
+  };  
+
   const formatCPF = (cpf) => {
     if (!cpf) return '';
     const cleaned = cpf.replace(/\D/g, '');
@@ -113,8 +123,9 @@ function EditarPasseador() {
     const isEmailValid = validateEmail(emailRef.current.value);
     const isCPFValid = validateCPF(cpfRef.current.value);
     const isTelefoneValid = validateTelefone(telefoneRef.current.value);
+    const isModuloValid = validateModulo(moduloRef.current.value);
 
-    if (isNomeValid && isEmailValid && isCPFValid && isTelefoneValid) {
+    if (isNomeValid && isEmailValid && isCPFValid && isTelefoneValid && isModuloValid) {
       const updatedPasseador = {
         nome: nomeRef.current.value,
         email: emailRef.current.value,
@@ -244,9 +255,10 @@ function EditarPasseador() {
               placeholder="Módulo" 
               defaultValue={passeador.modulo} 
               className="form-input"
+              onChange={(e) => validateModulo(e.target.value)}
             />
           </div>
-
+          {moduloError && <div className="error-message">{moduloError}</div>}
           <div className="button-group">
             <button type="button" className="cancel-button" onClick={() => navigate(`/visualizarpasseador/${id}`)}>
               Cancelar

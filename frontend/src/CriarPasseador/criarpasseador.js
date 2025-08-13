@@ -22,6 +22,7 @@ function CriarPasseador() {
   const [emailError, setEmailError] = useState('');
   const [cpfError, setCpfError] = useState('');
   const [telefoneError, setTelefoneError] = useState('');
+  const [moduloError, setModuloError] = useState('');
 
   // Funções de validação
   const validateNome = (nome) => {
@@ -62,6 +63,15 @@ function CriarPasseador() {
     return true;
   };
 
+  const validateModulo = (modulo) => {
+    if (!/^\d+$/.test(modulo)) {
+      setModuloError('O módulo deve conter apenas números');
+      return false;
+    }
+    setModuloError('');
+    return true;
+  };  
+
   // Funções de formatação
   const formatCPF = (cpf) => {
     const cleaned = cpf.replace(/\D/g, '');
@@ -101,8 +111,9 @@ function CriarPasseador() {
     const isEmailValid = validateEmail(emailRef.current.value);
     const isCPFValid = validateCPF(cpfRef.current.value);
     const isTelefoneValid = validateTelefone(telefoneRef.current.value);
+    const isModuloValid = validateModulo(moduloRef.current.value);
 
-    if (isNomeValid && isEmailValid && isCPFValid && isTelefoneValid) {
+    if (isNomeValid && isEmailValid && isCPFValid && isTelefoneValid && isModuloValid) {
       const newPasseador = {
         nome: nomeRef.current.value,
         email: emailRef.current.value,
@@ -226,9 +237,10 @@ function CriarPasseador() {
               type="text" 
               placeholder="Módulo" 
               className="form-input"
+              onChange={(e) => validateModulo(e.target.value)}
             />
           </div>
-
+          {moduloError && <div className="error-message">{moduloError}</div>}
           <div className="button-group">
             <button
               type="button"
