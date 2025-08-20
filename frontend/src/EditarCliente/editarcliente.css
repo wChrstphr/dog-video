@@ -63,6 +63,7 @@ body {
     margin: 10px 0;
     position: relative;
     width: 100%;
+    gap: 10px;
 }
 
 .input-icon {
