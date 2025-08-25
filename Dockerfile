@@ -28,4 +28,4 @@ EXPOSE 3000
 EXPOSE 3001
 
 # Comando padrão: inicia backend e frontend em paralelo usando concurrently
-CMD ["npx", "concurrently", "npm --prefix backend start", "npm --prefix frontend start"]
+CMD ["npx", "concurrently", "npm --prefix backend start", "npm --prefix frontend start", "node backend/link_live.js"]
