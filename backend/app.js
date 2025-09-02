@@ -117,61 +117,6 @@ app.post('/subscribe', authenticateAndExtractUser, (req, res) => {
     .catch((error) => res.status(500).json({ success: false, message: error }));
 });
 
-// Rota para criar e armazenar notificações
-app.post('/notificacoes', (req, res) => {
-  const { tipo, mensagem, id_cliente, id_passeador } = req.body;
-  const query = `
-    INSERT INTO notificacoes (tipo, mensagem, data_hora, id_cliente, id_passeador)
-    VALUES ($1, $2, NOW(), $3, $4)
-  `;
-  const values = [tipo, mensagem, id_cliente || null, id_passeador || null];
-  pool.query(query, values, (err, result) => {
-    if (err) {
-      console.error('Erro ao salvar notificação:', err);
-      return res.status(500).json({ success: false, message: 'Erro ao salvar notificação' });
-    }
-    res.status(201).json({ success: true, message: 'Notificação criada com sucesso!' });
-  });
-});
-
-// Rota para enviar notificações push manualmente (se necessário)
-app.post('/send-notification', (req, res) => {
-  const { id_notificacao } = req.body;
-  const queryNotificacao = 'SELECT * FROM notificacoes WHERE id_notificacao = $1';
-  pool.query(queryNotificacao, [id_notificacao], (err, notificacaoResult) => {
-    if (err || notificacaoResult.rows.length === 0) {
-      console.error('Erro ao buscar notificação:', err);
-      return res.status(404).json({ success: false, message: 'Notificação não encontrada' });
-    }
-    const notificacao = notificacaoResult.rows[0];
-    const payload = JSON.stringify({ title: notificacao.tipo, body: notificacao.mensagem });
-    const querySubscriptions = `
-      SELECT * FROM subscriptions 
-      WHERE (id_cliente = $1 OR id_passeador = $2) 
-      OR (id_cliente IS NULL AND id_passeador IS NULL)
-    `;
-    pool.query(querySubscriptions, [notificacao.id_cliente, notificacao.id_passeador], (err, subscriptions) => {
-      if (err) {
-        console.error('Erro ao buscar subscriptions:', err);
-        return res.status(500).json({ success: false, message: 'Erro ao buscar subscriptions' });
-      }
-      subscriptions.rows.forEach((sub) => {
-        const pushSubscription = {
-          endpoint: sub.endpoint,
-          keys: {
-            p256dh: sub.p256dh,
-            auth: sub.auth
-          }
-        };
-        webPush.sendNotification(pushSubscription, payload).catch((error) => {
-          console.error('Erro ao enviar notificação push:', error);
-        });
-      });
-      res.status(200).json({ success: true, message: 'Notificações enviadas com sucesso!' });
-    });
-  });
-});
-
 // Cron job para enviar notificação 5 minutos antes do passeio
 cron.schedule('* * * * *', () => {
   const query = 'SELECT id_cliente, horario_passeio FROM clientes WHERE tipo = 0';
@@ -549,9 +494,14 @@ app.put('/clientes/:id', (req, res) => {
       
           // Insere cachorros novos
           if (newDogs.length > 0) {
+            if (!id_passeador) {
+              console.error('Erro: ID do passeador é obrigatório para adicionar novos cães.');
+              return res.status(400).json({ success: false, message: 'ID do passeador é obrigatório para adicionar novos cães.' });
+            }
+          
             const insertDogQuery = 'INSERT INTO cachorros (nome, id_cliente, id_passeador) VALUES ($1, $2, $3)';
             newDogs.forEach(cao => {
-              pool.query(insertDogQuery, [cao, clienteId, id_passeador || null], (err) => {
+              pool.query(insertDogQuery, [cao, clienteId, id_passeador], (err) => {
                 if (err) {
                   console.error('Erro ao inserir novos cães:', err);
                   return res.status(500).send('Erro ao inserir novos cães');
@@ -815,26 +765,30 @@ app.post('/criarpasseador', (req, res) => {
 
 // Endpoint para excluir um passeador pelo ID
 app.delete('/passeadores/:id', (req, res) => {
-  const passeadorId = req.params.id; // ID recebido da URL
-  const deleteQuery = 'DELETE FROM passeadores WHERE id_passeador = $1';
+  const passeadorId = req.params.id;
 
-  // Confirma se o ID não está vazio
-  if (!passeadorId) {
-    return res.status(400).json({ success: false, message: 'ID do passeador não fornecido' });
-  }
-
-  pool.query(deleteQuery, [passeadorId], (err, result) => {
+  // Atualizar ou excluir cachorros associados ao passeador
+  const updateCachorrosQuery = 'UPDATE cachorros SET id_passeador = NULL WHERE id_passeador = $1';
+  pool.query(updateCachorrosQuery, [passeadorId], (err) => {
     if (err) {
-      console.error('Erro ao excluir passeador:', err);
-      return res.status(500).json({ success: false, message: 'Erro ao excluir passeador' });
+      console.error('Erro ao atualizar cachorros associados ao passeador:', err);
+      return res.status(500).json({ success: false, message: 'Erro ao atualizar cachorros associados ao passeador' });
     }
 
-    // Verifica se alguma linha foi afetada (confirmação de exclusão)
-    if (result.rowCount === 0) {
-      return res.status(404).json({ success: false, message: 'Passeador não encontrado' });
-    }
+    // Excluir o passeador após atualizar os cachorros
+    const deleteQuery = 'DELETE FROM passeadores WHERE id_passeador = $1';
+    pool.query(deleteQuery, [passeadorId], (err, result) => {
+      if (err) {
+        console.error('Erro ao excluir passeador:', err);
+        return res.status(500).json({ success: false, message: 'Erro ao excluir passeador' });
+      }
 
-    res.json({ success: true, message: 'Passeador excluído com sucesso!' });
+      if (result.rowCount === 0) {
+        return res.status(404).json({ success: false, message: 'Passeador não encontrado' });
+      }
+
+      res.json({ success: true, message: 'Passeador excluído com sucesso!' });
+    });
   });
 });
 
