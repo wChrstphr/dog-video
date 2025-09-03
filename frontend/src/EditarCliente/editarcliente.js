@@ -2,6 +2,7 @@ import './editarcliente.css';
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from "react-router-dom";
 import { FaUser, FaEnvelope, FaAddressCard, FaDog, FaPhone, FaHome, FaCalendarAlt, FaClock, FaBook, FaUserAlt } from "react-icons/fa";
+import CustomSelect from '../utils/CustomSelect';
 
 function EditarCliente() {
   const navigate = useNavigate();
@@ -25,6 +26,17 @@ function EditarCliente() {
   const [horarioError, setHorarioError] = useState('');
   const [pacote, setPacote] = useState("");
   const [diasTeste, setDiasTeste] = useState("");
+
+   // Formatando dados para o componente CustomSelect
+  const passeadoresOptions = Array.isArray(passeadores)
+  ? passeadores.map((p) => ({ value: p.id, label: p.nome }))
+  : [];
+
+  const pacoteOptions = [
+    { value: 'Trimestral', label: 'Trimestral' },
+    { value: 'Mensal', label: 'Mensal' },
+    { value: 'Temporario', label: 'Temporário' },
+  ];
 
   const validateNome = (nome) => {
     if (!/^[A-ZÀ-Ÿ][a-zà-ÿ]{1,}/.test(nome)) {
@@ -345,35 +357,26 @@ function EditarCliente() {
             <FaHome className="input-icon" />
             <input ref={enderecoRef} type="text" placeholder="Endereço" className="form-input" />
           </div>
+          <CustomSelect
+            icon={<FaUserAlt />}
+            placeholder="Selecione o Passeador"
+            options={passeadoresOptions}
+            value={selectedPasseadorId}
+            onChange={(value) => setSelectedPasseadorId(value)}
+          />
+
+          {/* 2. SELECT DE PACOTE SUBSTITUÍDO */}
           <div className="input-container">
-            <FaUserAlt className="input-icon" />
-            <select
-              className="form-input"
-              value={selectedPasseadorId}
-              onChange={(e) => setSelectedPasseadorId(e.target.value)}
-            >
-              <option value="">Selecione o Passeador</option>
-              {passeadores.map((passeador) => (
-                <option key={passeador.id} value={passeador.id}>
-                  {passeador.nome}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="input-container">
-            <FaCalendarAlt className="input-icon" />
-            <select
-              className="form-input"
+            <CustomSelect
+              icon={<FaCalendarAlt />}
+              placeholder="Selecione o Pacote"
+              options={pacoteOptions}
               value={pacote}
-              onChange={(e) => setPacote(e.target.value)}
-            >
-              <option value="">Selecione o Pacote</option>
-              <option value="Mensal">Mensal</option>
-              <option value="Trimestral">Trimestral</option>
-              <option value="Temporario">Temporário</option>
-            </select>
-            {pacote === "Temporario" && (
-              <div className="input-container">
+              onChange={(value) => setPacote(value)}
+            />
+            {/* Lógica para mostrar o campo de dias de teste permanece a mesma */}
+            {pacote === 'Temporario' && (
+              <div className="input-container temporary-days-input">
                 <input
                   type="number"
                   placeholder="Dias de teste"
