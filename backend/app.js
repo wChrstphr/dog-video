@@ -174,9 +174,14 @@ app.post('/send-notification', (req, res) => {
 
 // Cron job para enviar notificação 5 minutos antes do passeio
 cron.schedule('* * * * *', () => {
-  const query = 'SELECT id_cliente, horario_passeio FROM clientes WHERE tipo = 0';
+  const query = `
+    SELECT p.id_cliente, p.horario_passeio
+    FROM passeios p
+    INNER JOIN clientes c ON p.id_cliente = c.id_cliente
+    WHERE c.tipo = 0
+  `;
 
-  pool.query(query, (err, clientes) => {
+  pool.query(query, (err, passeios) => {
     if (err) {
       console.error('Erro ao buscar clientes para notificação:', err);
       return;
@@ -184,13 +189,13 @@ cron.schedule('* * * * *', () => {
 
     const now = dayjs().tz('America/Sao_Paulo'); // Ajuste para o timezone correto
 
-    clientes.rows.forEach((cliente) => {
-      const walkTime = dayjs(cliente.horario_passeio, 'HH:mm:ss');
+    passeios.rows.forEach((passeio) => {
+      const walkTime = dayjs(passeio.horario_passeio, 'HH:mm:ss');
       const notificationTime = walkTime.subtract(5, 'minute');
 
       if (now.format('HH:mm') === notificationTime.format('HH:mm')) {
         const subQuery = 'SELECT * FROM subscriptions WHERE id_cliente = $1';
-        pool.query(subQuery, [cliente.id_cliente], (err, subscriptions) => {
+        pool.query(subQuery, [passeio.id_cliente], (err, subscriptions) => {
           if (err) {
             console.error('Erro ao buscar subscriptions para notificação:', err);
             return;
@@ -215,7 +220,7 @@ cron.schedule('* * * * *', () => {
 
             webPush.sendNotification(pushSubscription, payload)
               .catch((error) => {
-                console.error(`Erro ao enviar notificação para o cliente ${cliente.id_cliente}:`, error);
+                console.error(`Erro ao enviar notificação para o cliente ${passeio.id_cliente}:`, error);
               });
           });
         });
@@ -437,11 +442,6 @@ app.get('/clientes/:id', (req, res) => {
 
     const cliente = clienteResults.rows[0];
 
-    // Formatar horário para mostrar apenas HH:MM, se disponível
-    if (cliente.horario_passeio) {
-      cliente.horario_passeio = cliente.horario_passeio.slice(0, 5);
-    }
-
     // Consultar os cachorros associados ao cliente
     pool.query(queryCachorros, [clienteId], (err, cachorroResults) => {
       if (err) {
@@ -477,97 +477,59 @@ app.get('/clientes/:id', (req, res) => {
 });
 
 // Endpoint para atualizar um cliente
-app.put('/clientes/:id', (req, res) => {
+app.put('/clientes/:id', async (req, res) => {
   const clienteId = req.params.id;
-  const { nome, email, cpf, telefone, endereco, pacote, horario_passeio, anotacoes, caes, id_passeador, temporario, dias_teste } = req.body;
-  
-  // Define os valores para temporario e dias_teste
-  const temporarioValido = pacote === 'Temporario' ? 1 : 0;
-  const diasTesteValido = pacote === 'Temporario' && Number(dias_teste) > 0 
-    ? Math.floor(Number(dias_teste)) 
-    : null;
+  const { nome, email, cpf, telefone, endereco, pacote, anotacoes, caes, id_passeador, dias_teste } = req.body;
 
-  // Atualiza os dados do cliente incluindo temporario e dias_teste
-  const updateClienteQuery = `
-    UPDATE clientes
-    SET nome = $1, email = $2, cpf = $3, telefone = $4, endereco = $5, 
-        pacote = $6, horario_passeio = $7, anotacoes = $8, 
-        temporario = $9, dias_teste = $10
-    WHERE id_cliente = $11`;
+  console.log('Recebendo dados para atualizar cliente:', req.body); // Log para verificar os dados recebidos
 
-  pool.query(
-    updateClienteQuery,
-    [nome, email, cpf, telefone, endereco, pacote, horario_passeio, 
-     anotacoes, temporarioValido, diasTesteValido, clienteId],
-    (err) => {
-      if (err) {
-        console.error('Erro ao atualizar cliente:', err);
-        return res.status(500).send('Erro ao atualizar cliente');
+  try {
+    // Busca o passeador atual associado ao cliente
+    const passeadorAtualQuery = `
+      SELECT c.id_passeador
+      FROM cachorros c
+      WHERE c.id_cliente = $1
+      LIMIT 1
+    `;
+    const passeadorAtualResult = await pool.query(passeadorAtualQuery, [clienteId]);
+    const passeadorAtual = passeadorAtualResult.rows.length > 0 ? passeadorAtualResult.rows[0].id_passeador : null;
+
+    const updateClienteQuery = `
+      UPDATE clientes
+      SET nome = $1, email = $2, cpf = $3, telefone = $4, endereco = $5, 
+          pacote = $6, anotacoes = $7, dias_teste = $8
+      WHERE id_cliente = $9
+    `;
+
+    await pool.query(updateClienteQuery, [
+      nome,
+      email,
+      cpf,
+      telefone,
+      endereco,
+      pacote,
+      anotacoes,
+      dias_teste !== undefined ? dias_teste : null, // Mantém o valor atual se não for alterado
+      clienteId,
+    ]);
+
+    console.log('Cliente atualizado com sucesso.');
+
+    if (caes && caes.length > 0) {
+      const deleteDogsQuery = 'DELETE FROM cachorros WHERE id_cliente = $1';
+      await pool.query(deleteDogsQuery, [clienteId]);
+
+      const insertDogQuery = 'INSERT INTO cachorros (nome, id_cliente, id_passeador) VALUES ($1, $2, $3)';
+      for (const cao of caes) {
+        await pool.query(insertDogQuery, [cao, clienteId, id_passeador || passeadorAtual]); // Mantém o passeador atual se não for alterado
       }
-
-      // Atualiza o ID do passeador apenas se ele for fornecido e válido
-      if (id_passeador && !isNaN(id_passeador)) {
-        const updatePasseadorQuery = `
-          UPDATE cachorros 
-          SET id_passeador = $1 
-          WHERE id_cliente = $2`;
-      
-        pool.query(updatePasseadorQuery, [id_passeador, clienteId], (err) => {
-          if (err) {
-            console.error('Erro ao atualizar passeador dos cachorros:', err);
-            return res.status(500).json({ success: false, message: 'Erro ao atualizar passeador dos cachorros' });
-          }
-        });
-      } else {
-        console.warn(`ID do passeador inválido: ${id_passeador}. Atualização do passeador ignorada.`);
-      }      
-
-      // Verifica se há novos cães para adicionar
-      if (caes && caes.length > 0) {
-        // Consulta para buscar os nomes dos cachorros existentes
-        const selectCachorrosQuery = 'SELECT nome FROM cachorros WHERE id_cliente = $1';
-        pool.query(selectCachorrosQuery, [clienteId], (err, existingDogs) => {
-          if (err) {
-            console.error('Erro ao consultar cachorros existentes:', err);
-            return res.status(500).send('Erro ao consultar cachorros existentes');
-          }
-      
-          const existingDogNames = existingDogs.rows.map(dog => dog.nome); // Nomes dos cachorros existentes no banco
-          const newDogs = caes.filter(cao => !existingDogNames.includes(cao)); // Cachorros novos
-          const dogsToDelete = existingDogNames.filter(existingDog => !caes.includes(existingDog)); // Cachorros a excluir
-      
-          // Exclui cachorros que não estão mais na lista
-          if (dogsToDelete.length > 0) {
-            const deleteDogsQuery = 'DELETE FROM cachorros WHERE id_cliente = $1 AND nome = ANY($2)';
-            pool.query(deleteDogsQuery, [clienteId, dogsToDelete], (err) => {
-              if (err) {
-                console.error('Erro ao deletar cachorros:', err);
-                return res.status(500).send('Erro ao deletar cachorros');
-              }
-            });
-          }
-      
-          // Insere cachorros novos
-          if (newDogs.length > 0) {
-            const insertDogQuery = 'INSERT INTO cachorros (nome, id_cliente, id_passeador) VALUES ($1, $2, $3)';
-            newDogs.forEach(cao => {
-              pool.query(insertDogQuery, [cao, clienteId, id_passeador || null], (err) => {
-                if (err) {
-                  console.error('Erro ao inserir novos cães:', err);
-                  return res.status(500).send('Erro ao inserir novos cães');
-                }
-              });
-            });
-            res.json({ success: true, message: 'Cliente e cachorros atualizados com sucesso!' });
-          } else {
-            res.json({ success: true, message: 'Cliente atualizado com sucesso!' });
-          }
-        });
-      } else {
-        res.json({ success: true, message: 'Cliente atualizado sem mudanças nos cachorros!' });
-      }      
     }
-  );
+
+    res.json({ success: true, message: 'Cliente e cachorros atualizados com sucesso!' });
+  } catch (error) {
+    console.error('Erro ao atualizar cliente:', error);
+    res.status(500).json({ success: false, message: 'Erro ao atualizar cliente.' });
+  }
 });
 
 // Endpoint para redefinir a senha do cliente
@@ -607,7 +569,7 @@ app.put('/clientes/:id/reset-senha', authenticateToken, async (req, res) => {
 
 // Endpoint para criar um cliente
 app.post('/criarcliente', async (req, res) => {
-  const { nome, email, cpf, telefone, endereco, pacote, horario, anotacao, caes, id_passeador, temporario, dias_teste } = req.body;
+  const { nome, email, cpf, telefone, endereco, pacote, anotacao, caes, id_passeador, temporario, dias_teste } = req.body;
 
   try {
     // Gera o hash da senha padrão "dog123"
@@ -615,8 +577,8 @@ app.post('/criarcliente', async (req, res) => {
 
     // Query atualizada para incluir temporario e dias_teste
     const insertClientQuery = `
-      INSERT INTO clientes (nome, email, cpf, telefone, endereco, pacote, horario_passeio, anotacoes, tipo, senha, temporario, dias_teste)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0, $9, $10, $11)
+      INSERT INTO clientes (nome, email, cpf, telefone, endereco, pacote, anotacoes, tipo, senha, temporario, dias_teste)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, 0, $8, $9, $10)
       RETURNING id_cliente
     `;
 
@@ -627,7 +589,6 @@ app.post('/criarcliente', async (req, res) => {
       telefone, 
       endereco, 
       pacote, 
-      horario, 
       anotacao, 
       hashedPassword,
       temporario,
@@ -654,10 +615,59 @@ app.post('/criarcliente', async (req, res) => {
       }
     }
 
-    res.json({ success: true, message: 'Cliente e cães adicionados com sucesso!' });
+    res.json({ success: true, message: 'Cliente e cães adicionados com sucesso!', id_cliente: clienteId });
   } catch (error) {
     console.error('Erro ao criar cliente:', error);
     res.status(500).json({ success: false, message: 'Erro ao criar cliente.' });
+  }
+});
+
+// Endpoint para criar passeios
+app.post('/passeios', async (req, res) => {
+  const { horario_passeio, id_cliente, id_passeador } = req.body;
+
+  try {
+    const query = `
+      INSERT INTO passeios (horario_passeio, id_cliente, id_passeador)
+      VALUES ($1, $2, $3)
+    `;
+    const result = await pool.query(query, [horario_passeio, id_cliente, id_passeador || null]);
+
+    res.status(201).json({ success: true, message: 'Passeio criado com sucesso!' });
+  } catch (error) {
+    console.error('Erro ao criar passeio:', error);
+    res.status(500).json({ success: false, message: 'Erro ao criar passeio.' });
+  }
+});
+
+// Endpoint para atualizar passeios
+app.put('/passeios/:id_cliente', async (req, res) => {
+  const { id_cliente } = req.params;
+  let { horario_passeio, id_passeador } = req.body;
+
+  console.log('Recebendo dados para atualizar passeio:', req.body);
+
+  // Garante que id_passeador seja null se for uma string vazia
+  id_passeador = id_passeador === "" ? null : id_passeador;
+
+  try {
+    const query = `
+      UPDATE passeios
+      SET horario_passeio = $1, id_passeador = $2
+      WHERE id_cliente = $3
+    `;
+    const result = await pool.query(query, [horario_passeio, id_passeador, id_cliente]);
+
+    if (result.rowCount === 0) {
+      console.warn('Nenhuma linha atualizada na tabela passeios. Verifique se o cliente possui um passeio associado.');
+      return res.status(404).json({ success: false, message: 'Passeio não encontrado para o cliente.' });
+    }
+
+    console.log('Passeio atualizado com sucesso.');
+    res.json({ success: true, message: 'Passeio atualizado com sucesso!' });
+  } catch (error) {
+    console.error('Erro ao atualizar passeio:', error);
+    res.status(500).json({ success: false, message: 'Erro ao atualizar passeio.' });
   }
 });
 
@@ -836,6 +846,75 @@ app.delete('/passeadores/:id', (req, res) => {
 
     res.json({ success: true, message: 'Passeador excluído com sucesso!' });
   });
+});
+
+app.get('/cachorros/:id_cliente/passeador', async (req, res) => {
+  const { id_cliente } = req.params;
+
+  try {
+    const query = `
+      SELECT id_passeador
+      FROM cachorros
+      WHERE id_cliente = $1
+      LIMIT 1
+    `;
+    const result = await pool.query(query, [id_cliente]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Passeador não encontrado para o cliente.' });
+    }
+
+    res.json({ success: true, id_passeador: result.rows[0].id_passeador });
+  } catch (error) {
+    console.error('Erro ao buscar passeador:', error);
+    res.status(500).json({ success: false, message: 'Erro ao buscar passeador.' });
+  }
+});
+
+app.get('/passeios/:id_cliente', async (req, res) => {
+  const { id_cliente } = req.params;
+
+  try {
+    const query = `
+      SELECT TO_CHAR(horario_passeio, 'HH24:MI') AS horario_passeio
+      FROM passeios
+      WHERE id_cliente = $1
+      LIMIT 1
+    `;
+    const result = await pool.query(query, [id_cliente]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Horário de passeio não encontrado para o cliente.' });
+    }
+
+    res.json({ success: true, horario_passeio: result.rows[0].horario_passeio });
+  } catch (error) {
+    console.error('Erro ao buscar horário de passeio:', error);
+    res.status(500).json({ success: false, message: 'Erro ao buscar horário de passeio.' });
+  }
+});
+
+app.get('/passeadores/:id/horarios', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const query = `
+      SELECT TO_CHAR(horario_passeio, 'HH24:MI') AS horario_passeio
+      FROM passeios
+      WHERE id_passeador = $1
+    `;
+    const result = await pool.query(query, [id]);
+
+    if (result.rows.length === 0) {
+      return res.json({ success: true, horarios: [] }); // Retorna lista vazia se não houver horários
+    }
+
+    const horarios = result.rows.map(row => row.horario_passeio);
+    res.json({ success: true, horarios });
+  } catch (error) {
+    console.error('Erro ao buscar horários de passeio:', error);
+    res.status(500).json({ success: false, message: 'Erro ao buscar horários de passeio.' });
+  }
 });
 
 // Inicia o servidor apenas se o arquivo for executado diretamente

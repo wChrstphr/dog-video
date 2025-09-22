@@ -37,6 +37,16 @@ function VisualizarCliente() {
           if (data.cliente.id_passeador) {
             localStorage.setItem('passeadorId', data.cliente.id_passeador);
           }
+
+          // Busca o horário de passeio da tabela passeios
+          const passeioResponse = await fetch(`http://localhost:3001/passeios/${id}`);
+          const passeioData = await passeioResponse.json();
+          if (passeioData.success) {
+            setCliente((prevCliente) => ({
+              ...prevCliente,
+              horario_passeio: passeioData.horario_passeio.slice(0, 5), // Apenas horas e minutos
+            }));
+          }
         } else {
           console.error('Erro no servidor:', data.message);
         }
@@ -122,7 +132,7 @@ function VisualizarCliente() {
           )}
           <div className="input-container">
             <FaClock className="input-icon" />
-            <span className="form-input">{cliente.horario_passeio}</span> {/* Horário de passeio */}
+            <span className="form-input">{cliente.horario_passeio || 'Horário não definido'}</span> {/* Horário de passeio */}
           </div>
           <div className="input-container">
             <FaBook className="input-icon" />

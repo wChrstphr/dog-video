@@ -217,17 +217,26 @@ function CriarCliente() {
       id_passeador,
     });
 
-      if (response.data.success) {
-        alert('Cliente criado com sucesso!');
-        navigate("/clientes");
-      } else {
-        alert('Erro ao criar cliente: ' + (response.data.message || 'Erro desconhecido'));
+    if (response.data.success) {
+      const id_cliente = response.data.id_cliente; // Captura o ID do cliente criado
+      if (horario) {
+        const horarioFormatado = `${horario}:00`; // Adiciona os segundos ao horário
+        await axios.post('http://localhost:3001/passeios', {
+          horario_passeio: horarioFormatado, // Envia apenas o horário no formato HH:mm:ss
+          id_cliente,
+          id_passeador,
+        });
       }
-    } catch (error) {
-      console.error('Erro ao criar cliente:', error);
-      alert('Erro ao conectar com o servidor. Tente novamente mais tarde.');
+      alert('Cliente criado com sucesso!');
+      navigate("/clientes");
+    } else {
+      alert('Erro ao criar cliente: ' + (response.data.message || 'Erro desconhecido'));
     }
-  };
+  } catch (error) {
+    console.error('Erro ao criar cliente:', error);
+    alert('Erro ao conectar com o servidor. Tente novamente mais tarde.');
+  }
+};
 
   return (
     <div className="Web-Criar-Cliente">
