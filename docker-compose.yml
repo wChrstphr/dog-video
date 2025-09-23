@@ -9,15 +9,8 @@ services:
       - "3000:3000"
       - "3001:3001"
     restart: unless-stopped
-    # --- INÍCIO DAS MUDANÇAS ---
     volumes:
-      # Mapeia o código-fonte do backend para a pasta correspondente no container
       - ./backend:/app/backend
-      # Mapeia o código-fonte do frontend para a pasta correspondente no container
       - ./frontend:/app/frontend
-
-      # "Isola" a pasta node_modules dentro do container para evitar conflitos
-      # com a pasta node_modules do seu computador. Isso é uma boa prática!
       - /app/backend/node_modules
       - /app/frontend/node_modules
-    # --- FIM DAS MUDANÇAS ---
