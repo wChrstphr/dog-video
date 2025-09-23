@@ -113,6 +113,15 @@ body {
     line-height: 1.5;
 }
 
+.input-container-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.input-container-row .input-container {
+    flex: 1;
+}
 
 .cancel-button, .create-button {
     border: none;

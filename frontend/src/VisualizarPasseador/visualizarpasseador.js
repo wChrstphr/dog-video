@@ -100,9 +100,15 @@ function VisualizarPasseador() {
             <FaUserAlt className="input-icon" />
             <span className="form-input">{clientes || 'Sem clientes associados'}</span> {/* Exibe todos os clientes associados */}
           </div>
-          <div className="input-container">
-            <FaSignal className="input-icon" />
-            <span className="form-input">{passeador.modulo || 'Módulo não disponível'}</span> {/* Exibe o módulo */}
+          <div className="input-container-row">
+            <div className="input-container">
+              <FaSignal className="input-icon" />
+              <span className="form-input">{passeador.modulo || 'Módulo 1 não disponível'}</span>
+            </div>
+            <div className="input-container">
+              <FaSignal className="input-icon" />
+              <span className="form-input">{passeador.modulo2 || 'Módulo 2 não disponível'}</span>
+            </div>
           </div>
           <div className="input-container">
             <FaClock className="input-icon" />
