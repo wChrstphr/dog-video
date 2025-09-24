@@ -13,6 +13,7 @@ function CriarPasseador() {
   const telefoneRef = useRef(null);
   const enderecoRef = useRef(null);
   const moduloRef = useRef(null); 
+  const modulo2Ref = useRef(null); 
 
   // Estado para armazenar a imagem em base64
   const [selectedImage, setSelectedImage] = useState(null);
@@ -23,6 +24,7 @@ function CriarPasseador() {
   const [cpfError, setCpfError] = useState('');
   const [telefoneError, setTelefoneError] = useState('');
   const [moduloError, setModuloError] = useState('');
+  const [modulo2Error, setModulo2Error] = useState('');
 
   // Funções de validação
   const validateNome = (nome) => {
@@ -72,6 +74,15 @@ function CriarPasseador() {
     return true;
   };  
 
+  const validateModulo2 = (modulo2) => {
+    if (!/^\d+$/.test(modulo2)) {
+      setModulo2Error('O módulo 2 deve conter apenas números');
+      return false;
+    }
+    setModulo2Error('');
+    return true;
+  };
+
   // Funções de formatação
   const formatCPF = (cpf) => {
     const cleaned = cpf.replace(/\D/g, '');
@@ -112,8 +123,9 @@ function CriarPasseador() {
     const isCPFValid = validateCPF(cpfRef.current.value);
     const isTelefoneValid = validateTelefone(telefoneRef.current.value);
     const isModuloValid = validateModulo(moduloRef.current.value);
+    const isModulo2Valid = validateModulo2(modulo2Ref.current.value);
 
-    if (isNomeValid && isEmailValid && isCPFValid && isTelefoneValid && isModuloValid) {
+    if (isNomeValid && isEmailValid && isCPFValid && isTelefoneValid && isModuloValid && isModulo2Valid) {
       const newPasseador = {
         nome: nomeRef.current.value,
         email: emailRef.current.value,
@@ -122,6 +134,7 @@ function CriarPasseador() {
         endereco: enderecoRef.current.value,
         imagem: selectedImage,
         modulo: moduloRef.current.value, 
+        modulo2: modulo2Ref.current.value,
       };
 
       try {
@@ -230,17 +243,33 @@ function CriarPasseador() {
             <FaHome className="input-icon" />
             <input ref={enderecoRef} type="text" placeholder="Endereço" className="form-input" />
           </div>
-          <div className="input-container">
-            <FaSignal className="input-icon" />
-            <input 
-              ref={moduloRef} 
-              type="text" 
-              placeholder="Módulo" 
-              className="form-input"
-              onChange={(e) => validateModulo(e.target.value)}
-            />
+          <div className="input-container-row">
+            <div className="input-container">
+              <FaSignal className="input-icon" />
+              <input 
+                ref={moduloRef} 
+                type="text" 
+                placeholder="Módulo 1" 
+                className="form-input"
+                onChange={(e) => validateModulo(e.target.value)}
+              />
+            </div>
+            <div className="input-container">
+              <FaSignal className="input-icon" />
+              <input 
+                ref={modulo2Ref} 
+                type="text" 
+                placeholder="Módulo 2" 
+                className="form-input"
+                onChange={(e) => validateModulo2(e.target.value)}
+              />
+            </div>
           </div>
-          {moduloError && <div className="error-message">{moduloError}</div>}
+          {(moduloError || modulo2Error) && (
+            <div className="error-message">
+              {moduloError || modulo2Error}
+            </div>
+          )}
           <div className="button-group">
             <button
               type="button"

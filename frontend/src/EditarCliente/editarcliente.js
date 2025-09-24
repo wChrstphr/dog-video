@@ -2,6 +2,7 @@ import './editarcliente.css';
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from "react-router-dom";
 import { FaUser, FaEnvelope, FaAddressCard, FaDog, FaPhone, FaHome, FaCalendarAlt, FaClock, FaBook, FaUserAlt } from "react-icons/fa";
+import CustomSelect from '../utils/CustomSelect';
 
 function EditarCliente() {
   const navigate = useNavigate();
@@ -25,6 +26,17 @@ function EditarCliente() {
   const [horarioError, setHorarioError] = useState('');
   const [pacote, setPacote] = useState("");
   const [diasTeste, setDiasTeste] = useState("");
+
+   // Formatando dados para o componente CustomSelect
+  const passeadoresOptions = Array.isArray(passeadores)
+  ? passeadores.map((p) => ({ value: p.id, label: p.nome }))
+  : [];
+
+  const pacoteOptions = [
+    { value: 'Trimestral', label: 'Trimestral' },
+    { value: 'Mensal', label: 'Mensal' },
+    { value: 'Temporario', label: 'Temporário' },
+  ];
 
   const validateNome = (nome) => {
     if (!/^[A-ZÀ-Ÿ][a-zà-ÿ]{1,}/.test(nome)) {
@@ -133,12 +145,23 @@ function EditarCliente() {
 
         if (data.success && data.cliente) {
           setCliente(data.cliente);
-          setSelectedPasseadorId(data.cliente.id_passeador || ""); // Define o passeador atual
+
+          // Buscar o id_passeador a partir da tabela cachorros
+          const passeadorResponse = await fetch(`http://localhost:3001/cachorros/${id}/passeador`);
+          const passeadorData = await passeadorResponse.json();
+
+          if (passeadorData.success && passeadorData.id_passeador) {
+            setSelectedPasseadorId(passeadorData.id_passeador); // Define o passeador atual
+            localStorage.setItem('passeadorId', passeadorData.id_passeador); // Salva o passeador localmente
+          } else {
+            setSelectedPasseadorId(""); // Nenhum passeador encontrado
+            localStorage.removeItem('passeadorId'); // Remove o passeador localmente
+          }
         } else {
           console.error('Erro: Cliente não encontrado ou resposta inesperada', data);
         }
       } catch (error) {
-        console.error('Erro ao buscar cliente:', error);
+        console.error('Erro ao buscar cliente ou passeador:', error);
       } finally {
         setLoading(false);
       }
@@ -165,14 +188,13 @@ function EditarCliente() {
 
   useEffect(() => {
     if (cliente) {
-      nomeRef.current.value = cliente.nome || '';
-      emailRef.current.value = cliente.email || '';
-      cpfRef.current.value = formatCPF(cliente.cpf) || '';
-      caesRef.current.value = cliente.caes ? cliente.caes.join(', ') : '';
-      telefoneRef.current.value = formatTelefone(cliente.telefone) || '';
-      enderecoRef.current.value = cliente.endereco || '';
-      horarioRef.current.value = cliente.horario_passeio ? formatHorario(cliente.horario_passeio) : '';
-      anotacaoRef.current.value = cliente.anotacoes || '';
+      if (nomeRef.current) nomeRef.current.value = cliente.nome || '';
+      if (emailRef.current) emailRef.current.value = cliente.email || '';
+      if (cpfRef.current) cpfRef.current.value = formatCPF(cliente.cpf) || '';
+      if (caesRef.current) caesRef.current.value = cliente.caes ? cliente.caes.join(', ') : '';
+      if (telefoneRef.current) telefoneRef.current.value = formatTelefone(cliente.telefone) || '';
+      if (enderecoRef.current) enderecoRef.current.value = cliente.endereco || '';
+      if (anotacaoRef.current) anotacaoRef.current.value = cliente.anotacoes || '';
       setSelectedPasseadorId(cliente.id_passeador || ""); // Atualiza o passeador selecionado ao carregar o cliente
       setPacote(cliente.pacote || "");
     }
@@ -195,72 +217,73 @@ function EditarCliente() {
   const handleSave = async (e) => {
     e.preventDefault();
   
-const isNomeValid = validateNome(nomeRef.current.value);
-const isEmailValid = validateEmail(emailRef.current.value);
-const isCPFValid = validateCPF(cpfRef.current.value);
-const isTelefoneValid = validateTelefone(telefoneRef.current.value);
-const isHorarioValid = validateHorario(horarioRef.current.value);
-const localPasseadorId = localStorage.getItem('passeadorId');
-
-if (!isNomeValid || !isEmailValid || !isCPFValid || !isTelefoneValid || !isHorarioValid) {
-  alert('Por favor, corrija os erros destacados antes de editar.');
-  return;
-}
-
-try {
-  const temporario = pacote === 'Temporario' ? 1 : 0;
-  const updatedCliente = {
-    nome: nomeRef.current.value || cliente.nome,
-    email: emailRef.current.value || cliente.email,
-    cpf: (cpfRef.current.value || cliente.cpf).replace(/\D/g, ''),
-    caes: caesRef.current.value 
-      ? caesRef.current.value.split(',').map(cao => cao.trim()) 
-      : cliente.caes,
-    telefone: (telefoneRef.current.value || cliente.telefone).replace(/\D/g, ''),
-    endereco: enderecoRef.current.value || cliente.endereco,
-    pacote,
-    dias_teste: pacote === "Temporario" ? parseInt(diasTeste) || null : null,
-    temporario,
-    horario_passeio: horarioRef.current.value || cliente.horario_passeio,
-    anotacoes: anotacaoRef.current.value || cliente.anotacoes,
-    id_passeador: selectedPasseadorId || localPasseadorId || cliente.id_passeador,
-  };
-
-  const response = await fetch(`http://localhost:3001/clientes/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(updatedCliente),
-  });
-
-  if (response.ok) {
-    navigate(`/visualizarcliente/${id}`);
-  } else {
-    const data = await response.json();
-    if (data.message?.includes('ID do passeador inválido')) {
-      updatedCliente.id_passeador = localPasseadorId;
-      const retryResponse = await fetch(`http://localhost:3001/clientes/${id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(updatedCliente),
-        });
-
-        if (retryResponse.ok) {
-          navigate(`/visualizarcliente/${id}`);
-      } else {
-        console.error('Erro ao atualizar cliente com ID local do passeador');
-      }
-    } else {
-      console.error('Erro ao atualizar cliente:', data);
+    const isNomeValid = validateNome(nomeRef.current.value);
+    const isEmailValid = validateEmail(emailRef.current.value);
+    const isCPFValid = validateCPF(cpfRef.current.value);
+    const isTelefoneValid = validateTelefone(telefoneRef.current.value);
+    const isHorarioValid = validateHorario(horarioRef.current.value);
+  
+    if (!isNomeValid || !isEmailValid || !isCPFValid || !isTelefoneValid || !isHorarioValid) {
+      alert('Por favor, corrija os erros destacados antes de editar.');
+      return;
     }
-  }
-} catch (error) {
-  console.error('Erro ao enviar os dados do cliente:', error);
-}
-  }
+  
+    try {
+      const localPasseadorId = localStorage.getItem('passeadorId'); // Recupera o ID do passeador salvo localmente
+      const updatedCliente = {
+        nome: nomeRef.current.value || cliente.nome,
+        email: emailRef.current.value || cliente.email,
+        cpf: (cpfRef.current.value || cliente.cpf).replace(/\D/g, ''),
+        caes: caesRef.current.value 
+          ? caesRef.current.value.split(',').map(cao => cao.trim()) 
+          : cliente.caes,
+        telefone: (telefoneRef.current.value || cliente.telefone).replace(/\D/g, ''),
+        endereco: enderecoRef.current.value || cliente.endereco,
+        pacote,
+        dias_teste: pacote === "Temporario" ? parseInt(diasTeste) || cliente.dias_teste : cliente.dias_teste, // Mantém o valor atual se não for alterado
+        anotacoes: anotacaoRef.current.value || cliente.anotacoes,
+        id_passeador: selectedPasseadorId || localPasseadorId || null, // Garante que será null se não houver passeador
+      };
+  
+      console.log('Enviando dados para atualização:', updatedCliente);
+  
+      const response = await fetch(`http://localhost:3001/clientes/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedCliente),
+      });
+  
+      if (response.ok) {
+        if (horarioRef.current.value) {
+          const horarioFormatado = `${horarioRef.current.value}:00`; // Adiciona os segundos ao horário
+          const passeioResponse = await fetch(`http://localhost:3001/passeios/${id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              horario_passeio: horarioFormatado,
+              id_passeador: updatedCliente.id_passeador, // Garante que será null se não houver passeador
+            }),
+          });
+  
+          if (!passeioResponse.ok) {
+            console.error('Erro ao atualizar passeio:', await passeioResponse.json());
+          }
+        }
+        navigate(`/visualizarcliente/${id}`);
+      } else {
+        const data = await response.json();
+        console.error('Erro ao atualizar cliente:', data);
+        alert('Erro ao atualizar cliente: ' + (data.message || 'Erro desconhecido'));
+      }
+    } catch (error) {
+      console.error('Erro ao enviar os dados do cliente:', error);
+      alert('Erro ao conectar com o servidor. Tente novamente mais tarde.');
+    }
+  };
   
   return (
     <div className="Web-Editar-Cliente">
@@ -334,35 +357,24 @@ try {
             <FaHome className="input-icon" />
             <input ref={enderecoRef} type="text" placeholder="Endereço" className="form-input" />
           </div>
+          <CustomSelect
+            icon={<FaUserAlt />}
+            placeholder="Selecione o Passeador"
+            options={passeadoresOptions}
+            value={selectedPasseadorId}
+            onChange={(value) => setSelectedPasseadorId(value)}
+          />
+
           <div className="input-container">
-            <FaUserAlt className="input-icon" />
-            <select
-              className="form-input"
-              value={selectedPasseadorId}
-              onChange={(e) => setSelectedPasseadorId(e.target.value)}
-            >
-              <option value="">Selecione o Passeador</option>
-              {passeadores.map((passeador) => (
-                <option key={passeador.id} value={passeador.id}>
-                  {passeador.nome}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="input-container">
-            <FaCalendarAlt className="input-icon" />
-            <select
-              className="form-input"
+            <CustomSelect
+              icon={<FaCalendarAlt />}
+              placeholder="Selecione o Pacote"
+              options={pacoteOptions}
               value={pacote}
-              onChange={(e) => setPacote(e.target.value)}
-            >
-              <option value="">Selecione o Pacote</option>
-              <option value="Mensal">Mensal</option>
-              <option value="Trimestral">Trimestral</option>
-              <option value="Temporario">Temporário</option>
-            </select>
-            {pacote === "Temporario" && (
-              <div className="input-container">
+              onChange={(value) => setPacote(value)}
+            />
+            {pacote === 'Temporario' && (
+              <div className="input-container temporary-days-input">
                 <input
                   type="number"
                   placeholder="Dias de teste"

@@ -1,7 +1,7 @@
 import './visualizarpasseador.css';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from "react-router-dom";
-import { FaUser, FaEnvelope, FaAddressCard, FaPhone, FaHome, FaCamera, FaUserAlt, FaSignal } from "react-icons/fa";
+import { FaUser, FaEnvelope, FaAddressCard, FaPhone, FaHome, FaCamera, FaUserAlt, FaSignal, FaClock } from "react-icons/fa";
 
 function VisualizarPasseador() {
   const { id } = useParams();
@@ -10,6 +10,7 @@ function VisualizarPasseador() {
   const [passeador, setPasseador] = useState(null);
   const [clientes, setClientes] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [horariosPasseio, setHorariosPasseio] = useState([]); // Novo estado para os horários de passeio
 
   useEffect(() => {
     const fetchPasseador = async () => {
@@ -20,6 +21,13 @@ function VisualizarPasseador() {
         if (data.success) {
           setPasseador(data.passeador);
           setClientes(data.clientes);
+
+          // Busca os horários de passeio associados ao passeador
+          const horariosResponse = await fetch(`http://localhost:3001/passeadores/${id}/horarios`);
+          const horariosData = await horariosResponse.json();
+          if (horariosData.success) {
+            setHorariosPasseio(horariosData.horarios);
+          }
         } else {
           console.error('Erro na resposta do backend:', data.message);
           setPasseador(null);
@@ -92,9 +100,23 @@ function VisualizarPasseador() {
             <FaUserAlt className="input-icon" />
             <span className="form-input">{clientes || 'Sem clientes associados'}</span> {/* Exibe todos os clientes associados */}
           </div>
+          <div className="input-container-row">
+            <div className="input-container">
+              <FaSignal className="input-icon" />
+              <span className="form-input">{passeador.modulo || 'Módulo 1 não disponível'}</span>
+            </div>
+            <div className="input-container">
+              <FaSignal className="input-icon" />
+              <span className="form-input">{passeador.modulo2 || 'Módulo 2 não disponível'}</span>
+            </div>
+          </div>
           <div className="input-container">
-            <FaSignal className="input-icon" />
-            <span className="form-input">{passeador.modulo || 'Módulo não disponível'}</span> {/* Exibe o módulo */}
+            <FaClock className="input-icon" />
+            <span className="form-input">
+              {horariosPasseio.length > 0
+                ? horariosPasseio.join(', ') // Exibe os horários separados por vírgula
+                : 'Nenhum horário definido'}
+            </span>
           </div>
 
           <div className="button-group">
