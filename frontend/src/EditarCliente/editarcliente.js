@@ -365,7 +365,6 @@ function EditarCliente() {
             onChange={(value) => setSelectedPasseadorId(value)}
           />
 
-          {/* 2. SELECT DE PACOTE SUBSTITUÍDO */}
           <div className="input-container">
             <CustomSelect
               icon={<FaCalendarAlt />}
@@ -374,7 +373,6 @@ function EditarCliente() {
               value={pacote}
               onChange={(value) => setPacote(value)}
             />
-            {/* Lógica para mostrar o campo de dias de teste permanece a mesma */}
             {pacote === 'Temporario' && (
               <div className="input-container temporary-days-input">
                 <input
