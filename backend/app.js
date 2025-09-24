@@ -825,26 +825,30 @@ app.post('/criarpasseador', (req, res) => {
 
 // Endpoint para excluir um passeador pelo ID
 app.delete('/passeadores/:id', (req, res) => {
-  const passeadorId = req.params.id; // ID recebido da URL
-  const deleteQuery = 'DELETE FROM passeadores WHERE id_passeador = $1';
+  const passeadorId = req.params.id;
 
-  // Confirma se o ID não está vazio
-  if (!passeadorId) {
-    return res.status(400).json({ success: false, message: 'ID do passeador não fornecido' });
-  }
-
-  pool.query(deleteQuery, [passeadorId], (err, result) => {
+  // Atualizar ou excluir cachorros associados ao passeador
+  const updateCachorrosQuery = 'UPDATE cachorros SET id_passeador = NULL WHERE id_passeador = $1';
+  pool.query(updateCachorrosQuery, [passeadorId], (err) => {
     if (err) {
-      console.error('Erro ao excluir passeador:', err);
-      return res.status(500).json({ success: false, message: 'Erro ao excluir passeador' });
+      console.error('Erro ao atualizar cachorros associados ao passeador:', err);
+      return res.status(500).json({ success: false, message: 'Erro ao atualizar cachorros associados ao passeador' });
     }
 
-    // Verifica se alguma linha foi afetada (confirmação de exclusão)
-    if (result.rowCount === 0) {
-      return res.status(404).json({ success: false, message: 'Passeador não encontrado' });
-    }
+    // Excluir o passeador após atualizar os cachorros
+    const deleteQuery = 'DELETE FROM passeadores WHERE id_passeador = $1';
+    pool.query(deleteQuery, [passeadorId], (err, result) => {
+      if (err) {
+        console.error('Erro ao excluir passeador:', err);
+        return res.status(500).json({ success: false, message: 'Erro ao excluir passeador' });
+      }
 
-    res.json({ success: true, message: 'Passeador excluído com sucesso!' });
+      if (result.rowCount === 0) {
+        return res.status(404).json({ success: false, message: 'Passeador não encontrado' });
+      }
+
+      res.json({ success: true, message: 'Passeador excluído com sucesso!' });
+    });
   });
 });
 
