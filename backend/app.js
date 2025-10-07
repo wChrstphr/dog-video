@@ -409,27 +409,31 @@ app.get('/clientes', (req, res) => {
 app.get('/clientes/:id', (req, res) => {
   const clienteId = req.params.id;
 
-  // Consulta para buscar informações básicas do cliente
   const queryCliente = `
-    SELECT * 
-    FROM clientes 
-    WHERE id_cliente = $1`;
+    SELECT nome, email, cpf, telefone, endereco, anotacoes, pacote, dias_teste
+    FROM clientes
+    WHERE id_cliente = $1
+  `;
 
-  // Consulta para buscar os cachorros do cliente
   const queryCachorros = `
-    SELECT nome 
-    FROM cachorros 
-    WHERE id_cliente = $1`;
+    SELECT nome
+    FROM cachorros
+    WHERE id_cliente = $1
+  `;
 
-  // Consulta para buscar o passeador do cliente via cachorros
+  const queryPasseio = `
+    SELECT id_passeador, TO_CHAR(horario_passeio, 'HH24:MI') AS horario_passeio
+    FROM passeios
+    WHERE id_cliente = $1
+    LIMIT 1
+  `;
+
   const queryPasseador = `
-    SELECT p.nome AS passeador_nome
-    FROM passeadores p
-    JOIN cachorros c ON c.id_passeador = p.id_passeador
-    WHERE c.id_cliente = $1
-    LIMIT 1`;
+    SELECT nome
+    FROM passeadores
+    WHERE id_passeador = $1
+  `;
 
-  // Consultar os dados do cliente
   pool.query(queryCliente, [clienteId], (err, clienteResults) => {
     if (err) {
       console.error('Erro ao consultar cliente:', err);
@@ -442,7 +446,6 @@ app.get('/clientes/:id', (req, res) => {
 
     const cliente = clienteResults.rows[0];
 
-    // Consultar os cachorros associados ao cliente
     pool.query(queryCachorros, [clienteId], (err, cachorroResults) => {
       if (err) {
         console.error('Erro ao consultar cachorros:', err);
@@ -450,26 +453,44 @@ app.get('/clientes/:id', (req, res) => {
       }
 
       const caes = cachorroResults.rows.map(cachorro => cachorro.nome);
-      cliente.caes = caes; // Adiciona os cães ao objeto cliente
 
-      // Consultar o passeador associado aos cachorros do cliente
-      pool.query(queryPasseador, [clienteId], (err, passeadorResults) => {
+      pool.query(queryPasseio, [clienteId], (err, passeioResults) => {
         if (err) {
-          console.error('Erro ao consultar passeador:', err);
-          return res.status(500).json({ success: false, message: 'Erro ao consultar passeador' });
+          console.error('Erro ao consultar passeio:', err);
+          return res.status(500).json({ success: false, message: 'Erro ao consultar passeio' });
         }
 
-        const passeadorNome = passeadorResults.rows.length > 0 ? passeadorResults.rows[0].passeador_nome : null;
-        cliente.passeador = passeadorNome; // Adiciona o nome do passeador ao cliente
+        if (passeioResults.rows.length === 0) {
+          return res.json({
+            success: true,
+            cliente: {
+              ...cliente,
+              caes,
+              horario_passeio: null,
+              passeador: null,
+            },
+          });
+        }
 
-        // Retorna os dados consolidados
-        res.json({
-          success: true,
-          cliente: {
-            ...cliente,
-            caes,
-            passeador: passeadorNome
-          },
+        const { id_passeador, horario_passeio } = passeioResults.rows[0];
+
+        pool.query(queryPasseador, [id_passeador], (err, passeadorResults) => {
+          if (err) {
+            console.error('Erro ao consultar passeador:', err);
+            return res.status(500).json({ success: false, message: 'Erro ao consultar passeador' });
+          }
+
+          const passeador = passeadorResults.rows.length > 0 ? passeadorResults.rows[0].nome : null;
+
+          res.json({
+            success: true,
+            cliente: {
+              ...cliente,
+              caes,
+              horario_passeio,
+              passeador,
+            },
+          });
         });
       });
     });
@@ -481,9 +502,10 @@ app.put('/clientes/:id', async (req, res) => {
   const clienteId = req.params.id;
   const { nome, email, cpf, telefone, endereco, pacote, anotacoes, caes, id_passeador, dias_teste } = req.body;
 
-  console.log('Recebendo dados para atualizar cliente:', req.body); // Log para verificar os dados recebidos
-
   try {
+    // Converte dias_teste para null se for uma string vazia
+    const diasTesteValue = dias_teste === '' ? null : dias_teste;
+
     // Busca o passeador atual associado ao cliente
     const passeadorAtualQuery = `
       SELECT c.id_passeador
@@ -509,11 +531,9 @@ app.put('/clientes/:id', async (req, res) => {
       endereco,
       pacote,
       anotacoes,
-      dias_teste !== undefined ? dias_teste : null, // Mantém o valor atual se não for alterado
+      diasTesteValue, // Usa null se dias_teste for uma string vazia
       clienteId,
     ]);
-
-    console.log('Cliente atualizado com sucesso.');
 
     if (caes && caes.length > 0) {
       const deleteDogsQuery = 'DELETE FROM cachorros WHERE id_cliente = $1';
