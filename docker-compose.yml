@@ -9,3 +9,8 @@ services:
       - "3000:3000"
       - "3001:3001"
     restart: unless-stopped
+    volumes:
+      - ./backend:/app/backend
+      - ./frontend:/app/frontend
+      - /app/backend/node_modules
+      - /app/frontend/node_modules

@@ -2,6 +2,7 @@ import './editarcliente.css';
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from "react-router-dom";
 import { FaUser, FaEnvelope, FaAddressCard, FaDog, FaPhone, FaHome, FaCalendarAlt, FaClock, FaBook, FaUserAlt } from "react-icons/fa";
+import CustomSelect from '../utils/CustomSelect';
 
 function EditarCliente() {
   const navigate = useNavigate();
@@ -21,6 +22,123 @@ function EditarCliente() {
   const [loading, setLoading] = useState(true); // Controla o estado de carregamento
   const [passeadores, setPasseadores] = useState([]); // Lista de passeadores
   const [selectedPasseadorId, setSelectedPasseadorId] = useState(""); // Passeador selecionado
+  
+  // Estados para validação
+  const [nomeError, setNomeError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [cpfError, setCpfError] = useState('');
+  const [telefoneError, setTelefoneError] = useState('');
+  const [horarioError, setHorarioError] = useState('');
+
+  // Formatando dados para o componente CustomSelect
+  const passeadoresOptions = Array.isArray(passeadores)
+    ? passeadores.map((p) => ({ value: p.id, label: p.nome }))
+    : [];
+
+  const pacoteOptions = [
+    { value: 'Trimestral', label: 'Trimestral' },
+    { value: 'Mensal', label: 'Mensal' },
+    { value: 'Temporario', label: 'Temporário' },
+  ];
+
+  const validateNome = (nome) => {
+    if (!/^[A-ZÀ-Ÿ][a-zà-ÿ]{1,}/.test(nome)) {
+      setNomeError('O nome deve começar com letra maiúscula e ter pelo menos 2 caracteres');
+      return false;
+    }
+    setNomeError('');
+    return true;
+  };
+
+  const validateEmail = (email) => {
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      setEmailError('Email inválido');
+      return false;
+    }
+    setEmailError('');
+    return true;
+  };
+
+  const validateCPF = (cpf) => {
+    const cleaned = cpf.replace(/\D/g, '');
+    if (cleaned.length !== 11 || /^(\d)\1+$/.test(cleaned)) {
+      setCpfError('CPF inválido');
+      return false;
+    }
+    setCpfError('');
+    return true;
+  };
+
+  const validateTelefone = (telefone) => {
+    const cleaned = telefone.replace(/\D/g, '');
+    if (!/^\d{11}$/.test(cleaned)) {
+      setTelefoneError('Telefone deve ter DDD e 9 dígitos');
+      return false;
+    }
+    setTelefoneError('');
+    return true;
+  };
+
+  const validateHorario = (horario) => {
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(horario)) {
+      setHorarioError('Horário inválido (use o formato HH:MM)');
+      return false;
+    }
+    setHorarioError('');
+    return true;
+  };
+
+  const formatCPF = (cpf) => {
+    const cleaned = cpf.replace(/\D/g, '');
+    const match = cleaned.match(/^(\d{3})(\d{3})(\d{3})(\d{2})$/);
+    if (match) {
+      return `${match[1]}.${match[2]}.${match[3]}-${match[4]}`;
+    }
+    return cpf;
+  };
+
+  const formatTelefone = (telefone) => {
+    const cleaned = telefone.replace(/\D/g, '');
+    const match = cleaned.match(/^(\d{2})(\d{5})(\d{4})$/);
+    if (match) {
+      return `(${match[1]}) ${match[2]}-${match[3]}`;
+    }
+    return telefone;
+  };
+
+  const formatHorario = (horario) => {
+    const cleaned = horario.replace(/\D/g, '');
+    const match = cleaned.match(/^(\d{2})(\d{2})$/);
+    if (match) {
+      return `${match[1]}:${match[2]}`;
+    }
+    return horario;
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault(); 
+  
+    try {
+      const response = await fetch(`http://localhost:3001/clientes/${id}/reset-senha`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      const data = await response.json();
+  
+      if (data.success) {
+        alert('Senha redefinida com sucesso!');
+      } else {
+        console.error('Erro ao resetar senha:', data.message);
+        alert('Erro ao resetar senha.');
+      }
+    } catch (error) {
+      console.error('Erro ao processar reset de senha:', error);
+      alert('Erro ao processar reset de senha.');
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -38,8 +156,8 @@ function EditarCliente() {
           setCliente({
             nome: nome || '',
             email: email || '',
-            cpf: cpf || '',
-            telefone: telefone || '',
+            cpf: formatCPF(cpf) || '',
+            telefone: formatTelefone(telefone) || '',
             endereco: endereco || '',
             anotacoes: anotacoes || '',
             caes: caes ? caes.join(', ') : '',
@@ -87,14 +205,44 @@ function EditarCliente() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    
+    // Aplica formatação automaticamente para alguns campos
+    let formattedValue = value;
+    if (name === 'cpf') {
+      formattedValue = formatCPF(value);
+      validateCPF(value);
+    } else if (name === 'telefone') {
+      formattedValue = formatTelefone(value);
+      validateTelefone(value);
+    } else if (name === 'horario_passeio') {
+      formattedValue = formatHorario(value);
+      validateHorario(value);
+    } else if (name === 'nome') {
+      validateNome(value);
+    } else if (name === 'email') {
+      validateEmail(value);
+    }
+
     setCliente((prevCliente) => ({
       ...prevCliente,
-      [name]: value,
+      [name]: formattedValue,
     }));
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
+
+    // Validações antes de salvar
+    const isNomeValid = validateNome(cliente.nome);
+    const isEmailValid = validateEmail(cliente.email);
+    const isCPFValid = validateCPF(cliente.cpf);
+    const isTelefoneValid = validateTelefone(cliente.telefone);
+    const isHorarioValid = validateHorario(cliente.horario_passeio);
+
+    if (!isNomeValid || !isEmailValid || !isCPFValid || !isTelefoneValid || !isHorarioValid) {
+      alert('Por favor, corrija os erros destacados antes de salvar.');
+      return;
+    }
 
     try {
       const updatedCliente = {
@@ -103,6 +251,7 @@ function EditarCliente() {
         telefone: cliente.telefone.replace(/\D/g, ''),
         caes: cliente.caes.split(',').map((cao) => cao.trim()),
         id_passeador: selectedPasseadorId || null,
+        horario_passeio: cliente.horario_passeio,
       };
 
       console.log('Enviando dados para atualização:', updatedCliente);
@@ -132,6 +281,9 @@ function EditarCliente() {
     <div className="Web-Editar-Cliente">
       <header className="Web-header">
         <img src="/logotipo.svg" className="Web-logotipo" alt="Dogvideo Logomarca" />
+        <button type="button" className="r-password-button" onClick={handleResetPassword}>
+          Resetar Senha
+        </button>
         <div className="footer-bar"></div>
       </header>
 
@@ -148,6 +300,8 @@ function EditarCliente() {
               onChange={handleInputChange}
             />
           </div>
+          {nomeError && <div className="error-message">{nomeError}</div>}
+          
           <div className="input-container">
             <FaEnvelope className="input-icon" />
             <input
@@ -159,6 +313,8 @@ function EditarCliente() {
               onChange={handleInputChange}
             />
           </div>
+          {emailError && <div className="error-message">{emailError}</div>}
+          
           <div className="input-container">
             <FaAddressCard className="input-icon" />
             <input
@@ -170,6 +326,8 @@ function EditarCliente() {
               onChange={handleInputChange}
             />
           </div>
+          {cpfError && <div className="error-message">{cpfError}</div>}
+          
           <div className="input-container">
             <FaDog className="input-icon" />
             <input
@@ -181,6 +339,7 @@ function EditarCliente() {
               onChange={handleInputChange}
             />
           </div>
+          
           <div className="input-container">
             <FaPhone className="input-icon" />
             <input
@@ -192,6 +351,8 @@ function EditarCliente() {
               onChange={handleInputChange}
             />
           </div>
+          {telefoneError && <div className="error-message">{telefoneError}</div>}
+          
           <div className="input-container">
             <FaHome className="input-icon" />
             <input
@@ -203,36 +364,25 @@ function EditarCliente() {
               onChange={handleInputChange}
             />
           </div>
+          
+          <CustomSelect
+            icon={<FaUserAlt />}
+            placeholder="Selecione o Passeador"
+            options={passeadoresOptions}
+            value={selectedPasseadorId}
+            onChange={(value) => setSelectedPasseadorId(value)}
+          />
+
           <div className="input-container">
-            <FaUserAlt className="input-icon" />
-            <select
-              className="form-input"
-              value={selectedPasseadorId}
-              onChange={(e) => setSelectedPasseadorId(e.target.value)}
-            >
-              <option value="">Selecione o Passeador</option>
-              {passeadores.map((passeador) => (
-                <option key={passeador.id} value={passeador.id}>
-                  {passeador.nome}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="input-container">
-            <FaCalendarAlt className="input-icon" />
-            <select
-              name="pacote"
-              className="form-input"
+            <CustomSelect
+              icon={<FaCalendarAlt />}
+              placeholder="Selecione o Pacote"
+              options={pacoteOptions}
               value={cliente.pacote}
-              onChange={handleInputChange}
-            >
-              <option value="">Selecione o Pacote</option>
-              <option value="Mensal">Mensal</option>
-              <option value="Trimestral">Trimestral</option>
-              <option value="Temporario">Temporário</option>
-            </select>
-            {cliente.pacote === "Temporario" && (
-              <div className="input-container">
+              onChange={(value) => setCliente(prev => ({ ...prev, pacote: value }))}
+            />
+            {cliente.pacote === 'Temporario' && (
+              <div className="input-container temporary-days-input">
                 <input
                   name="dias_teste"
                   type="number"
@@ -245,6 +395,7 @@ function EditarCliente() {
               </div>
             )}
           </div>
+          
           <div className="input-container">
             <FaClock className="input-icon" />
             <input
@@ -256,6 +407,8 @@ function EditarCliente() {
               onChange={handleInputChange}
             />
           </div>
+          {horarioError && <div className="error-message">{horarioError}</div>}
+          
           <div className="input-container">
             <FaBook className="input-icon" />
             <textarea
