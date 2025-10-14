@@ -31,7 +31,7 @@ body {
 }
 
 .footer-bar {
-    background-color: white;
+    background-color: black;
     height: 5px;
     width: 100%;
     margin-top: 90px;
@@ -113,15 +113,6 @@ body {
     line-height: 1.5;
 }
 
-.input-container-row {
-    display: flex;
-    justify-content: space-between;
-    gap: 20px;
-}
-
-.input-container-row .input-container {
-    flex: 1;
-}
 
 .cancel-button, .create-button {
     border: none;
@@ -211,7 +202,7 @@ body {
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.15);
     transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
     margin-bottom: 20px;
-    background-color: #D69958;
+    background-color: white;
 }
 
 .edit-button:hover {

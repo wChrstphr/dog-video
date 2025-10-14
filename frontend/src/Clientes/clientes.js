@@ -14,7 +14,9 @@ function Clientes() {
   const [sortDirection, setSortDirection] = useState('asc');
   const [isFilterMenuVisible, setIsFilterMenuVisible] = useState(false);
   const searchInputRef = useRef(null);
+  const [filtroPasseador, setFiltroPasseador] = useState('');
   const [filtroPacote, setFiltroPacote] = useState('');
+  const [passeadores, setPasseadores] = useState([]);
 
   useEffect(() => {
     axios.get('http://localhost:3001/clientes')
@@ -23,6 +25,22 @@ function Clientes() {
       })
       .catch(error => {
         console.error('Erro ao buscar clientes:', error);
+      });
+
+    axios.get('http://localhost:3001/passeadores')
+      .then(response => {
+        if (Array.isArray(response.data)) {
+          setPasseadores(response.data);
+        } else if (response.data && Array.isArray(response.data.passeadores)) {
+          setPasseadores(response.data.passeadores);
+        } else {
+          console.error('Dados de passeadores inválidos:', response.data);
+          setPasseadores([]);
+        }
+      })
+      .catch(error => {
+        console.error('Erro ao buscar passeadores:', error);
+        setPasseadores([]);
       });
   }, []);
 
@@ -82,6 +100,7 @@ function Clientes() {
     return clientes
       .filter((cliente) =>
         normalizeText(cliente.nome).includes(normalizedBusca) &&
+        (filtroPasseador === '' || (cliente.id_passeador && cliente.id_passeador.toString() === filtroPasseador)) &&
         (filtroPacote === '' || cliente.pacote === filtroPacote)
       )
       .sort((a, b) => {
@@ -91,7 +110,7 @@ function Clientes() {
           return b.nome.localeCompare(a.nome);
         }
       });
-  }, [clientes, busca, sortDirection, filtroPacote]);
+  }, [clientes, busca, sortDirection, filtroPasseador, filtroPacote]);
   
   return (
     <div className="Web-Clientes">
@@ -136,6 +155,19 @@ function Clientes() {
           </button>
           <div className="filter-divider"></div>
           <select
+            value={filtroPasseador}
+            onChange={(e) => setFiltroPasseador(e.target.value)}
+            className="filter-select"
+          >
+            <option value="">Passeadores</option>
+            {Array.isArray(passeadores) && passeadores.map((passeador) => (
+              <option key={passeador.id} value={passeador.id.toString()}>
+                {passeador.nome}
+              </option>
+            ))}
+          </select>
+          <div className="filter-divider"></div>
+          <select
             value={filtroPacote}
             onChange={(e) => setFiltroPacote(e.target.value)}
             className="filter-select"
@@ -143,7 +175,6 @@ function Clientes() {
             <option value="">Pacotes</option>
             <option value="Trimestral">Trimestral</option>
             <option value="Mensal">Mensal</option>
-            <option value="Temporario">Temporário</option>
           </select>
         </div>
       )}

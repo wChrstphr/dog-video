@@ -1,45 +1,28 @@
 import './editarcliente.css';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from "react-router-dom";
 import { FaUser, FaEnvelope, FaAddressCard, FaDog, FaPhone, FaHome, FaCalendarAlt, FaClock, FaBook, FaUserAlt } from "react-icons/fa";
-import CustomSelect from '../utils/CustomSelect';
 
 function EditarCliente() {
   const navigate = useNavigate();
   const { id } = useParams(); // Captura o ID da URL
-  const [cliente, setCliente] = useState({
-    nome: '',
-    email: '',
-    cpf: '',
-    telefone: '',
-    endereco: '',
-    anotacoes: '',
-    caes: '',
-    horario_passeio: '',
-    pacote: '',
-    dias_teste: '',
-  }); // Estado para armazenar os dados do cliente
+  const [cliente, setCliente] = useState(null); // Armazena os dados do cliente
   const [loading, setLoading] = useState(true); // Controla o estado de carregamento
   const [passeadores, setPasseadores] = useState([]); // Lista de passeadores
   const [selectedPasseadorId, setSelectedPasseadorId] = useState(""); // Passeador selecionado
-  
-  // Estados para validação
+  const nomeRef = useRef(null);
+  const emailRef = useRef(null);
+  const cpfRef = useRef(null);
+  const caesRef = useRef(null);
+  const telefoneRef = useRef(null);
+  const enderecoRef = useRef(null);
+  const horarioRef = useRef(null);
+  const anotacaoRef = useRef(null);
   const [nomeError, setNomeError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [cpfError, setCpfError] = useState('');
   const [telefoneError, setTelefoneError] = useState('');
   const [horarioError, setHorarioError] = useState('');
-
-  // Formatando dados para o componente CustomSelect
-  const passeadoresOptions = Array.isArray(passeadores)
-    ? passeadores.map((p) => ({ value: p.id, label: p.nome }))
-    : [];
-
-  const pacoteOptions = [
-    { value: 'Trimestral', label: 'Trimestral' },
-    { value: 'Mensal', label: 'Mensal' },
-    { value: 'Temporario', label: 'Temporário' },
-  ];
 
   const validateNome = (nome) => {
     if (!/^[A-ZÀ-Ÿ][a-zà-ÿ]{1,}/.test(nome)) {
@@ -129,7 +112,7 @@ function EditarCliente() {
       const data = await response.json();
   
       if (data.success) {
-        alert('Senha redefinida com sucesso!');
+        alert('Senha redefinida com sucesso!'); // Exibe um alerta
       } else {
         console.error('Erro ao resetar senha:', data.message);
         alert('Erro ao resetar senha.');
@@ -138,151 +121,147 @@ function EditarCliente() {
       console.error('Erro ao processar reset de senha:', error);
       alert('Erro ao processar reset de senha.');
     }
-  };
+  };  
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchCliente = async () => {
       try {
-        setLoading(true);
+        const response = await fetch(`http://localhost:3001/clientes/${id}`);
+        const data = await response.json();
 
-        // Busca os dados do cliente
-        const clienteResponse = await fetch(`http://localhost:3001/clientes/${id}`);
-        const clienteData = await clienteResponse.json();
-
-        if (clienteData.success && clienteData.cliente) {
-          const { nome, email, cpf, telefone, endereco, anotacoes, caes, horario_passeio, pacote, dias_teste, passeador } = clienteData.cliente;
-
-          // Atualiza o estado do cliente
-          setCliente({
-            nome: nome || '',
-            email: email || '',
-            cpf: formatCPF(cpf) || '',
-            telefone: formatTelefone(telefone) || '',
-            endereco: endereco || '',
-            anotacoes: anotacoes || '',
-            caes: caes ? caes.join(', ') : '',
-            horario_passeio: horario_passeio || '',
-            pacote: pacote || '',
-            dias_teste: dias_teste || '',
-          });
-
-          // Define o passeador selecionado
-          const passeadorId = passeador ? passeadores.find(p => p.nome === passeador)?.id : '';
-          setSelectedPasseadorId(passeadorId || '');
+        if (data.success && data.cliente) {
+          setCliente(data.cliente);
+          setSelectedPasseadorId(data.cliente.id_passeador || ""); // Define o passeador atual
         } else {
-          console.error('Erro: Cliente não encontrado ou resposta inesperada', clienteData);
-        }
-
-        // Busca a lista de passeadores
-        const passeadoresResponse = await fetch('http://localhost:3001/passeadores');
-        const passeadoresData = await passeadoresResponse.json();
-
-        if (passeadoresData.success && Array.isArray(passeadoresData.passeadores)) {
-          setPasseadores(passeadoresData.passeadores);
-
-          // Atualiza o passeador selecionado após carregar a lista de passeadores
-          const passeadorId = clienteData.cliente.passeador
-            ? passeadoresData.passeadores.find(p => p.nome === clienteData.cliente.passeador)?.id
-            : '';
-          setSelectedPasseadorId(passeadorId || '');
-        } else {
-          console.error('Erro ao buscar passeadores ou resposta inesperada', passeadoresData);
+          console.error('Erro: Cliente não encontrado ou resposta inesperada', data);
         }
       } catch (error) {
-        console.error('Erro ao buscar dados:', error);
+        console.error('Erro ao buscar cliente:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const fetchPasseadores = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/passeadores');
+        const data = await response.json();
+
+        if (data.success && Array.isArray(data.passeadores)) {
+          setPasseadores(data.passeadores);
+        } else {
+          console.error('Erro ao buscar passeadores ou resposta inesperada', data);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar passeadores:', error);
+      }
+    };
+
+    fetchCliente();
+    fetchPasseadores();
   }, [id]);
+
+  useEffect(() => {
+    if (cliente) {
+      nomeRef.current.value = cliente.nome || '';
+      emailRef.current.value = cliente.email || '';
+      cpfRef.current.value = formatCPF(cliente.cpf) || '';
+      caesRef.current.value = cliente.caes ? cliente.caes.join(', ') : '';
+      telefoneRef.current.value = formatTelefone(cliente.telefone) || '';
+      enderecoRef.current.value = cliente.endereco || '';
+      horarioRef.current.value = formatHorario(cliente.horario_passeio) || '';
+      anotacaoRef.current.value = cliente.anotacoes || '';
+      setSelectedPasseadorId(cliente.id_passeador || ""); // Atualiza o passeador selecionado ao carregar o cliente
+    }
+  }, [cliente]);
+
+  // Recupera o ID do passeador do localStorage
+  useEffect(() => {
+    const localIdPasseador = localStorage.getItem('passeadorId'); // Recupera o ID do passeador salvo localmente
+    setSelectedPasseadorId(localIdPasseador || ""); // Define o passeador selecionado como o ID salvo
+  }, []);
 
   if (loading) {
     return <div>Carregando...</div>;
   }
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    
-    // Aplica formatação automaticamente para alguns campos
-    let formattedValue = value;
-    if (name === 'cpf') {
-      formattedValue = formatCPF(value);
-      validateCPF(value);
-    } else if (name === 'telefone') {
-      formattedValue = formatTelefone(value);
-      validateTelefone(value);
-    } else if (name === 'horario_passeio') {
-      formattedValue = formatHorario(value);
-      validateHorario(value);
-    } else if (name === 'nome') {
-      validateNome(value);
-    } else if (name === 'email') {
-      validateEmail(value);
-    }
-
-    setCliente((prevCliente) => ({
-      ...prevCliente,
-      [name]: formattedValue,
-    }));
-  };
+  if (!cliente) {
+    return <div>Cliente não encontrado</div>;
+  }
 
   const handleSave = async (e) => {
     e.preventDefault();
+  
+const isNomeValid = validateNome(nomeRef.current.value);
+const isEmailValid = validateEmail(emailRef.current.value);
+const isCPFValid = validateCPF(cpfRef.current.value);
+const isTelefoneValid = validateTelefone(telefoneRef.current.value);
+const isHorarioValid = validateHorario(horarioRef.current.value);
+const localPasseadorId = localStorage.getItem('passeadorId');
 
-    // Validações antes de salvar
-    const isNomeValid = validateNome(cliente.nome);
-    const isEmailValid = validateEmail(cliente.email);
-    const isCPFValid = validateCPF(cliente.cpf);
-    const isTelefoneValid = validateTelefone(cliente.telefone);
-    const isHorarioValid = validateHorario(cliente.horario_passeio);
+if (!isNomeValid || !isEmailValid || !isCPFValid || !isTelefoneValid || !isHorarioValid) {
+  alert('Por favor, corrija os erros destacados antes de editar.');
+  return;
+}
 
-    if (!isNomeValid || !isEmailValid || !isCPFValid || !isTelefoneValid || !isHorarioValid) {
-      alert('Por favor, corrija os erros destacados antes de salvar.');
-      return;
-    }
-
-    try {
-      const updatedCliente = {
-        ...cliente,
-        cpf: cliente.cpf.replace(/\D/g, ''),
-        telefone: cliente.telefone.replace(/\D/g, ''),
-        caes: cliente.caes.split(',').map((cao) => cao.trim()),
-        id_passeador: selectedPasseadorId || null,
-        horario_passeio: cliente.horario_passeio,
-      };
-
-      console.log('Enviando dados para atualização:', updatedCliente);
-
-      const response = await fetch(`http://localhost:3001/clientes/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedCliente),
-      });
-
-      if (response.ok) {
-        navigate(`/visualizarcliente/${id}`);
-      } else {
-        const data = await response.json();
-        console.error('Erro ao atualizar cliente:', data);
-        alert('Erro ao atualizar cliente: ' + (data.message || 'Erro desconhecido'));
-      }
-    } catch (error) {
-      console.error('Erro ao enviar os dados do cliente:', error);
-      alert('Erro ao conectar com o servidor. Tente novamente mais tarde.');
-    }
+try {
+  const updatedCliente = {
+    nome: nomeRef.current.value || cliente.nome,
+    email: emailRef.current.value || cliente.email,
+    cpf: (cpfRef.current.value || cliente.cpf).replace(/\D/g, ''),
+    caes: caesRef.current.value 
+      ? caesRef.current.value.split(',').map(cao => cao.trim()) 
+      : cliente.caes,
+    telefone: (telefoneRef.current.value || cliente.telefone).replace(/\D/g, ''),
+    endereco: enderecoRef.current.value || cliente.endereco,
+    pacote: cliente.pacote ?? "", // Retorna o seu operando do lado direito quando o seu operador do lado esquerdo é null ou undefined
+    horario_passeio: horarioRef.current.value || cliente.horario_passeio,
+    anotacoes: anotacaoRef.current.value || cliente.anotacoes,
+    id_passeador: selectedPasseadorId || localPasseadorId || cliente.id_passeador,
   };
 
+  const response = await fetch(`http://localhost:3001/clientes/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(updatedCliente),
+  });
+
+  if (response.ok) {
+    navigate(`/visualizarcliente/${id}`);
+  } else {
+    const data = await response.json();
+    if (data.message?.includes('ID do passeador inválido')) {
+      updatedCliente.id_passeador = localPasseadorId;
+      const retryResponse = await fetch(`http://localhost:3001/clientes/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(updatedCliente),
+        });
+
+        if (retryResponse.ok) {
+          navigate(`/visualizarcliente/${id}`);
+      } else {
+        console.error('Erro ao atualizar cliente com ID local do passeador');
+      }
+    } else {
+      console.error('Erro ao atualizar cliente:', data);
+    }
+  }
+} catch (error) {
+  console.error('Erro ao enviar os dados do cliente:', error);
+}
+  }
+  
   return (
     <div className="Web-Editar-Cliente">
       <header className="Web-header">
         <img src="/logotipo.svg" className="Web-logotipo" alt="Dogvideo Logomarca" />
         <button type="button" className="r-password-button" onClick={handleResetPassword}>
-          Resetar Senha
+        Resetar Senha
         </button>
         <div className="footer-bar"></div>
       </header>
@@ -292,132 +271,108 @@ function EditarCliente() {
           <div className="input-container">
             <FaUser className="input-icon" />
             <input
-              name="nome"
+              ref={nomeRef}
               type="text"
               placeholder="Nome do cliente"
               className="form-input"
-              value={cliente.nome}
-              onChange={handleInputChange}
+              onChange={(e) => validateNome(e.target.value)}
             />
-          </div>
-          {nomeError && <div className="error-message">{nomeError}</div>}
-          
+            </div>
+            {nomeError && <div className="error-message">{nomeError}</div>}
           <div className="input-container">
             <FaEnvelope className="input-icon" />
             <input
-              name="email"
+              ref={emailRef}
               type="email"
               placeholder="Email"
               className="form-input"
-              value={cliente.email}
-              onChange={handleInputChange}
+              onChange={(e) => validateEmail(e.target.value)}
             />
-          </div>
-          {emailError && <div className="error-message">{emailError}</div>}
-          
+            </div>
+            {emailError && <div className="error-message">{emailError}</div>}
           <div className="input-container">
             <FaAddressCard className="input-icon" />
             <input
-              name="cpf"
+              ref={cpfRef}
               type="text"
               placeholder="CPF"
               className="form-input"
-              value={cliente.cpf}
-              onChange={handleInputChange}
+              onChange={(e) => {
+                const formatted = formatCPF(e.target.value);
+                e.target.value = formatted;
+                validateCPF(formatted);
+              }}
             />
-          </div>
-          {cpfError && <div className="error-message">{cpfError}</div>}
-          
+            </div>
+            {cpfError && <div className="error-message">{cpfError}</div>}
           <div className="input-container">
             <FaDog className="input-icon" />
-            <input
-              name="caes"
-              type="text"
-              placeholder="Cães"
-              className="form-input"
-              value={cliente.caes}
-              onChange={handleInputChange}
-            />
+            <input ref={caesRef} type="text" placeholder="Cães" className="form-input" />
           </div>
-          
           <div className="input-container">
             <FaPhone className="input-icon" />
             <input
-              name="telefone"
+              ref={telefoneRef}
               type="tel"
               placeholder="Telefone"
               className="form-input"
-              value={cliente.telefone}
-              onChange={handleInputChange}
+              onChange={(e) => {
+                const formatted = formatTelefone(e.target.value);
+                e.target.value = formatted;
+                validateTelefone(formatted);
+              }}
             />
-          </div>
-          {telefoneError && <div className="error-message">{telefoneError}</div>}
-          
+            </div>
+            {telefoneError && <div className="error-message">{telefoneError}</div>}
           <div className="input-container">
             <FaHome className="input-icon" />
-            <input
-              name="endereco"
-              type="text"
-              placeholder="Endereço"
-              className="form-input"
-              value={cliente.endereco}
-              onChange={handleInputChange}
-            />
+            <input ref={enderecoRef} type="text" placeholder="Endereço" className="form-input" />
           </div>
-          
-          <CustomSelect
-            icon={<FaUserAlt />}
-            placeholder="Selecione o Passeador"
-            options={passeadoresOptions}
-            value={selectedPasseadorId}
-            onChange={(value) => setSelectedPasseadorId(value)}
-          />
-
           <div className="input-container">
-            <CustomSelect
-              icon={<FaCalendarAlt />}
-              placeholder="Selecione o Pacote"
-              options={pacoteOptions}
-              value={cliente.pacote}
-              onChange={(value) => setCliente(prev => ({ ...prev, pacote: value }))}
-            />
-            {cliente.pacote === 'Temporario' && (
-              <div className="input-container temporary-days-input">
-                <input
-                  name="dias_teste"
-                  type="number"
-                  placeholder="Dias de teste"
-                  className="form-input"
-                  min="1"
-                  value={cliente.dias_teste}
-                  onChange={handleInputChange}
-                />
-              </div>
-            )}
+            <FaUserAlt className="input-icon" />
+            <select
+              className="form-input"
+              value={selectedPasseadorId}
+              onChange={(e) => setSelectedPasseadorId(e.target.value)}
+            >
+              <option value="">Selecione o Passeador</option>
+              {passeadores.map((passeador) => (
+                <option key={passeador.id} value={passeador.id}>
+                  {passeador.nome}
+                </option>
+              ))}
+            </select>
           </div>
-          
+          <div className="input-container">
+            <FaCalendarAlt className="input-icon" />
+            <select
+              className="form-input"
+              value={cliente.pacote || ""}
+              onChange={(e) => setCliente({ ...cliente, pacote: e.target.value })}
+            >
+              <option value="">Selecione o Pacote</option>
+              <option value="Mensal">Mensal</option>
+              <option value="Trimestral">Trimestral</option>
+            </select>
+          </div>
           <div className="input-container">
             <FaClock className="input-icon" />
             <input
-              name="horario_passeio"
+              ref={horarioRef}
               type="text"
               placeholder="Horário de passeio"
               className="form-input"
-              value={cliente.horario_passeio}
-              onChange={handleInputChange}
+              onChange={(e) => {
+                const formatted = formatHorario(e.target.value);
+                e.target.value = formatted;
+                validateHorario(formatted);
+              }}
             />
-          </div>
-          {horarioError && <div className="error-message">{horarioError}</div>}
-          
+            </div>
+            {horarioError && <div className="error-message">{horarioError}</div>}
           <div className="input-container">
             <FaBook className="input-icon" />
-            <textarea
-              name="anotacoes"
-              placeholder="Anotações"
-              className="form-textarea"
-              value={cliente.anotacoes}
-              onChange={handleInputChange}
-            />
+            <textarea ref={anotacaoRef} placeholder="Anotações" className="form-textarea" />
           </div>
 
           <div className="button-group">

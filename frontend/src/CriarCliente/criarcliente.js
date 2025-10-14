@@ -3,7 +3,6 @@ import React, { useRef, useState, useEffect} from 'react';
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 import { FaUser, FaEnvelope, FaAddressCard, FaDog, FaPhone, FaHome, FaCalendarAlt, FaClock, FaBook, FaUserAlt } from "react-icons/fa";
-import CustomSelect from '../utils/CustomSelect';
 
 function CriarCliente() {
   const navigate = useNavigate();
@@ -29,18 +28,6 @@ function CriarCliente() {
   const [passeadores, setPasseadores] = useState([]);
   const [selectedPasseadorId, setSelectedPasseadorId] = useState("");
   const [pacote, setPacote] = useState(""); // Estado para o pacote selecionado
-  const [diasTeste, setDiasTeste] = useState("");
-
-  // Formatando dados para o componente CustomSelect
-  const passeadoresOptions = Array.isArray(passeadores)
-  ? passeadores.map((p) => ({ value: p.id, label: p.nome }))
-  : [];
-
-  const pacoteOptions = [
-    { value: 'Trimestral', label: 'Trimestral' },
-    { value: 'Mensal', label: 'Mensal' },
-    { value: 'Temporario', label: 'Temporário' },
-  ];
 
   // Função para buscar passeadores do backend
   useEffect(() => {
@@ -198,57 +185,36 @@ function CriarCliente() {
     if (!id_passeador) {
       alert('Por favor, selecione um passeador.');
       return;
-    }    
-    if (pacote === "Temporario" && (!diasTeste || diasTeste <= 0)) {
-      alert('Para pacote temporário, informe um número válido de dias de teste (maior que 0)');
-      return;
-    }
-  
-    if (!isNomeValid || !isEmailValid || !isCPFValid || !isTelefoneValid || !isHorarioValid) {
+    }    if (!isNomeValid || !isEmailValid || !isCPFValid || !isTelefoneValid || !isHorarioValid) {
       alert('Por favor, corrija os erros destacados antes de enviar.');
       return;
     }
 
-    // define flag temporário: 1 se pacote for "Temporario", senão 0
-  const temporario = pacote === 'Temporario' ? 1 : 0;
+    try {
+      const response = await axios.post('http://localhost:3001/criarcliente', {
+        nome,
+        email,
+        cpf,
+        telefone,
+        endereco,
+        pacote: pacoteSelecionado, // Mantemos a nomenclatura da main
+        horario,
+        anotacao,
+        caes,
+        id_passeador,
+      });
 
-  try {
-    const response = await axios.post('http://localhost:3001/criarcliente', {
-      nome,
-      email,
-      cpf,
-      telefone,
-      endereco,
-      pacote: pacoteSelecionado,
-      temporario,
-      // GARANTIR QUE DIAS_TESTE SEJA UM NÚMERO INTEIRO
-      dias_teste: temporario ? parseInt(diasTeste) : null,
-      horario,
-      anotacao,
-      caes,
-      id_passeador,
-    });
-
-    if (response.data.success) {
-      const id_cliente = response.data.id_cliente; // Captura o ID do cliente criado
-      if (horario) {
-        const horarioFormatado = `${horario}:00`; // Adiciona os segundos ao horário
-        await axios.post('http://localhost:3001/passeios', {
-          horario_passeio: horarioFormatado, // Envia apenas o horário no formato HH:mm:ss
-          id_cliente,
-          id_passeador,
-        });
+      if (response.data.success) {
+        alert('Cliente criado com sucesso!');
+        navigate("/clientes");
+      } else {
+        alert('Erro ao criar cliente: ' + (response.data.message || 'Erro desconhecido'));
       }
-      alert('Cliente criado com sucesso!');
-      navigate("/clientes");
-    } else {
-      alert('Erro ao criar cliente: ' + (response.data.message || 'Erro desconhecido'));
+    } catch (error) {
+      console.error('Erro ao criar cliente:', error);
+      alert('Erro ao conectar com o servidor. Tente novamente mais tarde.');
     }
-  } catch (error) {
-    console.error('Erro ao criar cliente:', error);
-    alert('Erro ao conectar com o servidor. Tente novamente mais tarde.');
-  }
-};
+  };
 
   return (
     <div className="Web-Criar-Cliente">
@@ -329,36 +295,33 @@ function CriarCliente() {
               className="form-input"
             />
           </div>
-          <CustomSelect
-            icon={<FaUserAlt />}
-            placeholder="Selecione o Passeador"
-            options={passeadoresOptions}
-            value={selectedPasseadorId}
-            onChange={(value) => setSelectedPasseadorId(value)}
-          />
-
-          {/* 2. SELECT DE PACOTE SUBSTITUÍDO */}
-          <div className="input-container"> {/* Mantemos este container para o layout condicional */}
-            <CustomSelect
-              icon={<FaCalendarAlt />}
-              placeholder="Selecione o Pacote"
-              options={pacoteOptions}
+          <div className="input-container">
+            <FaUserAlt className="input-icon" />
+            <select
+              className="form-input"
+              value={selectedPasseadorId}
+              onChange={(e) => setSelectedPasseadorId(e.target.value)}
+            >
+              <option value="">Selecione o Passeador</option>
+              {Array.isArray(passeadores) &&
+                passeadores.map((passeador) => (
+                  <option key={passeador.id} value={passeador.id}>
+                    {passeador.nome}
+                  </option>
+                ))}
+            </select>
+          </div>
+          <div className="input-container">
+            <FaCalendarAlt className="input-icon" />
+            <select
+              className="form-input"
               value={pacote}
-              onChange={(value) => setPacote(value)}
-            />
-            {/* A lógica para mostrar o campo de dias de teste permanece a mesma */}
-            {pacote === 'Temporario' && (
-              <div className="input-container temporary-days-input">
-                <input
-                  type="number"
-                  placeholder="Dias"
-                  className="form-input"
-                  min="1"
-                  value={diasTeste}
-                  onChange={(e) => setDiasTeste(e.target.value)}
-                />
-              </div>
-            )}
+              onChange={(e) => setPacote(e.target.value)}
+            >
+              <option value="">Selecione o Pacote</option>
+              <option value="Trimestral">Trimestral</option>
+              <option value="Mensal">Mensal</option>
+            </select>
           </div>
           <div className="input-container">
             <FaClock className="input-icon" />
