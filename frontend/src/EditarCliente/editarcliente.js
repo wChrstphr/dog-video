@@ -251,11 +251,11 @@ function EditarCliente() {
         telefone: cliente.telefone.replace(/\D/g, ''),
         caes: cliente.caes.split(',').map((cao) => cao.trim()),
         id_passeador: selectedPasseadorId || null,
-        horario_passeio: cliente.horario_passeio,
       };
 
       console.log('Enviando dados para atualização:', updatedCliente);
 
+      // Atualiza os dados do cliente
       const response = await fetch(`http://localhost:3001/clientes/${id}`, {
         method: 'PUT',
         headers: {
@@ -264,13 +264,30 @@ function EditarCliente() {
         body: JSON.stringify(updatedCliente),
       });
 
-      if (response.ok) {
-        navigate(`/visualizarcliente/${id}`);
-      } else {
+      if (!response.ok) {
         const data = await response.json();
         console.error('Erro ao atualizar cliente:', data);
         alert('Erro ao atualizar cliente: ' + (data.message || 'Erro desconhecido'));
+        return;
       }
+
+      // Atualiza o horário de passeio na tabela passeios
+      const passeioResponse = await fetch(`http://localhost:3001/passeios/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ horario_passeio: cliente.horario_passeio, id_passeador: selectedPasseadorId }),
+      });
+
+      if (!passeioResponse.ok) {
+        const passeioData = await passeioResponse.json();
+        console.error('Erro ao atualizar horário de passeio:', passeioData);
+        alert('Erro ao atualizar horário de passeio: ' + (passeioData.message || 'Erro desconhecido'));
+        return;
+      }
+
+      navigate(`/visualizarcliente/${id}`);
     } catch (error) {
       console.error('Erro ao enviar os dados do cliente:', error);
       alert('Erro ao conectar com o servidor. Tente novamente mais tarde.');
