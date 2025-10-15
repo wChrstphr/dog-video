@@ -29,7 +29,19 @@ function Dados({ onLogout }) {
         const data = await response.json();
 
         if (data.success) {
-          setDadosCliente(data.cliente);
+          const cliente = data.cliente;
+
+          // Busca o horário de passeio do cliente
+          const passeioResponse = await fetch(`http://localhost:3001/passeios/${id}`);
+          const passeioData = await passeioResponse.json();
+
+          if (passeioData.success) {
+            cliente.horario_passeio = passeioData.horario_passeio;
+          } else {
+            cliente.horario_passeio = "Horário não encontrado";
+          }
+
+          setDadosCliente(cliente);
         } else {
           console.error("Erro ao buscar dados do cliente:", data.message);
         }

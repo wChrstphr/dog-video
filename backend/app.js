@@ -73,7 +73,11 @@ const saveSubscription = (subscription, id_cliente) => {
     const { endpoint, keys } = subscription;
     const { p256dh, auth } = keys;
 
-    // Verifica se já existe uma linha com o mesmo endpoint e id_cliente
+    if (!endpoint || !p256dh || !auth || !id_cliente) {
+      console.error('Dados incompletos para salvar a subscription:', { endpoint, p256dh, auth, id_cliente });
+      return reject('Dados incompletos para salvar a subscription');
+    }
+
     const checkQuery = 'SELECT * FROM subscriptions WHERE endpoint = $1 AND id_cliente = $2';
     pool.query(checkQuery, [endpoint, id_cliente], (err, results) => {
       if (err) {
@@ -82,10 +86,8 @@ const saveSubscription = (subscription, id_cliente) => {
       }
 
       if (results.rows.length > 0) {
-        console.log('Subscription já existe para este navegador/computador e cliente.');
         return resolve('Subscription já existe');
       } else {
-        // Insere uma nova linha na tabela subscriptions
         const insertQuery = `
           INSERT INTO subscriptions (endpoint, expiration_time, p256dh, auth, id_cliente)
           VALUES ($1, NULL, $2, $3, $4)
@@ -95,7 +97,6 @@ const saveSubscription = (subscription, id_cliente) => {
             console.error('Erro ao inserir subscription:', err);
             return reject('Erro ao inserir subscription');
           }
-          console.log('Subscription salva com sucesso!');
           return resolve('Subscription salva com sucesso');
         });
       }
@@ -177,13 +178,11 @@ cron.schedule('* * * * *', () => {
   const query = `
     SELECT p.id_cliente, p.horario_passeio
     FROM passeios p
-    INNER JOIN clientes c ON p.id_cliente = c.id_cliente
-    WHERE c.tipo = 0
   `;
 
   pool.query(query, (err, passeios) => {
     if (err) {
-      console.error('Erro ao buscar clientes para notificação:', err);
+      console.error('Erro ao buscar passeios para notificação:', err);
       return;
     }
 
@@ -343,7 +342,6 @@ app.post('/login', (req, res) => {
     // Salva a subscription no banco de dados, se fornecida e o cliente for do tipo 0
     if (subscription && cliente.tipo === 0) {
       saveSubscription(subscription, cliente.id_cliente)
-        .then((message) => console.log('Subscription salva com sucesso:', message))
         .catch((error) => console.error('Erro ao salvar subscription:', error));
     }
 
@@ -665,8 +663,6 @@ app.put('/passeios/:id_cliente', async (req, res) => {
   const { id_cliente } = req.params;
   let { horario_passeio, id_passeador } = req.body;
 
-  console.log('Recebendo dados para atualizar passeio:', req.body);
-
   // Garante que id_passeador seja null se for uma string vazia
   id_passeador = id_passeador === "" ? null : id_passeador;
 
@@ -679,11 +675,9 @@ app.put('/passeios/:id_cliente', async (req, res) => {
     const result = await pool.query(query, [horario_passeio, id_passeador, id_cliente]);
 
     if (result.rowCount === 0) {
-      console.warn('Nenhuma linha atualizada na tabela passeios. Verifique se o cliente possui um passeio associado.');
       return res.status(404).json({ success: false, message: 'Passeio não encontrado para o cliente.' });
     }
 
-    console.log('Passeio atualizado com sucesso.');
     res.json({ success: true, message: 'Passeio atualizado com sucesso!' });
   } catch (error) {
     console.error('Erro ao atualizar passeio:', error);
@@ -878,7 +872,7 @@ app.get('/cachorros/:id_cliente/passeador', async (req, res) => {
   try {
     const query = `
       SELECT id_passeador
-      FROM cachorros
+      FROM passeios
       WHERE id_cliente = $1
       LIMIT 1
     `;

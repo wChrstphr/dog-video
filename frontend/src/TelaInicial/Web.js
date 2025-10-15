@@ -18,23 +18,36 @@ function Web({ onLogout }) {
   };
 
   useEffect(() => {
-    // Busca os passeadores do backend
-    const fetchPasseadores = async () => {
+    // Busca o passeador associado ao cliente logado
+    const fetchPasseador = async () => {
+      const idCliente = localStorage.getItem('id_cliente');
+      if (!idCliente) {
+        console.error('ID do cliente não encontrado no localStorage.');
+        return;
+      }
+
       try {
-        const response = await fetch('http://localhost:3001/passeadores');
+        const response = await fetch(`http://localhost:3001/cachorros/${idCliente}/passeador`);
         const data = await response.json();
 
         if (data.success) {
-          setPasseadores(data.passeadores);
+          const passeadorResponse = await fetch(`http://localhost:3001/passeadores/${data.id_passeador}`);
+          const passeadorData = await passeadorResponse.json();
+
+          if (passeadorData.success) {
+            setPasseadores([passeadorData.passeador]);
+          } else {
+            console.error('Erro ao buscar passeador:', passeadorData.message);
+          }
         } else {
-          console.error('Erro ao buscar passeadores:', data.message);
+          console.error('Erro ao buscar ID do passeador:', data.message);
         }
       } catch (error) {
         console.error('Erro ao conectar ao servidor:', error);
       }
     };
 
-    fetchPasseadores();
+    fetchPasseador();
   }, []);
 
   const handleDadosClienteClick = () => {
@@ -87,7 +100,7 @@ function Web({ onLogout }) {
 
       <div className="passeador-titulo-inicial">
         <img src="/Content.svg" alt="Passeadores título" />
-        <p className="passeador-texto-inicial">PASSEADORES</p>
+        <p className="passeador-texto-inicial">PASSEADOR</p>
       </div>
 
       {/* Seção dos Passeadores */}
