@@ -266,8 +266,11 @@ function EditarCliente() {
 
       if (!response.ok) {
         const data = await response.json();
-        console.error('Erro ao atualizar cliente:', data);
-        alert('Erro ao atualizar cliente: ' + (data.message || 'Erro desconhecido'));
+        if (data.message) {
+          alert('Erro: ' + data.message); // Mensagem detalhada
+        } else {
+          alert('Erro ao atualizar cliente: ' + (data.message || 'Erro desconhecido'));
+        }
         return;
       }
 

@@ -161,10 +161,16 @@ function EditarPasseador() {
         if (response.ok) {
           navigate(`/visualizarpasseador/${id}`);
         } else {
-          console.error('Erro ao atualizar passeador');
+          const data = await response.json();
+          if (data.message) {
+            alert(`Erro: ${data.message}`); // Exibe a mensagem de erro como alerta
+          } else {
+            alert('Erro ao atualizar passeador.');
+          }
         }
       } catch (error) {
         console.error('Erro ao salvar passeador:', error);
+        alert('Erro ao conectar com o servidor. Tente novamente mais tarde.');
       }
     } else {
       console.error('Formulário contém erros');
