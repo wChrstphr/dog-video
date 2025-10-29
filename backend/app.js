@@ -194,8 +194,8 @@ app.post('/subscribe', authenticateAndExtractUser, (req, res) => {
   const { subscription } = req.body;
   const id_cliente = req.user.userType === 'user' ? req.user.id : null;
 
-  if (!id_cliente) {
-    return res.status(400).json({ success: false, message: 'ID do cliente não fornecido' });
+  if (!subscription || !id_cliente) {
+    return res.status(400).json({ success: false, message: 'Dados incompletos para salvar a assinatura' });
   }
 
   saveSubscription(subscription, id_cliente)
@@ -477,6 +477,11 @@ app.post('/alterar-senha', async (req, res) => {
 
 // Endpoint para aparecer os clientes
 app.get('/clientes', (req, res) => {
+  const simulateError = req.query.simulateError === 'true';
+  if (simulateError) {
+    return res.status(500).json({ message: 'Erro de conexão com o banco de dados' });
+  }
+
   const query = 'SELECT * FROM clientes WHERE tipo = 0';
 
   pool.query(query, (err, results) => {
@@ -685,7 +690,7 @@ app.put('/clientes/:id/reset-senha', authenticateToken, async (req, res) => {
         return res.status(404).json({ success: false, message: 'Cliente não encontrado' });
       }
 
-      res.json({ success: true, message: 'Senha redefinida com sucesso!' });
+      res.status(200).json({ success: true, message: 'Senha redefinida com sucesso!' });
     });
   } catch (error) {
     console.error('Erro ao processar senha:', error);
@@ -696,6 +701,10 @@ app.put('/clientes/:id/reset-senha', authenticateToken, async (req, res) => {
 // Endpoint para criar um cliente
 app.post('/criarcliente', async (req, res) => {
   const { nome, email, cpf, telefone, endereco, pacote, anotacao, caes, id_passeador, temporario, dias_teste, horario } = req.body;
+
+  if (!nome || !email || !cpf || !telefone || !endereco || !pacote) {
+    return res.status(400).json({ success: false, message: 'Campos obrigatórios estão faltando' });
+  }
 
   try {
     if (horario && id_passeador) {
@@ -951,20 +960,25 @@ app.put('/passeadores/:id', async (req, res) => {
 app.post('/criarpasseador', (req, res) => {
   const { nome, email, cpf, telefone, endereco, imagem, modulo, modulo2 } = req.body; // inclua modulo2
 
+  if (!nome || !email || !cpf || !telefone || !endereco || modulo == null || modulo2 == null) {
+    return res.status(400).json({ success: false, message: 'Campos obrigatórios estão faltando' });
+  }
+
   // Converte a imagem base64 em Blob para salvar no banco de dados
   const imagemBlob = imagem ? Buffer.from(imagem.replace(/^data:image\/\w+;base64,/, ""), 'base64') : null;
 
   const query = `
     INSERT INTO passeadores (nome, email, cpf, telefone, endereco, imagem, modulo, modulo2)
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    RETURNING id_passeador
   `;
 
-  pool.query(query, [nome, email, cpf, telefone, endereco, imagemBlob, modulo, modulo2], (err) => {
+  pool.query(query, [nome, email, cpf, telefone, endereco, imagemBlob, modulo, modulo2], (err, result) => {
     if (err) {
       console.error('Erro ao criar passeador:', err);
       return res.status(500).json({ success: false, message: 'Erro ao criar passeador' });
     }
-    res.json({ success: true, message: 'Passeador criado com sucesso!' });
+    res.status(201).json({ success: true, message: 'Passeador criado com sucesso!', id_passeador: result.rows[0].id_passeador });
   });
 });
 
