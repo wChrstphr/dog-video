@@ -119,10 +119,17 @@ function EditarCliente() {
     e.preventDefault(); 
   
     try {
+      const token = localStorage.getItem('token'); // Certifique-se de que o token está armazenado
+      if (!token) {
+        alert('Usuário não autenticado. Faça login novamente.');
+        return;
+      }
+
       const response = await fetch(`http://localhost:3001/clientes/${id}/reset-senha`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`, // Envia o token no cabeçalho
         },
       });
   
@@ -132,7 +139,7 @@ function EditarCliente() {
         alert('Senha redefinida com sucesso!');
       } else {
         console.error('Erro ao resetar senha:', data.message);
-        alert('Erro ao resetar senha.');
+        alert(data.message || 'Erro ao resetar senha.');
       }
     } catch (error) {
       console.error('Erro ao processar reset de senha:', error);

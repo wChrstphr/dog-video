@@ -10,7 +10,6 @@ const saltRounds = 10;
 const cron = require('node-cron');
 const dayjs = require('dayjs');
 const customParseFormat = require('dayjs/plugin/customParseFormat');
-const authenticateToken = require('./middleware/auth');
 const jwt = require('jsonwebtoken');
 const timezone = require('dayjs/plugin/timezone');
 const utc = require('dayjs/plugin/utc');
@@ -59,6 +58,24 @@ const authenticateAndExtractUser = (req, res, next) => {
   }
 
   jwt.verify(token, 'your_secret_key', (err, user) => {
+    if (err) {
+      return res.status(403).json({ success: false, message: 'Token inválido' });
+    }
+    req.user = user; // Adiciona os dados do usuário logado à requisição
+    next();
+  });
+};
+
+// Middleware para autenticar o token
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ success: false, message: 'Token não fornecido' });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET || 'your_secret_key', (err, user) => {
     if (err) {
       return res.status(403).json({ success: false, message: 'Token inválido' });
     }
@@ -422,7 +439,11 @@ app.post('/login', (req, res) => {
     const userType = cliente.tipo === 1 ? 'admin' : 'user';
 
     // Gera um token JWT para ser possível fazer a verificação de login nas rotas /admin, /clientes, /passeadores ....
-    const token = jwt.sign({ id: cliente.id_cliente, email: cliente.email, userType: userType }, 'your_secret_key', { expiresIn: '1h' });
+    const token = jwt.sign(
+      { id: cliente.id_cliente, email: cliente.email, userType: userType },
+      process.env.JWT_SECRET || 'your_secret_key', // Use a chave secreta correta
+      { expiresIn: '1h' }
+    );
 
     // Salva a subscription no banco de dados, se fornecida e o cliente for do tipo 0
     if (subscription && cliente.tipo === 0) {
@@ -433,6 +454,7 @@ app.post('/login', (req, res) => {
     // Retorna resposta de sucesso e dados do usuário
     res.json({
       success: true,
+      token, // Inclua o token na resposta
       userType: userType,
       alterar_senha: cliente.alterar_senha,
       id_cliente: cliente.id_cliente,
@@ -673,25 +695,21 @@ app.put('/clientes/:id/reset-senha', authenticateToken, async (req, res) => {
 
   try {
     const novaSenha = 'dog123';
-    const senhaHash = await bcrypt.hash(novaSenha, 10);
+    const senhaHash = await bcrypt.hash(novaSenha, saltRounds); // Encripta a nova senha
 
     const updatePasswordQuery = `
       UPDATE clientes 
       SET senha = $1, alterar_senha = 1 
-      WHERE id_cliente = $2`;
+      WHERE id_cliente = $2
+    `;
 
-    pool.query(updatePasswordQuery, [senhaHash, clienteId], (err, result) => {
-      if (err) {
-        console.error('Erro ao redefinir senha:', err);
-        return res.status(500).json({ success: false, message: 'Erro ao redefinir senha' });
-      }
+    const result = await pool.query(updatePasswordQuery, [senhaHash, clienteId]);
 
-      if (result.rowCount === 0) {
-        return res.status(404).json({ success: false, message: 'Cliente não encontrado' });
-      }
+    if (result.rowCount === 0) {
+      return res.status(404).json({ success: false, message: 'Cliente não encontrado' });
+    }
 
-      res.status(200).json({ success: true, message: 'Senha redefinida com sucesso!' });
-    });
+    res.status(200).json({ success: true, message: 'Senha redefinida com sucesso!' });
   } catch (error) {
     console.error('Erro ao processar senha:', error);
     res.status(500).json({ success: false, message: 'Erro interno ao processar senha' });
