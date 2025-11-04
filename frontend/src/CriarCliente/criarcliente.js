@@ -245,8 +245,12 @@ function CriarCliente() {
       alert('Erro ao criar cliente: ' + (response.data.message || 'Erro desconhecido'));
     }
   } catch (error) {
-    console.error('Erro ao criar cliente:', error);
-    alert('Erro ao conectar com o servidor. Tente novamente mais tarde.');
+    if (error.response && error.response.data && error.response.data.message) {
+      alert('Erro: ' + error.response.data.message); // Mensagem detalhada
+    } else {
+      console.error('Erro ao criar cliente:', error);
+      alert('Erro ao conectar com o servidor. Tente novamente mais tarde.');
+    }
   }
 };
 

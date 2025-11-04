@@ -104,6 +104,91 @@ const saveSubscription = (subscription, id_cliente) => {
   });
 };
 
+// Função para verificar conflitos de módulo
+const verificarConflitoModulo = async (id_passeador, horario_passeio, id_cliente = null, id_passeador_atual = null) => {
+  const query = `
+    SELECT p.horario_passeio, pa.modulo, pa.modulo2, pa.nome AS nome_passeador, p.id_cliente
+    FROM passeios p
+    JOIN passeadores pa ON p.id_passeador = pa.id_passeador
+    WHERE pa.id_passeador != $1 -- Ignora o passeador selecionado
+    AND ($2::TEXT IS NULL OR p.id_cliente::TEXT != $2::TEXT) -- Ignora o cliente atual, se fornecido
+    AND pa.id_passeador != $3 -- Ignora o passeador atual, se fornecido
+    AND (pa.modulo = (SELECT modulo FROM passeadores WHERE id_passeador = $1)
+         OR pa.modulo2 = (SELECT modulo2 FROM passeadores WHERE id_passeador = $1)) -- Verifica conflitos nos módulos do novo passeador
+  `;
+  const result = await pool.query(query, [
+    id_passeador,
+    id_cliente ? id_cliente.toString() : null,
+    id_passeador_atual,
+  ]);
+
+  const horarioNovo = dayjs(horario_passeio, 'HH:mm:ss');
+  for (const row of result.rows) {
+    const horarioExistente = dayjs(row.horario_passeio, 'HH:mm:ss');
+    const diferenca = Math.abs(horarioNovo.diff(horarioExistente, 'minute'));
+
+    if (diferenca <= 60) { // Verifica se está dentro de 1 hora antes ou depois
+      return {
+        conflito: true,
+        modulo: row.modulo,
+        modulo2: row.modulo2,
+        nomePasseador: row.nome_passeador,
+      };
+    }
+  }
+
+  return { conflito: false };
+};
+
+// Função para verificar conflitos de módulo ao editar passeador
+const verificarConflitoModuloPasseador = async (modulo, modulo2, id_passeador) => {
+  const query = `
+    SELECT p.horario_passeio, pa.nome AS nome_passeador, pa.modulo, pa.modulo2
+    FROM passeios p
+    JOIN passeadores pa ON p.id_passeador = pa.id_passeador
+    WHERE pa.id_passeador != $1 -- Ignora o passeador atual
+    AND ($2 = pa.modulo OR $2 = pa.modulo2 OR $3 = pa.modulo OR $3 = pa.modulo2) -- Verifica conflitos nos módulos
+  `;
+  const result = await pool.query(query, [id_passeador, modulo, modulo2]);
+
+  const horarios = result.rows.map(row => ({
+    horario: dayjs(row.horario_passeio, 'HH:mm:ss'),
+    nomePasseador: row.nome_passeador,
+    modulo: row.modulo,
+    modulo2: row.modulo2,
+  }));
+
+  // Busca o horário do passeador que está sendo editado
+  const horarioPasseadorEditadoQuery = `
+    SELECT p.horario_passeio
+    FROM passeios p
+    WHERE p.id_passeador = $1
+    LIMIT 1
+  `;
+  const horarioPasseadorEditadoResult = await pool.query(horarioPasseadorEditadoQuery, [id_passeador]);
+
+  if (horarioPasseadorEditadoResult.rows.length === 0) {
+    return { conflito: false }; // Se o passeador não tem horário, não há conflito
+  }
+
+  const horarioPasseadorEditado = dayjs(horarioPasseadorEditadoResult.rows[0].horario_passeio, 'HH:mm:ss');
+
+  for (const { horario, nomePasseador, modulo, modulo2 } of horarios) {
+    const diferenca = Math.abs(horarioPasseadorEditado.diff(horario, 'minute')); // Calcula a diferença entre os horários
+
+    if (diferenca <= 60) { // Verifica se está dentro de 1 hora antes ou depois
+      return {
+        conflito: true,
+        nomePasseador,
+        modulo,
+        modulo2,
+      };
+    }
+  }
+
+  return { conflito: false };
+};
+
 // Rota para salvar `subscriptions` no banco de dados
 app.post('/subscribe', authenticateAndExtractUser, (req, res) => {
   const { subscription } = req.body;
@@ -498,9 +583,32 @@ app.get('/clientes/:id', (req, res) => {
 // Endpoint para atualizar um cliente
 app.put('/clientes/:id', async (req, res) => {
   const clienteId = req.params.id;
-  const { nome, email, cpf, telefone, endereco, pacote, anotacoes, caes, id_passeador, dias_teste } = req.body;
+  const { nome, email, cpf, telefone, endereco, pacote, anotacoes, caes, id_passeador, dias_teste, horario_passeio } = req.body;
 
   try {
+    if (horario_passeio && id_passeador) {
+      const horarioFormatado = `${horario_passeio}:00`;
+
+      // Busca o passeador atual associado ao cliente
+      const passeadorAtualQuery = `
+        SELECT c.id_passeador
+        FROM cachorros c
+        WHERE c.id_cliente = $1
+        LIMIT 1
+      `;
+      const passeadorAtualResult = await pool.query(passeadorAtualQuery, [clienteId]);
+      const id_passeador_atual = passeadorAtualResult.rows.length > 0 ? passeadorAtualResult.rows[0].id_passeador : null;
+
+      const conflito = await verificarConflitoModulo(id_passeador, horarioFormatado, clienteId, id_passeador_atual);
+
+      if (conflito.conflito) {
+        return res.status(400).json({
+          success: false,
+          message: `Conflito de módulo detectado. O passeador ${conflito.nomePasseador} está usando o módulo ${conflito.modulo} e ${conflito.modulo2} em um horário próximo.`,
+        });
+      }
+    }
+
     // Converte dias_teste para null se for uma string vazia
     const diasTesteValue = dias_teste === '' ? null : dias_teste;
 
@@ -587,9 +695,21 @@ app.put('/clientes/:id/reset-senha', authenticateToken, async (req, res) => {
 
 // Endpoint para criar um cliente
 app.post('/criarcliente', async (req, res) => {
-  const { nome, email, cpf, telefone, endereco, pacote, anotacao, caes, id_passeador, temporario, dias_teste } = req.body;
+  const { nome, email, cpf, telefone, endereco, pacote, anotacao, caes, id_passeador, temporario, dias_teste, horario } = req.body;
 
   try {
+    if (horario && id_passeador) {
+      const horarioFormatado = `${horario}:00`;
+      const conflito = await verificarConflitoModulo(id_passeador, horarioFormatado);
+
+      if (conflito.conflito) {
+        return res.status(400).json({
+          success: false,
+          message: `Conflito de módulo detectado. O passeador ${conflito.nomePasseador} está usando o módulo ${conflito.modulo} e ${conflito.modulo2} em um horário próximo.`,
+        });
+      }
+    }
+
     // Gera o hash da senha padrão "dog123"
     const hashedPassword = await bcrypt.hash('dog123', saltRounds);
 
@@ -794,26 +914,37 @@ app.get('/passeadores/:id?', (req, res) => {
 });
 
 // Endpoint para atualizar os dados de um passeador
-app.put('/passeadores/:id', (req, res) => {
+app.put('/passeadores/:id', async (req, res) => {
   const passeadorId = req.params.id;
   const { nome, email, cpf, telefone, endereco, imagem, modulo, modulo2 } = req.body;
 
-  // Conversão de base64 para Blob (Binário)
-  const imagemBlob = imagem ? Buffer.from(imagem.replace(/^data:image\/\w+;base64,/, ""), 'base64') : null;
+  try {
+    // Verifica conflitos de módulo
+    const conflito = await verificarConflitoModuloPasseador(modulo, modulo2, passeadorId);
 
-  const query = `
-    UPDATE passeadores
-    SET nome = $1, email = $2, cpf = $3, telefone = $4, endereco = $5, imagem = $6, modulo = $7, modulo2 = $8
-    WHERE id_passeador = $9
-  `;
-  
-  pool.query(query, [nome, email, cpf, telefone, endereco, imagemBlob, modulo, modulo2, passeadorId], (err) => {
-    if (err) {
-      console.error('Erro ao atualizar passeador:', err);
-      return res.status(500).json({ success: false, message: 'Erro ao atualizar passeador' });
+    if (conflito.conflito) {
+      return res.status(400).json({
+        success: false,
+        message: `Conflito de módulo detectado. O passeador ${conflito.nomePasseador} está usando o módulo ${conflito.modulo} e ${conflito.modulo2} em um horário próximo.`,
+      });
     }
+
+    // Conversão de base64 para Blob (Binário)
+    const imagemBlob = imagem ? Buffer.from(imagem.replace(/^data:image\/\w+;base64,/, ""), 'base64') : null;
+
+    const query = `
+      UPDATE passeadores
+      SET nome = $1, email = $2, cpf = $3, telefone = $4, endereco = $5, imagem = $6, modulo = $7, modulo2 = $8
+      WHERE id_passeador = $9
+    `;
+
+    await pool.query(query, [nome, email, cpf, telefone, endereco, imagemBlob, modulo, modulo2, passeadorId]);
+
     res.json({ success: true, message: 'Passeador atualizado com sucesso!' });
-  });
+  } catch (err) {
+    console.error('Erro ao atualizar passeador:', err);
+    res.status(500).json({ success: false, message: 'Erro ao atualizar passeador' });
+  }
 });
 
 // Endpoint para criar um novo passeador
