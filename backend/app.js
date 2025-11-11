@@ -331,7 +331,7 @@ cron.schedule('* * * * *', () => {
 });
 
 // Cron job para excluir clientes temporários com base no dias_teste
-cron.schedule('0 2 * * *', async () => {
+async function deleteTemporaryClients() {
   const timestamp = new Date().toISOString();
   console.log(`[${timestamp}] Processando exclusão de clientes temporários...`);
 
@@ -374,7 +374,10 @@ cron.schedule('0 2 * * *', async () => {
   } finally {
     client.release(); // Libera o cliente de conexão
   }
-});
+}
+
+// Agendar o cron job
+cron.schedule('0 2 * * *', deleteTemporaryClients);
 
 // Variáveis para controle de tentativas de login
 const loginAttempts = {}; // Armazena tentativas de login { "email@example.com": { attempts: 0, lastAttempt: Date.now() } }
@@ -873,6 +876,11 @@ app.delete('/clientes/:id', (req, res) => {
 // Endpoint para buscar passeadores com imagens ou informações detalhadas de um passeador específico
 app.get('/passeadores/:id?', (req, res) => {
   const passeadorId = req.params.id; // ID opcional
+  const simulateError = req.query.simulateError === 'true'; // Simula erro de conexão
+
+  if (simulateError) {
+    return res.status(500).json({ message: 'Erro de conexão com o banco de dados' });
+  }
 
   if (passeadorId) {
     // Caso o ID seja fornecido, busca detalhes do passeador e seus clientes associados
@@ -1105,5 +1113,5 @@ if (require.main === module) {
   });
 }
 
-// Exporta o app e o pool de conexões
-module.exports = { app, pool };
+// Exporta o app, o pool de conexões e a função do cron job
+module.exports = { app, pool, deleteTemporaryClients };
