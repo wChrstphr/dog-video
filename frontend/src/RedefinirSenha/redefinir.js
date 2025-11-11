@@ -62,7 +62,7 @@ function Redefinir() {
       return;
     }
 
-    if (!termoAceito) {
+    if (alterarSenha === 1 && !termoAceito) {
       setError('Você precisa aceitar a Política de Privacidade antes de redefinir a senha.');
       return;
     }
@@ -71,7 +71,7 @@ function Redefinir() {
       
 
       // Envia a nova senha e o aceite dos termos
-      const id_cliente = localStorage.getItem('id_cliente'); // ✅ pega o id real salvo no login
+      const id_cliente = localStorage.getItem('id_cliente');
 
       const response = await fetch('http://localhost:3001/alterar-senha', {
         method: 'POST',
@@ -171,24 +171,26 @@ function Redefinir() {
       </div>
 
       {/* Checkbox dos Termos de Uso */}
-      <div className="checkbox-termos">
-        <input
-          type="checkbox"
-          id="termoUso"
-          checked={termoAceito}
-          onChange={(e) => setTermoAceito(e.target.checked)}
-        />
-        <label htmlFor="termoUso">
-          Eu li e aceito a{" "}
-          <a
-            href={`${process.env.PUBLIC_URL}/termos-de-uso.html`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Política de Privacidade
-          </a>
-        </label>
-      </div>
+      {alterarSenha === 1 && (
+        <div className="checkbox-termos">
+          <input
+            type="checkbox"
+            id="termoUso"
+            checked={termoAceito}
+            onChange={(e) => setTermoAceito(e.target.checked)}
+          />
+          <label htmlFor="termoUso">
+            Eu li e aceito os{" "}
+            <a
+              href={`${process.env.PUBLIC_URL}/termos-de-uso.html`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Termos de Uso
+            </a>
+          </label>
+        </div>
+      )}
 
       {error && <p className="error">{error}</p>}
       <button onClick={handlePasswordChange}>Redefinir</button>
