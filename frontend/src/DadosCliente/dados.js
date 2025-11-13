@@ -163,15 +163,15 @@ function Dados({ onLogout }) {
         </div>
       </main>
 
-      {/* Link fixo para Termos de Uso */}
-        <a
-          href={`${process.env.PUBLIC_URL}/termos-de-uso.html`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="link-termos"
-        >
-          Política de Privacidade
-        </a>
+      {/* Link fixo para Política de Privacidade */}
+      <a
+        href={`${process.env.PUBLIC_URL}/termos-de-uso.html`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="link-termos"
+      >
+        Política de Privacidade
+      </a>
     </div>
   );
 }

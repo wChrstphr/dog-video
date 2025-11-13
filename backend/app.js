@@ -481,7 +481,7 @@ app.post('/alterar-senha', async (req, res) => {
   }
 });
 
-// Endpoint para registrar aceite do termo de uso
+// Endpoint para registrar aceite da Política de Privacidade
 app.post('/aceitar-termo', async (req, res) => {
   const { id_cliente } = req.body;
 
@@ -493,10 +493,10 @@ app.post('/aceitar-termo', async (req, res) => {
     const query = 'UPDATE clientes SET termo_aceito = TRUE WHERE id_cliente = $1';
     await pool.query(query, [id_cliente]);
 
-    res.json({ success: true, message: 'Termo aceito com sucesso!' });
+    res.json({ success: true, message: 'Política de Privacidade aceita com sucesso!' });
   } catch (error) {
-    console.error('Erro ao registrar aceite do termo:', error);
-    res.status(500).json({ success: false, message: 'Erro ao registrar aceite do termo' });
+    console.error('Erro ao registrar aceite da Política de Privacidade:', error);
+    res.status(500).json({ success: false, message: 'Erro ao registrar aceite da Política de Privacidade' });
   }
 });
 
