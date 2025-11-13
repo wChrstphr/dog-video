@@ -416,8 +416,12 @@ function EditarCliente() {
                   placeholder="Dias de teste"
                   className="form-input"
                   min="1"
+                  max="99" // Define o máximo como 99
                   value={cliente.dias_teste}
-                  onChange={handleInputChange}
+                  onChange={(e) => {
+                    const value = Math.min(99, Math.max(1, parseInt(e.target.value) || 1)); // Limita entre 1 e 99
+                    setCliente((prev) => ({ ...prev, dias_teste: value }));
+                  }}
                 />
               </div>
             )}

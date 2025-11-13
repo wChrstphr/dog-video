@@ -523,7 +523,7 @@ app.get('/clientes/:id', (req, res) => {
   const clienteId = req.params.id;
 
   const queryCliente = `
-    SELECT nome, email, cpf, telefone, endereco, anotacoes, pacote, dias_teste
+    SELECT nome, email, cpf, telefone, endereco, anotacoes, pacote, dias_teste, criado_em
     FROM clientes
     WHERE id_cliente = $1
   `;
