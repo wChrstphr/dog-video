@@ -29,8 +29,13 @@ function Redefinir() {
         const data = await response.json();
         
         // Verificação mais robusta dos dados
-        if (data?.cliente?.alterar_senha !== undefined) {
-          setAlterarSenha(data.cliente.alterar_senha);
+        if (data?.cliente) {
+          if ('alterar_senha' in data.cliente) {
+            setAlterarSenha(data.cliente.alterar_senha);
+          } else {
+            console.warn('Propriedade "alterar_senha" não encontrada no objeto cliente:', data.cliente);
+            setAlterarSenha(null); // Define um valor padrão ou trate conforme necessário
+          }
         } else {
           console.error('Dados incompletos da API:', data);
           setError('Erro ao carregar configurações de senha');
